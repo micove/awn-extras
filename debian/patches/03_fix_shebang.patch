@@ -1,0 +1,653 @@
+diff -ur awn-extras-applets-0.2.6.orig/src/arss/Core/filechooser_rss.py awn-extras-applets-0.2.6/src/arss/Core/filechooser_rss.py
+--- awn-extras-applets-0.2.6.orig/src/arss/Core/filechooser_rss.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/arss/Core/filechooser_rss.py	2008-03-15 17:34:51.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # example filechooser.py
+ 
+Seulement dans awn-extras-applets-0.2.6/src/arss/Core: filechooser_rss.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/arss/Core/handle_rss.py awn-extras-applets-0.2.6/src/arss/Core/handle_rss.py
+--- awn-extras-applets-0.2.6.orig/src/arss/Core/handle_rss.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/arss/Core/handle_rss.py	2008-03-15 17:36:13.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/arss/Core: handle_rss.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/arss/rss_awn.py awn-extras-applets-0.2.6/src/arss/rss_awn.py
+--- awn-extras-applets-0.2.6.orig/src/arss/rss_awn.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/arss/rss_awn.py	2008-03-15 17:57:38.000000000 +0100
+@@ -1,4 +1,4 @@
+-# !/usr/bin/python
++#!/usr/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (c) 2007 Randal Barlow
+Seulement dans awn-extras-applets-0.2.6/src/arss: rss_awn.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/calendarlogin.py awn-extras-applets-0.2.6/src/calendar/calendarlogin.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/calendarlogin.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/calendarlogin.py	2008-03-15 17:36:35.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: calendarlogin.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/calendarprefs.py awn-extras-applets-0.2.6/src/calendar/calendarprefs.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/calendarprefs.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/calendarprefs.py	2008-03-15 17:36:53.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: calendarprefs.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/calthread.py awn-extras-applets-0.2.6/src/calendar/calthread.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/calthread.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/calthread.py	2008-03-15 17:37:29.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: calthread.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/evocal.py awn-extras-applets-0.2.6/src/calendar/evocal.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/evocal.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/evocal.py	2008-03-15 17:37:10.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: evocal.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/atom/__init__.py awn-extras-applets-0.2.6/src/calendar/google/atom/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/atom/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/atom/__init__.py	2008-03-15 17:37:55.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/atom: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/atom/service.py awn-extras-applets-0.2.6/src/calendar/google/atom/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/atom/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/atom/service.py	2008-03-15 17:38:42.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/atom: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/apps/__init__.py awn-extras-applets-0.2.6/src/calendar/google/gdata/apps/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/apps/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/apps/__init__.py	2008-03-15 17:39:40.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2007 SIOS Technology, Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/apps: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/apps/service.py awn-extras-applets-0.2.6/src/calendar/google/gdata/apps/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/apps/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/apps/service.py	2008-03-15 17:39:54.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2007 SIOS Technology, Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/apps: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/base/__init__.py awn-extras-applets-0.2.6/src/calendar/google/gdata/base/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/base/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/base/__init__.py	2008-03-15 17:40:17.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/base: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/base/service.py awn-extras-applets-0.2.6/src/calendar/google/gdata/base/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/base/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/base/service.py	2008-03-15 17:40:26.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/base: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/calendar/__init__.py awn-extras-applets-0.2.6/src/calendar/google/gdata/calendar/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/calendar/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/calendar/__init__.py	2008-03-15 17:40:45.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/calendar: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/calendar/service.py awn-extras-applets-0.2.6/src/calendar/google/gdata/calendar/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/calendar/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/calendar/service.py	2008-03-15 17:40:53.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/calendar: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/docs/__init__.py awn-extras-applets-0.2.6/src/calendar/google/gdata/docs/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/docs/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/docs/__init__.py	2008-03-15 17:41:12.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/docs: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/docs/service.py awn-extras-applets-0.2.6/src/calendar/google/gdata/docs/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/docs/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/docs/service.py	2008-03-15 17:41:21.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/docs: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/__init__.py awn-extras-applets-0.2.6/src/calendar/google/gdata/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/__init__.py	2008-03-15 17:38:18.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/service.py awn-extras-applets-0.2.6/src/calendar/google/gdata/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/service.py	2008-03-15 17:41:46.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/spreadsheet/__init__.py awn-extras-applets-0.2.6/src/calendar/google/gdata/spreadsheet/__init__.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/spreadsheet/__init__.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/spreadsheet/__init__.py	2008-03-15 17:42:15.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2007 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/spreadsheet: __init__.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/spreadsheet/service.py awn-extras-applets-0.2.6/src/calendar/google/gdata/spreadsheet/service.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/spreadsheet/service.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/spreadsheet/service.py	2008-03-15 17:42:38.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2007 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata/spreadsheet: service.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/test_data.py awn-extras-applets-0.2.6/src/calendar/google/gdata/test_data.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/google/gdata/test_data.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/google/gdata/test_data.py	2008-03-15 18:09:17.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ # Copyright (C) 2006 Google Inc.
+ #
+Seulement dans awn-extras-applets-0.2.6/src/calendar/google/gdata: test_data.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/googlecal.py awn-extras-applets-0.2.6/src/calendar/googlecal.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/googlecal.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/googlecal.py	2008-03-15 17:44:02.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: googlecal.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/icscal.py awn-extras-applets-0.2.6/src/calendar/icscal.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/icscal.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/icscal.py	2008-03-15 17:44:16.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: icscal.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/owacal.py awn-extras-applets-0.2.6/src/calendar/owacal.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/owacal.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/owacal.py	2008-03-15 17:44:30.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: owacal.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/calendar/sevensegled.py awn-extras-applets-0.2.6/src/calendar/sevensegled.py
+--- awn-extras-applets-0.2.6.orig/src/calendar/sevensegled.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/calendar/sevensegled.py	2008-03-15 17:44:59.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/calendar: sevensegled.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/comicdialog.py awn-extras-applets-0.2.6/src/comic/comicdialog.py
+--- awn-extras-applets-0.2.6.orig/src/comic/comicdialog.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/comicdialog.py	2008-03-15 17:45:22.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # This program is free software; you can redistribute it and/or modify
+Seulement dans awn-extras-applets-0.2.6/src/comic: comicdialog.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/getborn.py awn-extras-applets-0.2.6/src/comic/getborn.py
+--- awn-extras-applets-0.2.6.orig/src/comic/getborn.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/getborn.py	2008-03-15 17:45:34.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ 
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License version 2 as
+Seulement dans awn-extras-applets-0.2.6/src/comic: getborn.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/getdilbert.py awn-extras-applets-0.2.6/src/comic/getdilbert.py
+--- awn-extras-applets-0.2.6.orig/src/comic/getdilbert.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/getdilbert.py	2008-03-15 17:45:52.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ 
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License version 2 as
+Seulement dans awn-extras-applets-0.2.6/src/comic: getdilbert.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/getpcnp.py awn-extras-applets-0.2.6/src/comic/getpcnp.py
+--- awn-extras-applets-0.2.6.orig/src/comic/getpcnp.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/getpcnp.py	2008-03-15 17:46:16.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ 
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License version 2 as
+Seulement dans awn-extras-applets-0.2.6/src/comic: getpcnp.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/getpeanuts.py awn-extras-applets-0.2.6/src/comic/getpeanuts.py
+--- awn-extras-applets-0.2.6.orig/src/comic/getpeanuts.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/getpeanuts.py	2008-03-15 17:46:26.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ 
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License version 2 as
+Seulement dans awn-extras-applets-0.2.6/src/comic: getpeanuts.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/getwiz.py awn-extras-applets-0.2.6/src/comic/getwiz.py
+--- awn-extras-applets-0.2.6.orig/src/comic/getwiz.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/getwiz.py	2008-03-15 17:46:45.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ 
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License version 2 as
+Seulement dans awn-extras-applets-0.2.6/src/comic: getwiz.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/comic/getxkcd.py awn-extras-applets-0.2.6/src/comic/getxkcd.py
+--- awn-extras-applets-0.2.6.orig/src/comic/getxkcd.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/comic/getxkcd.py	2008-03-15 17:47:00.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ 
+ # This program is free software; you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License version 2 as
+Seulement dans awn-extras-applets-0.2.6/src/comic: getxkcd.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/file-browser-launcher/about.py awn-extras-applets-0.2.6/src/file-browser-launcher/about.py
+--- awn-extras-applets-0.2.6.orig/src/file-browser-launcher/about.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/file-browser-launcher/about.py	2008-03-15 17:47:28.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ # -*- coding: utf-8 -*-
+ #
+ # Copyright (c) 2008 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/file-browser-launcher: about.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/file-browser-launcher/file-browser-launcher.py awn-extras-applets-0.2.6/src/file-browser-launcher/file-browser-launcher.py
+--- awn-extras-applets-0.2.6.orig/src/file-browser-launcher/file-browser-launcher.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/file-browser-launcher/file-browser-launcher.py	2008-03-15 17:48:04.000000000 +0100
+@@ -1,4 +1,3 @@
+-#! /usr/bin/python
+ # -*- coding: utf-8 -*-
+ #
+ # Copyright (c) 2008 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/file-browser-launcher: file-browser-launcher.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/file-browser-launcher/gconfwrapper.py awn-extras-applets-0.2.6/src/file-browser-launcher/gconfwrapper.py
+--- awn-extras-applets-0.2.6.orig/src/file-browser-launcher/gconfwrapper.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/file-browser-launcher/gconfwrapper.py	2008-03-15 17:48:34.000000000 +0100
+@@ -1,4 +1,3 @@
+-#! /usr/bin/env python
+ # -*- coding:utf-8 -*-
+ #
+ # Copyright (c) 2008 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/file-browser-launcher: gconfwrapper.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/file-browser-launcher/prefs.py awn-extras-applets-0.2.6/src/file-browser-launcher/prefs.py
+--- awn-extras-applets-0.2.6.orig/src/file-browser-launcher/prefs.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/file-browser-launcher/prefs.py	2008-03-15 17:48:50.000000000 +0100
+@@ -1,4 +1,3 @@
+-#! /usr/bin/env python
+ # -*- coding: utf-8 -*-
+ #
+ # Copyright (c) 2008 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/file-browser-launcher: prefs.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/httpclient.py awn-extras-applets-0.2.6/src/lastfm/httpclient.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/httpclient.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/httpclient.py	2008-03-15 17:49:16.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), Jonathan Rauprich (joni@noplu.de)
+ #
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: httpclient.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/imageproducer.py awn-extras-applets-0.2.6/src/lastfm/imageproducer.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/imageproducer.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/imageproducer.py	2008-03-15 17:49:33.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), Jonathan Rauprich (joni@noplu.de)
+ #
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: imageproducer.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/lastfmconfig.py awn-extras-applets-0.2.6/src/lastfm/lastfmconfig.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/lastfmconfig.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/lastfmconfig.py	2008-03-15 17:50:10.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), Jonathan Rauprich (joni@noplu.de)
+ #
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: lastfmconfig.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/lastfmexception.py awn-extras-applets-0.2.6/src/lastfm/lastfmexception.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/lastfmexception.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/lastfmexception.py	2008-03-15 17:50:58.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), Jonathan Rauprich (joni@noplu.de)
+ #
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: lastfmexception.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/lastfmpreferences.py awn-extras-applets-0.2.6/src/lastfm/lastfmpreferences.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/lastfmpreferences.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/lastfmpreferences.py	2008-03-15 17:51:13.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), Jonathan Rauprich (joni@noplu.de)
+ #
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: lastfmpreferences.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/lastfm.py awn-extras-applets-0.2.6/src/lastfm/lastfm.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/lastfm.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/lastfm.py	2008-03-15 17:49:51.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), Jonathan Rauprich (joni@noplu.de)
+ #
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: lastfm.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/libawn-extras/bindings/python/AWNLib.py awn-extras-applets-0.2.6/src/libawn-extras/bindings/python/AWNLib.py
+--- awn-extras-applets-0.2.6.orig/src/libawn-extras/bindings/python/AWNLib.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/libawn-extras/bindings/python/AWNLib.py	2008-03-15 17:35:41.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #
+ #       AWN Applet Library
+ #
+Seulement dans awn-extras-applets-0.2.6/src/libawn-extras/bindings/python: AWNLib.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/media-control/mediacontrol.py awn-extras-applets-0.2.6/src/media-control/mediacontrol.py
+--- awn-extras-applets-0.2.6.orig/src/media-control/mediacontrol.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/media-control/mediacontrol.py	2008-03-15 17:57:20.000000000 +0100
+@@ -1,4 +1,4 @@
+-# !/usr/bin/python
++#!/usr/bin/python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/media-control: mediacontrol.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/media-icon-back/medialogoback.py awn-extras-applets-0.2.6/src/media-icon-back/medialogoback.py
+--- awn-extras-applets-0.2.6.orig/src/media-icon-back/medialogoback.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/media-icon-back/medialogoback.py	2008-03-15 17:32:30.000000000 +0100
+@@ -1,4 +1,4 @@
+-# !/usr/bin/python
++#!/usr/bin/python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/media-icon-back: medialogoback.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/media-icon-next/medialogonext.py awn-extras-applets-0.2.6/src/media-icon-next/medialogonext.py
+--- awn-extras-applets-0.2.6.orig/src/media-icon-next/medialogonext.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/media-icon-next/medialogonext.py	2008-03-15 17:33:18.000000000 +0100
+@@ -1,4 +1,4 @@
+-# !/usr/bin/python
++#!/usr/bin/python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/media-icon-next: medialogonext.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/media-icon-play/medialogoplay.py awn-extras-applets-0.2.6/src/media-icon-play/medialogoplay.py
+--- awn-extras-applets-0.2.6.orig/src/media-icon-play/medialogoplay.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/media-icon-play/medialogoplay.py	2008-03-15 17:32:57.000000000 +0100
+@@ -1,4 +1,4 @@
+-# !/usr/bin/python
++#!/usr/bin/python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/media-icon-play: medialogoplay.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/MiMenu/mimenu.py awn-extras-applets-0.2.6/src/MiMenu/mimenu.py
+--- awn-extras-applets-0.2.6.orig/src/MiMenu/mimenu.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/MiMenu/mimenu.py	2008-03-15 17:33:42.000000000 +0100
+@@ -1,4 +1,4 @@
+-# !/usr/bin/python
++#!/usr/bin/python
+ # -*- coding: utf-8 -*-
+ 
+ # Copyright (c) 2007 Randal Barlow
+Seulement dans awn-extras-applets-0.2.6/src/MiMenu: mimenu.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/showdesktop/showdesktop.py awn-extras-applets-0.2.6/src/showdesktop/showdesktop.py
+--- awn-extras-applets-0.2.6.orig/src/showdesktop/showdesktop.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/showdesktop/showdesktop.py	2008-03-15 17:58:31.000000000 +0100
+@@ -1,3 +1,4 @@
++#!/usr/bin/python
+ # -*- coding: utf-8 -*-
+ # vim: ts=4
+ ###
+Seulement dans awn-extras-applets-0.2.6/src/showdesktop: showdesktop.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_file.py awn-extras-applets-0.2.6/src/stacks/stacks_backend_file.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_file.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_backend_file.py	2008-03-15 17:52:23.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_backend_file.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_folder.py awn-extras-applets-0.2.6/src/stacks/stacks_backend_folder.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_folder.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_backend_folder.py	2008-03-15 17:52:36.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_backend_folder.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_plugger.py awn-extras-applets-0.2.6/src/stacks/stacks_backend_plugger.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_plugger.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_backend_plugger.py	2008-03-15 17:52:48.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_backend_plugger.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend.py awn-extras-applets-0.2.6/src/stacks/stacks_backend.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_backend.py	2008-03-15 17:51:49.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_backend.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_trasher.py awn-extras-applets-0.2.6/src/stacks/stacks_backend_trasher.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_backend_trasher.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_backend_trasher.py	2008-03-15 17:53:07.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_backend_trasher.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_config.py awn-extras-applets-0.2.6/src/stacks/stacks_config.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_config.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_config.py	2008-03-15 17:53:23.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ import sys
+ import gobject
+ import gtk
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_config.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_glade.py awn-extras-applets-0.2.6/src/stacks/stacks_glade.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_glade.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_glade.py	2008-03-15 17:53:38.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_glade.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_gui_curved.py awn-extras-applets-0.2.6/src/stacks/stacks_gui_curved.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_gui_curved.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_gui_curved.py	2008-03-15 17:53:51.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # stacks_gui_curved  version 0.2
+ # Copyright (c) 2007 SilentStorm aka Wim Wauters
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_gui_curved.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_gui_dialog.py awn-extras-applets-0.2.6/src/stacks/stacks_gui_dialog.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_gui_dialog.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_gui_dialog.py	2008-03-15 17:54:02.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_gui_dialog.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_gui_trasher.py awn-extras-applets-0.2.6/src/stacks/stacks_gui_trasher.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_gui_trasher.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_gui_trasher.py	2008-03-15 17:54:27.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Randal Barlow
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_gui_trasher.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_icons.py awn-extras-applets-0.2.6/src/stacks/stacks_icons.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_icons.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_icons.py	2008-03-15 17:54:43.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_icons.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_launcher.py awn-extras-applets-0.2.6/src/stacks/stacks_launcher.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_launcher.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_launcher.py	2008-03-15 17:54:53.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_launcher.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/stacks/stacks_vfs.py awn-extras-applets-0.2.6/src/stacks/stacks_vfs.py
+--- awn-extras-applets-0.2.6.orig/src/stacks/stacks_vfs.py	2008-03-15 17:12:05.000000000 +0100
++++ awn-extras-applets-0.2.6/src/stacks/stacks_vfs.py	2008-03-15 17:55:03.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/env python
+ 
+ # Copyright (c) 2007 Timon ter Braak
+ #
+Seulement dans awn-extras-applets-0.2.6/src/stacks: stacks_vfs.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/volume-control/volume-control.py awn-extras-applets-0.2.6/src/volume-control/volume-control.py
+--- awn-extras-applets-0.2.6.orig/src/volume-control/volume-control.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/volume-control/volume-control.py	2008-03-15 17:59:01.000000000 +0100
+@@ -1,3 +1,4 @@
++#!/usr/bin/python
+ """
+ --------------------------------------------------------------------------------
+  This program is free software; you can redistribute it and/or modify
+@@ -28,7 +29,6 @@
+                          Pavel Panchekha <pavpanchekha@gmail.com>
+ """
+ 
+-#!/usr/bin/python
+ import sys, os
+ import gobject
+ import gtk
+Seulement dans awn-extras-applets-0.2.6/src/volume-control: volume-control.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/override.py awn-extras-applets-0.2.6/src/weather/override.py
+--- awn-extras-applets-0.2.6.orig/src/weather/override.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/override.py	2008-03-15 18:09:39.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ #Copyright 2007 Isaac J. 
+ import sys, os
+ import gobject
+Seulement dans awn-extras-applets-0.2.6/src/weather: override.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/weatherconfig.py awn-extras-applets-0.2.6/src/weather/weatherconfig.py
+--- awn-extras-applets-0.2.6.orig/src/weather/weatherconfig.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/weatherconfig.py	2008-03-15 17:56:03.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/weather: weatherconfig.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/weathercurved.py awn-extras-applets-0.2.6/src/weather/weathercurved.py
+--- awn-extras-applets-0.2.6.orig/src/weather/weathercurved.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/weathercurved.py	2008-03-15 17:55:39.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/weather: weathercurved.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/weatherdialog.py awn-extras-applets-0.2.6/src/weather/weatherdialog.py
+--- awn-extras-applets-0.2.6.orig/src/weather/weatherdialog.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/weatherdialog.py	2008-03-15 17:56:11.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/weather: weatherdialog.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/weathericons.py awn-extras-applets-0.2.6/src/weather/weathericons.py
+--- awn-extras-applets-0.2.6.orig/src/weather/weathericons.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/weathericons.py	2008-03-15 17:56:29.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/weather: weathericons.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/weathermap.py awn-extras-applets-0.2.6/src/weather/weathermap.py
+--- awn-extras-applets-0.2.6.orig/src/weather/weathermap.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/weathermap.py	2008-03-15 17:56:36.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/weather: weathermap.py~
+diff -ur awn-extras-applets-0.2.6.orig/src/weather/weathertext.py awn-extras-applets-0.2.6/src/weather/weathertext.py
+--- awn-extras-applets-0.2.6.orig/src/weather/weathertext.py	2008-03-15 17:12:04.000000000 +0100
++++ awn-extras-applets-0.2.6/src/weather/weathertext.py	2008-03-15 17:56:44.000000000 +0100
+@@ -1,4 +1,3 @@
+-#!/usr/bin/python
+ # -*- coding: iso-8859-15 -*-
+ #
+ # Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+Seulement dans awn-extras-applets-0.2.6/src/weather: weathertext.py~

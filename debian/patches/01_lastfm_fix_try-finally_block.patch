@@ -1,0 +1,14 @@
+diff -ur awn-extras-applets-0.2.6.orig/src/lastfm/lastfmpreferences.py awn-extras-applets-0.2.6/src/lastfm/lastfmpreferences.py
+--- awn-extras-applets-0.2.6.orig/src/lastfm/lastfmpreferences.py	2008-03-14 20:57:40.000000000 +0100
++++ awn-extras-applets-0.2.6/src/lastfm/lastfmpreferences.py	2008-03-14 21:37:16.000000000 +0100
+@@ -146,8 +146,7 @@
+              self.labelw.set_text("Invalid username/password. Try again.")
+       except lastfmexception.LastFmException:
+           self.labelw.set_text("Network Connection error: unable to contact Last.Fm")
+-          
+-      finally:
++      else:
+           #reload the config no matter if we are connected or not - it will at least change the icon 
+           self.applet.reload_config()
+          
+Seulement dans awn-extras-applets-0.2.6/src/lastfm: lastfmpreferences.py~

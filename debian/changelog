@@ -1,0 +1,18 @@
+awn-extras-applets (0.2.6-1) unstable; urgency=low
+
+  * Initial upload (Closes: #468098)
+  * debian/patches:
+   - 00-Install-in-share.patch: Install python applets in /usr/share.
+   - 01_lastfm_fix_try-finally_block.patch: Fix block to work with python 2.4.
+   - 02_define_new_path_for_stack_dependency.patch: Add /usr/share as a 
+     location of stack applet.
+   - 03_fix_shebang.patch: Fix all shebang.
+   - 90_bzr_convert_filebrowser_to_awnclient.patch: From bzr, convert 
+     filebrowser to the new configuration system.
+   - 91_bzr_change_pandora_url.patch: Use new URL for pandora applet.
+   - 92_bzr_fix_location_for_comic.patch: From bzr, use /tmp/ instead of 
+     home directory.
+  * Applets comic, pandora, notification-area are not installed because of 
+    stability issues.
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Tue, 05 Feb 2008 01:19:17 +0100
