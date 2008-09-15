@@ -10,7 +10,7 @@ Build-Depends: 	debhelper (>= 5),
 		libgnome-desktop-dev, 
 		librsvg2-dev, 
 		libgtop2-dev, 
-		libawn-dev, 
+		libawn-dev (>= 0.2.4), 
 		libwnck-dev, 
 		libsexy-dev, 
 		libnotify-dev, 
@@ -22,7 +22,7 @@ Build-Depends: 	debhelper (>= 5),
 		python-elementtree,
 		libtrackerclient-dev,
 		awn-manager (>= 0.2.6)
-Standards-Version: 3.7.3
+Standards-Version: 3.8.0
 XS-Python-Version: >= 2.4
 Homepage: https://launchpad.net/awn-extras
 

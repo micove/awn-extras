@@ -1,3 +1,18 @@
+awn-extras-applets (0.2.6-3) unstable; urgency=low
+
+  * debian/control
+   - Bump to 3.8.0 Standards-Version (no change needed).
+   - Bump Build-Depends of libawn-dev to (>= 0.2.6)
+  * debian/patches/11-volume-channel-missing.patch
+   - Fix volume applet when current channel disappear (Closes: #491118).
+     Thanks Jean-Michel Philippe for the patch.
+  * debian/copyright
+   - Remove the complete Apache Licence and link instead to
+     /usr/share/common-licenses/Apache-2.0.
+   - Reformat the complete licence to reduce the lines under 80 characters.
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Mon, 15 Sep 2008 22:57:18 +0200
+
 awn-extras-applets (0.2.6-2) unstable; urgency=medium
 
   * Rebuild for python2.5 transition (Closes: #477264)
