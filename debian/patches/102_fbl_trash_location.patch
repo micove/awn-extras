@@ -1,0 +1,12 @@
+diff -Nur -x '*.orig' -x '*~' awn-extras-applets-0.2.6/src/file-browser-launcher/file-browser-launcher.py awn-extras-applets-0.2.6.new/src/file-browser-launcher/file-browser-launcher.py
+--- awn-extras-applets-0.2.6/src/file-browser-launcher/file-browser-launcher.py	2008-10-14 22:46:07.000000000 +0200
++++ awn-extras-applets-0.2.6.new/src/file-browser-launcher/file-browser-launcher.py	2008-10-14 22:47:43.000000000 +0200
+@@ -149,7 +149,7 @@
+ 		self.dvd_paths = []
+ 		
+ 		#Get whether the trash is empty or not
+-		if len(os.listdir(os.path.expanduser('~/.Trash'))) > 2:
++		if len(os.listdir(os.path.expanduser('~/.local/share/Trash/files'))) > 2:
+ 			self.trash_full = True
+ 		else:
+ 			self.trash_full = False

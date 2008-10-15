@@ -15,3 +15,5 @@ usr/share/avant-window-navigator/applets/icons/filebrowser.svg usr/share/awn/app
 #usr/lib/awn/applets/notification-area/*.so
 #usr/share/awn/applets/notification-area.desktop
 #usr/share/avant-window-navigator/applets/icons/notification.svg usr/share/awn/applets/icons/
+etc/gconf/schemas/filebrowser.schemas
+etc/gconf/schemas/switcher.schemas

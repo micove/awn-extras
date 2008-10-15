@@ -86,11 +86,13 @@ Depends: 	${shlibs:Depends},
 		${python:Depends},
 		avant-window-navigator,
 		python-awn,
-		python-awnlib
+		python-awnlib,
+		gnome-icon-theme
 Recommends: 	awn-manager (>= 0.2.6-3),
 		python-alsaaudio,
 		python-feedparser,
-		python-gst0.10
+		python-gst0.10,
+		acpi
 XB-Python-Version: ${python:Versions}
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It

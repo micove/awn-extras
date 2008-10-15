@@ -2,6 +2,7 @@ usr/share/awn/applets/arss/*.py
 usr/share/awn/applets/arss/Core/*.png
 usr/share/awn/applets/arss/Core/*.svg
 usr/share/awn/applets/arss/Core/*.py
+usr/share/awn/applets/arss/Core/feedlist-default
 usr/share/awn/applets/battery-applet/*.py
 usr/share/awn/applets/battery-applet/icons/*.svg
 usr/share/awn/applets/calendar/

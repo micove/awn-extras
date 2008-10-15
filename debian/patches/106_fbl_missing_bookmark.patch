@@ -1,0 +1,19 @@
+diff -Nur -x '*.orig' -x '*~' awn-extras-applets-0.2.6/src/file-browser-launcher/file-browser-launcher.py awn-extras-applets-0.2.6.new/src/file-browser-launcher/file-browser-launcher.py
+--- awn-extras-applets-0.2.6/src/file-browser-launcher/file-browser-launcher.py	2008-10-15 22:29:46.000000000 +0200
++++ awn-extras-applets-0.2.6.new/src/file-browser-launcher/file-browser-launcher.py	2008-10-15 22:32:15.000000000 +0200
+@@ -138,9 +138,12 @@
+ 		self.fstab2 = open('/etc/fstab','r')
+ 		self.fstab = self.fstab2.readlines()
+ 		self.fstab2.close()
+-		self.bmarks2 = open(os.path.expanduser('~/.gtk-bookmarks'))
+-		self.bmarks = self.bmarks2.readlines()
+-		self.bmarks2.close()
++		if os.path.exists(os.path.expanduser('~/.gtk-bookmarks')):
++			self.bmarks2 = open(os.path.expanduser('~/.gtk-bookmarks'))
++			self.bmarks = self.bmarks2.readlines()
++			self.bmarks2.close()
++		else:
++			self.bmarks = []
+ 		self.paths = []
+ 		self.paths_fstab = []
+ 		self.nfs_smb_paths = []

@@ -1,3 +1,38 @@
+awn-extras-applets (0.2.6-4) unstable; urgency=low
+
+  * debian/control
+   - Recommend acpi package for battery-applet.
+   - Add depends on gnome-icon-theme for the file-browser-launcher link.
+  * debian/awn-applets-python-core.links
+   - Add links for stacks to fix error in loading images.
+   - Add link for file-browser-launcher to point to icon of a folder.
+  * debian/awn-applets-python-core.install
+   - Install missing feedlist-default in arss applet.
+  * debian/awn-applets-c-*.install
+   - Install schemas files (Closes: #477367, #477371).
+  * debian/patches/
+   - 93-bzr-show-desktop-title.patch: from upstream, fix show-desktop applet on
+     mouse over.
+   - 94_shinyswitcher_string_to_color.patch: from upstream, fix 
+     awn_cairo_string_to_color crash for shinyswitcher.
+   - 95_weather_correct_url.patch: from upstream, update URL to fetch the data
+     for the weather applet.
+   - 96_shinyswitcher_cairo_set_operator.patch : From upstream, fix 
+     cairo_set_operator() crash.
+   - 101_places_string_to_color.patch: fix awn_cairo_string_to_color crash for
+     shinyswitcher.
+   - 102_fbl_trash_location.patch: fix location of Trash in file browser
+     launcher applet.
+   - 103-fix-schemas-generation.patch: Generate schemas files at build time.
+   - 104_tsclient_create_home.patch: create ~/.tsclient to avoid applet to
+     crash.
+   - 105_mimenu_missing_bookmark.patch: don't crash Main Menu applet if there is 
+     no bookmark.
+   - 106_fbl_missing_bookmark.patch: don't crash file-browser-launcher applet
+     if there is no bookmark.
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Wed, 15 Oct 2008 21:52:42 +0200
+
 awn-extras-applets (0.2.6-3) unstable; urgency=low
 
   * debian/control

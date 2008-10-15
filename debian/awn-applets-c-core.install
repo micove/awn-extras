@@ -18,3 +18,9 @@ usr/share/awn/applets/trash.desktop
 usr/share/awn/applets/cairo_main_menu.desktop
 usr/share/awn/applets/shinyswitcher.desktop
 usr/share/avant-window-navigator/applets/icons/separator.svg usr/share/awn/applets/icons/
+etc/gconf/schemas/awn-notification-daemon.schemas
+etc/gconf/schemas/awnsystemmonitor.schemas
+etc/gconf/schemas/awn-terminal.schemas
+etc/gconf/schemas/places.schemas
+etc/gconf/schemas/shinyswitcher.schemas
+etc/gconf/schemas/trash.schemas
