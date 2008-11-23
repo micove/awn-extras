@@ -25,7 +25,6 @@
 import sys, os
 import gobject
 import gtk
-import gconf
 import awn
 import comicdialog
 #default comic
@@ -34,17 +33,11 @@ showhover = False
 
 class App (awn.AppletSimple):
     titleText = "Daily Comic"
-    gconf_path = "/apps/avant-window-navigator/applets/comic"
     visible = False
 
     def __init__ (self, uid, orient, height):
         awn.AppletSimple.__init__ (self, uid, orient, height)
-        self.height = height
-        icon = gtk.gdk.pixbuf_new_from_file(os.path.dirname (__file__) + '/images/kmouth.png')
-
-        if height != icon.get_height():
-            icon = icon.scale_simple(height,height,gtk.gdk.INTERP_BILINEAR)
-        self.set_icon(icon)
+        self.set_awn_icon('comic', 'comic-applet')
 
         self.title = awn.awn_title_get_default ()
         self.dialog = awn.AppletDialog (self)
@@ -53,31 +46,53 @@ class App (awn.AppletSimple):
         self.connect ("leave-notify-event", self.leave_notify)
         self.dialog.connect ("focus-out-event", self.dialog_focus_out)
 
-        self.gconf_client = gconf.client_get_default()
-
         # Setup popup menu
-        self.popup_menu = gtk.Menu()
+        self.popup_menu = self.create_default_menu()
         dil_item = gtk.MenuItem("Dilbert")
         pnut_item = gtk.MenuItem("Peanuts")
         born_item = gtk.MenuItem("The Born Loser")
+        ben_item = gtk.MenuItem("Ben")
+        ferdnand_item = gtk.MenuItem("Ferdnand")
+        nancy_item = gtk.MenuItem("Nancy")
+        pickles_item = gtk.MenuItem("Pickles")
+        garfield_item = gtk.MenuItem("Garfield")
+        uf_item = gtk.MenuItem("User Friendly")
         wiz_item = gtk.MenuItem("Wizard of ID")
         xkcd_item = gtk.MenuItem("xkcd")
         showho_item = gtk.CheckMenuItem("Hide Strip on Hover")
         self.popup_menu.append(dil_item)
         self.popup_menu.append(pnut_item)
         self.popup_menu.append(born_item)
+        self.popup_menu.append(ben_item)
+        self.popup_menu.append(ferdnand_item)
+        self.popup_menu.append(nancy_item)
+        self.popup_menu.append(pickles_item)
+        self.popup_menu.append(garfield_item)
+        self.popup_menu.append(uf_item)
         self.popup_menu.append(wiz_item)
         self.popup_menu.append(xkcd_item)
         self.popup_menu.append(showho_item)
         dil_item.connect_object("activate",self.dil_callback,self)
         pnut_item.connect_object("activate",self.pnut_callback,self)
         born_item.connect_object("activate",self.born_callback,self)
+        ben_item.connect_object("activate",self.ben_callback,self)
+        ferdnand_item.connect_object("activate",self.ferdnand_callback,self)
+        nancy_item.connect_object("activate",self.nancy_callback,self)
+        pickles_item.connect_object("activate",self.pickles_callback,self)
+        garfield_item.connect_object("activate",self.garfield_callback,self)
+        uf_item.connect_object("activate",self.uf_callback,self)
         wiz_item.connect_object("activate",self.wiz_callback,self)
         xkcd_item.connect_object("activate",self.xkcd_callback,self)
         showho_item.connect_object("activate",self.showho_callback,self)
         dil_item.show()
         pnut_item.show()
         born_item.show()
+        ben_item.show()
+        ferdnand_item.show()
+        nancy_item.show()
+        pickles_item.show()
+        garfield_item.show()
+        uf_item.show()
         wiz_item.show()
         xkcd_item.show()
         showho_item.show()
@@ -136,6 +151,36 @@ class App (awn.AppletSimple):
         GETWHAT = 'getborn.py'
         self.build_dialog()
 
+    def ben_callback(self, widget):
+        global GETWHAT
+        GETWHAT = 'getben.py'
+        self.build_dialog()
+
+    def ferdnand_callback(self, widget):
+        global GETWHAT
+        GETWHAT = 'getferdnand.py'
+        self.build_dialog()
+
+    def nancy_callback(self, widget):
+        global GETWHAT
+        GETWHAT = 'getnancy.py'
+        self.build_dialog()
+
+    def pickles_callback(self, widget):
+        global GETWHAT
+        GETWHAT = 'getpickles.py'
+        self.build_dialog()
+
+    def garfield_callback(self, widget):
+        global GETWHAT
+        GETWHAT = 'getgarfield.py'
+        self.build_dialog()
+
+    def uf_callback(self, widget):
+        global GETWHAT
+        GETWHAT = 'getuf.py'
+        self.build_dialog()
+
     def wiz_callback(self, widget):
         global GETWHAT
         GETWHAT = 'getwiz.py'
@@ -157,6 +202,7 @@ class App (awn.AppletSimple):
 
 
     def enter_notify (self, widget, event):
+        global showhover
         self.title.show (self, self.titleText)
         if showhover:
             self.title.hide(self)
@@ -164,8 +210,9 @@ class App (awn.AppletSimple):
             self.visible = False
 
     def leave_notify (self, widget, event):
+        global showhover
         self.title.hide(self)
-        if self.showhover:
+        if showhover:
             self.dialog.hide()
             self.visible = False
 

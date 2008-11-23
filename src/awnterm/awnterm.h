@@ -21,21 +21,27 @@
 #define AWNTERM_H_
 
 #include <libawn/awn-applet.h>
+#include <libawn/awn-config-client.h>
 #include <gtk/gtk.h>
-#include <gconf/gconf-client.h>
 
 typedef struct
 {
 	AwnApplet *applet;
 	GdkPixbuf *icon;
 	GtkWidget *dialog;
+	GtkWidget *notebook;
+	GtkWidget *label;
 	GtkWidget *terminal;
 	GtkWidget *menu;
-	GConfClient *config;
+	AwnConfigClient *config;
 }AwnTerm;
 
 // The applet instance. We need to make it global so that we can access it in a bunch of callbacks.
 AwnTerm *applet;
+static unsigned int numTabs = 1;
+
+// Create new tab
+gboolean create_new_tab();
 
 // Callback when the icon is clicked on.
 gboolean icon_clicked_cb (GtkWidget *widget, GdkEventButton *event, gpointer null);
@@ -45,5 +51,8 @@ gboolean focus_out_cb (GtkWidget *window, GdkEventFocus *event, gpointer null);
 
 // Callback when a key is pressed. We check for the keyboard shortcuts for copy and paste. If they're found, we act accordingly.
 gboolean key_press_cb (GtkWidget *window, GdkEventKey *event, GtkWidget *terminal);
+
+// Callback when "exit" command is executed
+void exited_cb (GtkWidget *terminal, gpointer null);
 
 #endif /*AWNTERM_H_*/

@@ -27,7 +27,7 @@ import gtk
 from gtk import gdk
 import gconf
 import pango
-import awn
+import awn, awn.extras
 import cairo
 from StringIO import StringIO
 import datetime
@@ -101,7 +101,7 @@ class App(awn.AppletSimple):
 		gobject.timeout_add(100,self.first_paint)		
 		self.timer = gobject.timeout_add(1000,self.timer_callback)
 		#self.timer = gobject.timeout_add(1000,self.subsequent_paint)
-		self.popup_menu = gtk.Menu()
+		self.popup_menu = self.create_default_menu()
 		pref_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_PREFERENCES)
 		forget_item = gtk.MenuItem("Forget Password")
 		about_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_ABOUT)
@@ -278,10 +278,7 @@ class App(awn.AppletSimple):
 		else:		
 			if self.blinky_colon == True:
 				self.draw_colon(self.ct,123,202,30)
-				ns = self.ct.get_target()
-				new_icon = self.get_pixbuf_from_surface(ns)
-				scaled_icon = new_icon.scale_simple(self.height, self.height, gtk.gdk.INTERP_BILINEAR) 
-				self.set_temp_icon(scaled_icon)
+				self.set_icon_context_scaled(self.ct)
 			result=True
 		now = datetime.datetime.now()
 		self.title_text = now.strftime("%x %X")
@@ -426,10 +423,7 @@ class App(awn.AppletSimple):
 		self.ct.set_source_rgba(1.0,1.0,1.0,1.0)
 		self.ct.move_to(x,60)
 		self.ct.show_text(now.strftime("%b"))
-		ns = self.ct.get_target()
-		new_icon = self.get_pixbuf_from_surface(ns)
-		scaled_icon = new_icon.scale_simple(self.height, self.height, gtk.gdk.INTERP_BILINEAR) 
-		self.set_temp_icon(scaled_icon)
+		self.set_icon_context_scaled(self.ct)
 		return True
 
 	def draw_time_led(self, context, led, x0, y0, width, height):
@@ -569,16 +563,6 @@ class App(awn.AppletSimple):
 	############################################################################
 	# Utilities.
 	############################################################################
-
-	# Stolen from "BlingSwitcher"
-	def get_pixbuf_from_surface(self, surface):
-		sio = StringIO()
-		surface.write_to_png(sio)
-		sio.seek(0)
-		loader = gtk.gdk.PixbufLoader()
-		loader.write(sio.getvalue())
-		loader.close()
-		return loader.get_pixbuf()
 
 	def crypt(self,sequence, key):
 		sign = (key > 0) * 2 - 1

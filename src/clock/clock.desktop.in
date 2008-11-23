@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+X-AWN-AppletType=C
+Name=Clock
+Comment=A clock.
+Exec=/usr/lib/awn/applets/clock/clock.so
+Icon=

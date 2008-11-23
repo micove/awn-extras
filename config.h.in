@@ -33,6 +33,9 @@
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
 
+/* Defined if Gstreamer is detected */
+#undef HAVE_GSTREAMER
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -42,11 +45,18 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Have libwnck 2.22.x */
+#undef HAVE_LIBWNCK_222
+
 /* Define to 1 if you have the <locale.h> header file. */
 #undef HAVE_LOCALE_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define if the installed WebKit uses the old pkgconfig file and header
+   structure. */
+#undef HAVE_OLD_WEBKITGTK
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -92,9 +102,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Use the APIs that originated in the desktop-agnostic branch of Awn. */
-#undef USE_AWN_DESKTOP_AGNOSTIC
 
 /* Version number of package */
 #undef VERSION

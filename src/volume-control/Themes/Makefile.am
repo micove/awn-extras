@@ -1,4 +1,0 @@
-SUBDIRS = 	\
-	Black	\
-	Tango   \
-	Minimal

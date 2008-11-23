@@ -5,7 +5,8 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/gnome.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
-DEB_CONFIGURE_EXTRA_FLAGS += --disable-pymod-checks
+DEB_CONFIGURE_EXTRA_FLAGS += 	--disable-pymod-checks \
+				--with-webkit
 		
 DEB_DH_MAKESHLIBS_ARGS_awn-applets-c-extras += -n
 

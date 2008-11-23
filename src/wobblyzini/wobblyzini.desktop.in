@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-X-AWN-AppletType=C
-Encoding=UTF-8
-Name=Wobbly Zini
-Comment=A simple test animation
-Exec=/usr/local/lib/awn/applets/wobblyzini/wobblyzini.so
-Icon=/usr/local/lib/awn/applets/wobblyzini/icons/wobblyzini.png
-X-AWN-AppletCategory=Game,Amusement

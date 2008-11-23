@@ -1,0 +1,11 @@
+diff -Nur -x '*.orig' -x '*~' awn-extras-applets_0.3~bzr898/src/filebrowser/filebrowser.desktop.in.in awn-extras-applets_0.3~bzr898.new/src/filebrowser/filebrowser.desktop.in.in
+--- awn-extras-applets_0.3~bzr898/src/filebrowser/filebrowser.desktop.in.in	2008-10-30 18:48:11.000000000 +0100
++++ awn-extras-applets_0.3~bzr898.new/src/filebrowser/filebrowser.desktop.in.in	2008-11-11 23:53:12.000000000 +0100
+@@ -5,6 +5,6 @@
+ X-AWN-AppletType=C
+ Comment=Browse the filesystem
+ Exec=@LIBDIR@/awn/applets/filebrowser/filebrowser.so
+-Icon=@ICONDIR@/filebrowser.svg
++Icon=/usr/share/avant-window-navigator/applets/icons/filebrowser.svg
+ Name[en_US]=File Browser
+ X-AWN-AppletCategory=System,FileManager

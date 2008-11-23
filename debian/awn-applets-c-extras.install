@@ -1,19 +1,21 @@
-usr/lib/awn/applets/wobblyzini/*.so
 usr/lib/awn/applets/cairo_main_menu_classic/*.so
 usr/lib/awn/applets/trasher/*.so
 usr/lib/awn/applets/filebrowser/*.so
 usr/lib/awn/applets/main-menu/*.so
 usr/lib/awn/applets/switcher/*.so
-usr/share/awn/applets/wobblyzini.desktop
-usr/share/awn/applets/cairo_main_menu_classic.desktop
-usr/share/awn/applets/trasher.desktop
-usr/share/awn/applets/filebrowser.desktop
-usr/share/awn/applets/main-menu.desktop
-usr/share/awn/applets/switcher.desktop
-usr/lib/awn/applets/wobblyzini/icons/wobblyzini.png usr/share/awn/applets/icons/
-usr/share/avant-window-navigator/applets/icons/filebrowser.svg usr/share/awn/applets/icons/
+usr/lib/awn/applets/webapplet/*.so
+usr/share/avant-window-navigator/applets/cairo_main_menu_classic.desktop
+usr/share/avant-window-navigator/applets/trasher.desktop
+usr/share/avant-window-navigator/applets/filebrowser.desktop
+usr/share/avant-window-navigator/applets/main-menu.desktop
+usr/share/avant-window-navigator/applets/switcher.desktop
+usr/share/avant-window-navigator/applets/webapplet.desktop
+usr/share/avant-window-navigator/applets/icons/filebrowser.svg usr/share/avant-window-navigator/applets/icons/
+#
 #usr/lib/awn/applets/notification-area/*.so
-#usr/share/awn/applets/notification-area.desktop
-#usr/share/avant-window-navigator/applets/icons/notification.svg usr/share/awn/applets/icons/
+#usr/share/avant-window-navigator/applets/notification-area.desktop
+#usr/share/avant-window-navigator/applets/icons/notification.svg usr/share/avant-window-navigator/applets/icons/
+#
 etc/gconf/schemas/filebrowser.schemas
 etc/gconf/schemas/switcher.schemas
+etc/gconf/schemas/webapplet.schemas

@@ -5,22 +5,22 @@ usr/lib/awn/applets/awnterm/*.so
 usr/lib/awn/applets/places/*.so 
 usr/lib/awn/applets/plugger/*.so
 usr/lib/awn/applets/trash/*.so
-usr/lib/awn/applets/trash/trashapplet.glade usr/share/awn/applets/trash/
+usr/lib/awn/applets/trash/trashapplet.glade usr/share/avant-window-navigator/applets/trash/
 usr/lib/awn/applets/cairo_main_menu/*.so
 usr/lib/awn/applets/shinyswitcher/*.so
-usr/share/awn/applets/separator.desktop
-usr/share/awn/applets/awnsystemmonitor.desktop
-usr/share/awn/applets/awnnotificationdaemon.desktop
-usr/share/awn/applets/awnterm.desktop
-usr/share/awn/applets/places.desktop 
-usr/share/awn/applets/plugger.desktop
-usr/share/awn/applets/trash.desktop
-usr/share/awn/applets/cairo_main_menu.desktop
-usr/share/awn/applets/shinyswitcher.desktop
-usr/share/avant-window-navigator/applets/icons/separator.svg usr/share/awn/applets/icons/
+usr/share/avant-window-navigator/applets/separator.desktop
+usr/share/avant-window-navigator/applets/awnsystemmonitor.desktop
+usr/share/avant-window-navigator/applets/awnnotificationdaemon.desktop
+usr/share/avant-window-navigator/applets/awnterm.desktop
+usr/share/avant-window-navigator/applets/places.desktop 
+usr/share/avant-window-navigator/applets/plugger.desktop
+usr/share/avant-window-navigator/applets/trash.desktop
+usr/share/avant-window-navigator/applets/cairo_main_menu.desktop
+usr/share/avant-window-navigator/applets/shinyswitcher.desktop
+usr/share/avant-window-navigator/applets/icons/separator.svg usr/share/avant-window-navigator/applets/icons/
 etc/gconf/schemas/awn-notification-daemon.schemas
 etc/gconf/schemas/awnsystemmonitor.schemas
-etc/gconf/schemas/awn-terminal.schemas
+etc/gconf/schemas/awnterm.schemas
 etc/gconf/schemas/places.schemas
 etc/gconf/schemas/shinyswitcher.schemas
 etc/gconf/schemas/trash.schemas

@@ -1,10 +1,12 @@
-NULL = 
+NULL =
 
 # awn python scripts
 pyawn_extrasdir = $(PYTHON_SITE_PKG)/awn/extras
 pyawn_extras_PYTHON =	\
 	__init__.py	\
-	AWNLib.py
+	AWNLib.py	\
+	awnmediaplayers.py	\
+	detach.py
 
 AM_CFLAGS = \
 	$(PYTHON_CPPFLAGS) \

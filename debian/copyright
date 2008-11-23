@@ -21,7 +21,7 @@ Copyright:
    Copyright (C) 2006 Christian Hammond <chipx86@chipx86.com>
    Copyright (C) 2005 John (J5) Palmieri <johnp@redhat.com>
    Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
-   Copyright (c) 2007 Rodney Cryderman <rcryderman@gmail.com>
+   Copyright (c) 2007, 2008 Rodney Cryderman <rcryderman@gmail.com>
    Copyright (C) 2004, 2005 Jody Goldberg (jody@gnome.org)
    Copyright (c) 2007 Randal Barlow
    Copyright (c) 2007 Timon David Ter Braak
@@ -51,6 +51,15 @@ Copyright:
    Copyright (C) 2002  Red Hat, Inc.
    Copyright (c) 2004 James M. Cape <jcape@ignore-your.tv>
    Copyright (C) 2007 John Stowers <john.stower@gmail.com>
+   Copyright (c) 2008 Moses Palmér
+   Copyright (C) 2008  onox <denkpadje@gmail.com>
+   Copyright 2008 Allan Wirth <allanlw@gmail.com>
+   Copyright (c) 2008 Michal Hruby <michal.mhr at gmail.com>
+   Copyright 2007, 2008 Ryan Rushton (ryancr) <ryan@rrdesign.ca>
+   Copyright (c) 2008 Nathan Howard (triggerhapp@googlemail.com)
+         2003-2005 Jon Gelo      (ziljian@users.sourceforge.net)
+   Copyright (c) 2008 Andrew Starr-Bochicchio (andrewsomething) <a.starr.b@gmail.com>
+   Copyright 2008 Julien Lavergne <julien.lavergne@gmail.com>
 
 The Oxygen Icon Theme (in battery-applet/icons)
     Copyright (C) 2007 David Vignoni <david@icon-king.com>
@@ -68,6 +77,7 @@ Licence for applets and folders	arss
 				cairo-menu
 				cairo-menu-classic
 				calendar
+				comics
 				filebrowser
 				file-browser-launcher
 				lastfm
@@ -82,10 +92,12 @@ Licence for applets and folders	arss
 				plugger
 				python-test
 				quit-applet
+				rtm
 				separator
 				shiny-switcher
 				stack
 				switcher
+				to-do
 				trash
 				trasher
 				weather
@@ -134,6 +146,22 @@ Alike 3.0 License.
 
    See below for the complete licence.
 
+Licence for applets and folder 	thinkhdaps
+				pynot
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, version 3 of the License.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  See also /usr/share/common-licenses/GPL-3
 
 License (for others files):
 

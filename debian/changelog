@@ -1,3 +1,44 @@
+awn-extras-applets (0.3~bzr912-1) experimental; urgency=low
+
+  * New upstream snapshot.
+  * debian/patches
+   - All patches are merged upstream. Remaining patches :
+   - 10-implicit-pointer-conversion.patch : 
+    + Update to apply only to affinity applet.
+    + Add Debian and Upstream bug tracker entries.
+   - 01-hardcode-icon-location.patch:
+    + Hardcode icon location to workaround build system.
+  * debian/*.install & debian/*.links
+   - Update location, from /usr/*/awn/ to /usr/*/avant-window-navigator/
+   - Install new applets.
+   - Update schemas files installation.
+   - Update AWNLib installation.
+  * debian/control
+   - Bump libawn-dev Build-Depends to >= 0.3~bzr489.
+   - Bump python-awnlib Depends to >= 0.3~bzr912.
+   - Bump awn-manager Recommends to >= 0.3~bzr489.
+   - Suggest extras packages for each core binaries.
+   - Add valac for Build-Depends and Depends.
+   - Add libwebkit-deb as Build-Depends for webapplet.
+   - Add python2.5 as Build-Depends if python-elementtree is not installed.
+   - Add squilte3 and python-sqlalchemy as Depends for arss applet.
+   - Add python-xlib as Recommends for pynot applet.
+   - Add xdg-utils as Recommends for trash applet.
+   - Add python-dbus as Recommends for battery-applet.
+   - Add Conflicts and Replaces with previous version because calendar is now 
+     in python-extras.
+   - Add Suggests tomboy for tomboy applet.
+   - Remove gnome-icon-theme, not needed as the icon is now available.
+   - Update description for new applets.
+  * debian/copyright
+   - Add new copyright and licence for new applets.
+  * debian/rules
+   - Pass --with-webkit flag to build webapplet.
+  * debian/libawn-extras0.symbols
+   - Add with current symbols.
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Sun, 23 Nov 2008 11:34:07 +0100
+
 awn-extras-applets (0.2.6-4) unstable; urgency=low
 
   * debian/control

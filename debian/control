@@ -10,7 +10,7 @@ Build-Depends: 	debhelper (>= 5),
 		libgnome-desktop-dev, 
 		librsvg2-dev, 
 		libgtop2-dev, 
-		libawn-dev (>= 0.2.4), 
+		libawn-dev (>= 0.3~bzr489), 
 		libwnck-dev, 
 		libsexy-dev, 
 		libnotify-dev, 
@@ -19,9 +19,11 @@ Build-Depends: 	debhelper (>= 5),
 		python-dev,
 		python-gtk2-dev,
 		python-cairo-dev,
-		python-elementtree,
+		python-elementtree | python2.5
 		libtrackerclient-dev,
-		awn-manager (>= 0.2.6)
+		awn-manager (>= 0.2.6),
+		valac (>= 0.3.4),
+		libwebkit-dev,
 Standards-Version: 3.8.0
 XS-Python-Version: >= 2.4
 Homepage: https://launchpad.net/awn-extras
@@ -32,10 +34,12 @@ Architecture: any
 Depends: 	libawn-extras0 (= ${binary:Version}),
 		${shlibs:Depends}, 
 		${misc:Depends}, 
-		avant-window-navigator
-Recommends: 	awn-manager (>= 0.2.6-3),
+		avant-window-navigator,
+Recommends: 	awn-manager (>= 0.3~bzr489),
 		gconf-editor,
-		awn-applets-python-core
+		awn-applets-python-core,
+		xdg-utils,
+Suggests:	awn-applets-c-extras,
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
@@ -58,8 +62,8 @@ Architecture: any
 Depends: 	libawn-extras0 (= ${binary:Version}),
 		${shlibs:Depends}, 
 		${misc:Depends}, 
-		avant-window-navigator
-Recommends: awn-manager (>= 0.2.6-3)
+		avant-window-navigator,
+Recommends: awn-manager (>= 0.3~bzr489),
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
@@ -76,7 +80,7 @@ Description: A collection of applets for avant-window-navigator
     on it. Like the gnome-panel switcher.
   * trasher: Like the trash applet, but uses stacks to allow you to preview 
     your trash.
-  * wobblyzini: Displays a simple animation.
+  * webapplet: Displays a web page.
 
 Package: awn-applets-python-core
 Section: gnome
@@ -86,13 +90,16 @@ Depends: 	${shlibs:Depends},
 		${python:Depends},
 		avant-window-navigator,
 		python-awn,
-		python-awnlib,
-		gnome-icon-theme
-Recommends: 	awn-manager (>= 0.2.6-3),
+		python-awnlib (>= 0.3~bzr912),
+Recommends: 	awn-manager (>= 0.3~bzr489),
 		python-alsaaudio,
 		python-feedparser,
 		python-gst0.10,
-		acpi
+		python-dbus,
+		acpi,
+		python-sqlalchemy,
+		sqlite3,
+Suggests:	awn-applets-python-extras,
 XB-Python-Version: ${python:Versions}
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
@@ -102,19 +109,24 @@ Description: A collection of applets for avant-window-navigator
  This package provides the core Python applets:
   * arss: A Python feed launcher.
   * battery-applet: This applet displays your computers current power status.
-  * calendar: Displays a clock and calendar on the bar, and integrates with 
-    several external calendar applications to display appointments.
+  * cairo-clock: Displays an analog clock.
+  * comics: View your favourite comics on your desktop.
+  * cpufreq: Monitors and controls the CPU frequency. 
+  * DesktopManager: Manages the desktop Wallpaper.
   * file-browser-launcher: Launches the user's file manager or opens bookmarks.
   * lastfm: Stream any of the Last.Fm radios.
   * mail: The Mail Applet lets you check your mail from AWN.
   * media-control: This applet displays album art in a awn dialog while 
     allowing you to control your favorite media players.
+  * media-player: Plays any media files you drop on it.
   * mount-applet: Displays mounts from /etc/fstab and allows one to 
     mount/unmount them.
   * quit-applet: A simple gnome-quit launcher.
   * showdesktop: Hides/shows all of the windows of the current viewport, 
     similar to the showdesktop icon of gnome-panel.
   * stack: Provides a convenient location to place commonly used files.
+  * thinkhdaps: Displays the status of HDAPS. 
+  * todo: Manage a simple To-Do list.
   * volume-control: A fancy volume changing applet that works much like the 
     gnome-panel version.
   * weather: This applet downloads and displays the current weather conditions 
@@ -128,20 +140,31 @@ Depends: 	${shlibs:Depends},
 		${python:Depends},
 		avant-window-navigator,
 		python-awn,
-Recommends: 	awn-manager (>= 0.2.6-3),
+		python-awnlib (>= 0.3~bzr912)
+Recommends: 	awn-manager (>= 0.3~bzr489),
 		python-gnome2-desktop,
-		tsclient
+		tsclient,
+		python-xlib,
+Suggests: 	tomboy,
+Conflicts: awn-applets-python-core (<< 0.3~bzr912)
+Replaces: awn-applets-python-core (<< 0.3~bzr912)
 XB-Python-Version: ${python:Versions}
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).
+  * awn-meebo: Access to the Meebo Instant Messenger.
+  * calendar: Displays a clock and calendar on the bar, and integrates with 
+    several external calendar applications to display appointments.
   * digitalClock: A digital clock and calendar applet.
+  * digg: Access to Digg.
   * media-icon-applet: This applet allows you to add media icons like play,
     pause, and next/back to your awn bar, and control a list of media players.
   * mimenu: Another applet for the Menu.
-  * PyClock: A lightweight clock applet.
-  * python-test: An example applet.
+  * pandora: Plays Pandora internet radio.
+  * pynot: A Simple Python System tray. 
+  * rtm: Use Remember The Milk from AWN. 
+  * tomboy-applet: Control Tomboy with D-Bus.
   * tsclient-app: Lets you browser your terminal services RDP shares.
 
 Package: libawn-extras0
@@ -161,7 +184,7 @@ Depends:	libawn-extras0 (= ${binary:Version}),
 		${misc:Depends},
 		libawn-dev,
 		libgtk2.0-dev,
-		libglib2.0-dev
+		libglib2.0-dev,
 Description: library for avant-window-navigator's applets - development files
  This package provides the include files and static library for the
  libawn-extras library functions.
@@ -185,7 +208,7 @@ Architecture: any
 Depends:	${python:Depends},
 		python-awn-extras,
 		python-gtk2,
-		python-gobject
+		python-gobject,
 XB-Python-Version: ${python:Versions}
 Description: Python utilities for avant-window-navigator's applets
  This packages provides AWNLib, a collection of functions to simplify the 

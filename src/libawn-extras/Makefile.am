@@ -17,7 +17,9 @@ source_c =	\
 	colour.c	\
 	pixbufs.c	\
 	url.c		\
-	notify.c
+	notify.c    \
+	config_shared.c \
+	shared_menuitems.c
 	
 libawn_extrasinc_HEADERS = \
 	$(source_h)
@@ -27,3 +29,8 @@ libawn_extras_la_SOURCES = \
 	
 libawn_extras_la_LIBADD = $(AWN_LIBS) $(LIBNOTIFY_LIBS)
 libawn_extras_la_LDFLAGS = -version-info 0:1:0
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = awn-extras.pc
+
+EXTRA_DIST = awn-extras.pc.in
