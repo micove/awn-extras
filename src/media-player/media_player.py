@@ -18,9 +18,10 @@
 import pygst
 pygst.require("0.10")
 import gst
-import pygtk
 import gtk
-import gconf
+import gtk.glade
+import os
+import gobject
 import sys
 
 import awn
@@ -33,22 +34,40 @@ class App(awn.AppletSimple):
         """Creating the applets core"""
         awn.AppletSimple.__init__(self, uid, orient, height)
         self.toolTip = App.APPLET_NAME
-        self.keylocation = "/apps/avant-window-navigator/applets/media-player/"
         self.set_awn_icon('media-player', 'media-player')
         self.load_keys()
 
         # some initialization stuff
         self.isVideo = False
         self.height = height
+        self.full_window = None
         self.title = awn.awn_title_get_default()
         self.dialog = awn.AppletDialog(self)
         self.dialog_visible = False
 
+        # Recent items menu
+        self.recent_items_menu = gtk.Menu()
+        for item in self.recentItems:
+            menu_item = gtk.MenuItem(item)
+            menu_item.connect("activate", self.playItem)
+            self.recent_items_menu.append(menu_item)
+        self.recent_items_menu.show_all()
         # Popup menu
+        self.recent = gtk.MenuItem("Recent items")
+        self.recent.set_submenu(self.recent_items_menu)
+        self.prefs = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES)
+        self.prefs.connect("activate", self.show_prefs)
         self.about = gtk.ImageMenuItem(gtk.STOCK_ABOUT)
         self.about.connect("activate", self.show_about)
 
         self.popup_menu = self.create_default_menu()
+        self.popup_menu.append(self.recent)
+        self.popup_menu.append(self.prefs)
+
+        item = gtk.SeparatorMenuItem()
+        item.show()
+        self.popup_menu.append(item)
+
         self.popup_menu.append(self.about)
         self.popup_menu.show_all()
 
@@ -69,6 +88,9 @@ class App(awn.AppletSimple):
         self.vbox = gtk.VBox()
         self.da = gtk.DrawingArea()
         self.da.set_size_request(self.videoW, self.videoH)
+        self.da.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse("#000"))
+        self.da.set_events(gtk.gdk.ALL_EVENTS_MASK)
+        self.mouse_handler_id = self.da.connect("button-press-event", self.video_clicked)
         self.vbox.pack_start(self.da)
         # Buttons
         self.button_play = gtk.Button(stock='gtk-media-play')
@@ -76,10 +98,10 @@ class App(awn.AppletSimple):
         self.button_play.connect("clicked", self.button_play_pause_cb)
         self.button_stop.connect("clicked", self.button_stop_cb)
         # Packing Widgets
-        hbox = gtk.HBox()
-        hbox.pack_start(self.button_play)
-        hbox.add(self.button_stop)
-        self.vbox.add(hbox)
+        self.hbbox = gtk.HButtonBox()
+        self.hbbox.pack_start(self.button_play)
+        self.hbbox.pack_start(self.button_stop)
+        self.vbox.add(self.hbbox)
         self.dialog.add(self.vbox)
         # Video can't be played into RGBA widget
         rgbColormap = self.vbox.get_screen().get_rgb_colormap()
@@ -100,6 +122,78 @@ class App(awn.AppletSimple):
                            [("text/uri-list", 0, 0), ("text/plain", 0, 1)],
                            gtk.gdk.ACTION_COPY)
 
+    def playItem(self, widget):
+        label = widget.get_child().get_label()
+        self.stop()
+        self.playbin.set_property("uri", label)
+        self.play_pause()
+
+    def updateRecent(self, uri):
+        if self.recentItems.count(uri) > 0: return
+
+        if len(self.recentItems) < 5:
+            self.recentItems.insert(0, uri)
+        else:
+            self.recentItems.pop()
+            self.recentItems.insert(0, uri)
+
+        menu_items = self.recent_items_menu.get_children()
+        for item in menu_items: self.recent_items_menu.remove(item)
+        for item in self.recentItems:
+            menu_item = gtk.MenuItem(item)
+            menu_item.connect("activate", self.playItem)
+            self.recent_items_menu.append(menu_item)
+        self.recent_items_menu.show_all()
+        self.recent.set_submenu(self.recent_items_menu)
+
+        self.client.set_list(awn.CONFIG_DEFAULT_GROUP, "recentItems",
+                             awn.CONFIG_LIST_STRING, self.recentItems)
+
+    def keyPressed(self, widget, event):
+        if event.keyval == gtk.keysyms.Escape:
+            if self.full_window != None: self.toggleFullscreen()
+            return True
+        elif event.keyval == gtk.keysyms.space:
+            self.play_pause()
+            return True
+
+        return False
+
+    def fullscreenHide(self, widget):
+        if self.da.handler_is_connected(self.mouse_handler_id):
+            self.da.handler_disconnect(self.mouse_handler_id)
+        self.da.reparent(self.vbox)
+        self.vbox.reorder_child(self.da, 0)
+        self.mouse_handler_id = self.da.connect("button-press-event", self.video_clicked)
+
+    def fullscreenDestroy(self, widget):
+        self.full_window = None
+        return False
+
+    def toggleFullscreen(self):
+        if self.full_window == None:
+            self.full_window = gtk.Window()
+            self.full_window.connect("destroy", self.fullscreenDestroy)
+            self.full_window.connect("hide", self.fullscreenHide)
+            self.full_window.connect("key-press-event", self.keyPressed)
+            self.full_window.realize()
+            if self.da.handler_is_connected(self.mouse_handler_id):
+                self.da.handler_disconnect(self.mouse_handler_id)
+            self.da.reparent(self.full_window)
+            self.mouse_handler_id = self.da.connect("button-press-event", self.video_clicked)
+            self.set_flags(gtk.CAN_FOCUS)
+            self.full_window.show()
+            self.full_window.fullscreen()
+            self.full_window.present()
+            self.hideApplet()
+        else:
+            self.full_window.destroy()
+            self.showApplet()
+
+    def video_clicked(self, widget, event):
+        if event.type == gtk.gdk._2BUTTON_PRESS:
+            self.toggleFullscreen()
+
     def showApplet(self):
         self.dialog.stick()
         self.dialog.set_keep_above(True)
@@ -111,17 +205,21 @@ class App(awn.AppletSimple):
         self.dialog_visible = False
         self.dialog.hide()
 
+    def windowPrepared(self):
+        self.isVideo = True
+        if not self.dialog_visible:
+            self.showApplet()
+
     def OnGstMessage(self, bus, message, data = None):
         if message.type in [gst.MESSAGE_EOS, gst.MESSAGE_ERROR]:
             self.playbin.set_state(gst.STATE_NULL)
             self.button_play.set_label('gtk-media-play')
+            if self.full_window:
+                self.full_window.destroy()
             if self.dialog_visible:
                 self.hideApplet()
-        elif message.type is gst.MESSAGE_NEW_CLOCK:
-            if self.isVideo and self.dialog_visible == False:
-                self.showApplet()
-            elif self.isVideo:
-                self.da.set_property("visible", self.isVideo)
+        #elif message.type is gst.MESSAGE_NEW_CLOCK:
+        #    pass
         #elif message.type in [gst.MESSAGE_STATE_CHANGED]:
         #    oldstate, newstate, pending = message.parse_state_changed()
         #    print "state change %s -> %s" % (str(oldstate), str(newstate))
@@ -141,6 +239,7 @@ class App(awn.AppletSimple):
             videosink = message.src
             videosink.set_property("force-aspect-ratio", True)
             videosink.set_xwindow_id(self.da.window.xid)
+            gobject.timeout_add(150, self.windowPrepared)
         return True
 
     def button_press(self, widget, event):
@@ -165,48 +264,46 @@ class App(awn.AppletSimple):
         if not self.isVideo:
             self.hideApplet()
 
-    def key_control(self, keyname, default):
-        """
-        This Method takes the keyname and the defualt
-        value and either loads an existing key -or-
-        loads and saves the defualt key if no key is defined
-        """
-        keylocation_with_name = self.keylocation + keyname
-        result = None
-        try:
-            if default.__class__ is int:
-                val = self.client.get_without_default(keylocation_with_name)
-                if val == None:
-                    result = None
-                else:
-                    result = val.get_int()
-            else:
-                result = self.client.get_string(keylocation_with_name)
+    def resize_video_widget(self, entry, extra = None):
+        if entry['key'] == "videoWidth":
+          if entry['value'] > 1: self.videoW = entry['value']
+        elif entry['key'] == "videoHeight":
+          if entry['value'] > 1: self.videoH = entry['value']
+        else:
+          return
 
-            if result == None and default != None:
-                result = default
-                if default.__class__ is int:
-                    self.client.set_int(keylocation_with_name, result)
-                else:
-                    self.client.set_string(keylocation_with_name, result)
-        except NameError:
-            result = default
-        return result
+        self.da.set_size_request(self.videoW, self.videoH)
 
     def load_keys(self):
         """
-        Loads all the gconf variables by calling the key_control method
+        Loads all the config variables
         """
-        self.client = gconf.client_get_default()
-        self.audiosink = self.key_control("audiosink", "default")
-        self.videosink = self.key_control("videosink", "default")
-        self.videoW = self.key_control("videoWidth", 200)
-        self.videoH = self.key_control("videoHeight", 150)
+        self.client = awn.Config("media-player", None)
 
-        if self.videosink == "default":
-          self.videosink = self.client.get_string("/system/gstreamer/0.10/default/videosink")
-        if self.audiosink == "default":
-          self.audiosink = self.client.get_string("/system/gstreamer/0.10/default/audiosink")
+        self.audiosink = self.client.get_string(awn.CONFIG_DEFAULT_GROUP, 
+          "audiosink")
+        self.videosink = self.client.get_string(awn.CONFIG_DEFAULT_GROUP,
+          "videosink")
+        self.videoW = self.client.get_int(awn.CONFIG_DEFAULT_GROUP, 
+          "videoWidth")
+        self.videoH = self.client.get_int(awn.CONFIG_DEFAULT_GROUP,
+          "videoHeight")
+        self.recentItems = self.client.get_list(awn.CONFIG_DEFAULT_GROUP,
+          "recentItems", awn.CONFIG_LIST_STRING)
+
+        self.client.notify_add(awn.CONFIG_DEFAULT_GROUP,
+          "videoWidth", self.resize_video_widget)
+        self.client.notify_add(awn.CONFIG_DEFAULT_GROUP,
+          "videoHeight", self.resize_video_widget)
+
+        if self.videosink in [None, "", "default"] or self.audiosink in [None, "", "default"]:
+            self.videosink = "autovideosink"
+            self.audiosink = "autoaudiosink"
+
+            self.client.set_string(awn.CONFIG_DEFAULT_GROUP, "videosink",
+              self.videosink)
+            self.client.set_string(awn.CONFIG_DEFAULT_GROUP, "audiosink",
+              self.audiosink)
 
     def play_pause(self):
         oldstate, currentstate, pending = self.playbin.get_state()
@@ -240,8 +337,12 @@ class App(awn.AppletSimple):
         # I wonder why there are zeroes sometimes?
         uri2play = uri2play.strip('\000').strip()
 
+        if uri2play.startswith("udp://@"):
+          uri2play = uri2play.replace("udp://@", "udp://")
+
         self.stop()
         self.playbin.set_property("uri", uri2play)
+        self.updateRecent(uri2play)
         self.play_pause()
 
         context.finish(True, False, time)
@@ -252,6 +353,56 @@ class App(awn.AppletSimple):
 
     def button_stop_cb(self, widget):
         self.stop()
+
+    def show_prefs(self, widget):
+        glade_path =  os.path.join(os.path.dirname(__file__),
+                                   "media-player-prefs.glade")
+        wTree = gtk.glade.XML(glade_path)
+
+        window = wTree.get_widget("dialog1")
+        window.set_icon(self.get_awn_icons().get_icon_simple())
+
+        self.sinkChanged = False
+        def sink_changed(widget):
+            self.sinkChanged = True
+
+        vidEntry = wTree.get_widget("videoSinkEntry")
+        vidEntry.set_text(self.videosink)
+        vidEntry.connect("changed", sink_changed)
+        auEntry = wTree.get_widget("audioSinkEntry")
+        auEntry.set_text(self.audiosink)
+        auEntry.connect("changed", sink_changed)
+
+        def size_changed(widget, isWidth):
+            prop = "videoHeight"
+            if isWidth: prop = "videoWidth"
+
+            self.client.set_int(awn.CONFIG_DEFAULT_GROUP, prop,
+                                widget.get_value())
+
+        wSpin = wTree.get_widget("widthSpin")
+        wSpin.set_value(self.videoW)
+        wSpin.connect("value-changed", size_changed, True)
+        hSpin = wTree.get_widget("heightSpin")
+        hSpin.set_value(self.videoH)
+        hSpin.connect("value-changed", size_changed, False)
+
+        def prefs_closed(closeButton, tuple):
+            win = tuple[0]
+            if self.sinkChanged:
+                dialog = gtk.MessageDialog(win, buttons=gtk.BUTTONS_OK, message_format="Please restart the applet to apply changes to sinks.")
+                dialog.run()
+                dialog.destroy()
+                self.client.set_string(awn.CONFIG_DEFAULT_GROUP,
+                                       "videosink", tuple[1].get_text())
+                self.client.set_string(awn.CONFIG_DEFAULT_GROUP,
+                                       "audiosink", tuple[2].get_text())
+            win.destroy()
+
+        close = wTree.get_widget("closeButton")
+        close.connect("clicked", prefs_closed, (window, vidEntry, auEntry))
+
+        window.show()
 
     def show_about(self, widget):
         about = gtk.AboutDialog()

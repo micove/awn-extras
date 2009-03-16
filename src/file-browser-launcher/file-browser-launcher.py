@@ -26,9 +26,11 @@ import os
 import pygtk
 pygtk.require('2.0')
 import gtk
-import awn
 import subprocess
 import pango
+import urllib
+
+import awn
 import gconfwrapper as awnccwrapper
 
 class App (awn.AppletSimple):
@@ -296,6 +298,7 @@ class App (awn.AppletSimple):
     if self.show_bookmarks==2:
       for x in self.bmarks:
         x = x.replace('file://','').replace('\n','')
+        x = urllib.unquote(x)
         if x not in self.paths and x!=os.path.expanduser('~'):
           if x[0]=='/': #Normal filesystem bookmark, not computer:///,burn:///,network:///,etc.
             if os.path.isdir(self.parse_bookmark(x,'path')):

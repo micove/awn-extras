@@ -1,3 +1,5 @@
+usr/share/avant-window-navigator/applets/animal-farm/*.py
+usr/share/avant-window-navigator/applets/animal-farm/icons/*.svg
 usr/share/avant-window-navigator/applets/arss/*.py
 usr/share/avant-window-navigator/applets/arss/icons/*.png
 usr/share/avant-window-navigator/applets/arss/icons/*.svg
@@ -12,12 +14,14 @@ usr/share/avant-window-navigator/applets/comics/*.py
 usr/share/avant-window-navigator/applets/comics/*.pot
 usr/share/avant-window-navigator/applets/comics/*.po
 usr/share/avant-window-navigator/applets/comics/feeds/
+usr/share/avant-window-navigator/applets/comics/feed/
 usr/share/avant-window-navigator/applets/comics/glade/
 usr/share/avant-window-navigator/applets/comics/icons/
 usr/share/avant-window-navigator/applets/comics/locale/
 usr/share/avant-window-navigator/applets/cpufreq/
 usr/share/avant-window-navigator/applets/DesktopManager/
 usr/share/avant-window-navigator/applets/media-player/*.py
+usr/share/avant-window-navigator/applets/media-player/*.glade
 usr/share/avant-window-navigator/applets/media-player/icons/*.png
 usr/share/avant-window-navigator/applets/file-browser-launcher/*.py
 usr/share/avant-window-navigator/applets/file-browser-launcher/icons/
@@ -35,6 +39,9 @@ usr/share/avant-window-navigator/applets/thinkhdaps/
 usr/share/avant-window-navigator/applets/to-do/
 usr/share/avant-window-navigator/applets/volume-control/
 usr/share/avant-window-navigator/applets/weather/
+usr/share/avant-window-navigator/applets/shinyswitcher/*.py
+usr/share/avant-window-navigator/applets/shinyswitcher/*.glade
+usr/share/avant-window-navigator/applets/animal-farm.desktop
 usr/share/avant-window-navigator/applets/arss.desktop
 usr/share/avant-window-navigator/applets/battery-applet.desktop
 usr/share/avant-window-navigator/applets/file-browser-launcher.desktop

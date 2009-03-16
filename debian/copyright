@@ -17,57 +17,57 @@ Upstream Authors:
     Rodney Cryderman <rcryderman@gmail.com>
 
 Copyright:
-   Copyright (C) 2007 Neil Jagdish Patel
-   Copyright (C) 2006 Christian Hammond <chipx86@chipx86.com>
-   Copyright (C) 2005 John (J5) Palmieri <johnp@redhat.com>
-   Copyright (c) 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
-   Copyright (c) 2007, 2008 Rodney Cryderman <rcryderman@gmail.com>
-   Copyright (C) 2004, 2005 Jody Goldberg (jody@gnome.org)
-   Copyright (c) 2007 Randal Barlow
-   Copyright (c) 2007 Timon David Ter Braak
-   Copyright (C) 2002 Anders Carlsson <andersca@gnu.org>
-   Copyright (c) 2006 Mehdi Abaakouk
-   Copyright (c) 2004  Michiel Sikkes <michiel@eyesopened.nl>,
-   Copyright (c) 2004  Emmanuele Bassi <ebassi@gmail.com>
-   Copyright (C) 1999, 2000, 2001 Eazel, Inc.
-   Copyright (C) 2004 Canonical Ltd.
-   Copyright (C) 2002 Sun Microsystems Inc.
-   Copyright (c) 1997-2002 Alfredo K. Kojima
-   Copyright (c) 2007 Richard "nazrat" Beyer
-   Copyright (c) 2007 Jeff "Jawbreaker" Hubbard
-   Copyright (c) 2007 Nicolas de BONFILS
-   Copyright (C) 2006 Christian Hammond <chipx86@chipx86.com>
-   Copyright (c) 2007 Aantn
-   Copyright (C) 2006 Google Inc.
-   Copyright (c) 2008 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
-   Copyright (c) 2007 Tomas Kramar (kramar.tomas@gmail.com), 
+   Copyright Â© 2007 Neil Jagdish Patel
+   Copyright Â© 2006 Christian Hammond <chipx86@chipx86.com>
+   Copyright Â© 2005 John (J5) Palmieri <johnp@redhat.com>
+   Copyright Â© 2007 Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
+   Copyright Â© 2007, 2008 Rodney Cryderman <rcryderman@gmail.com>
+   Copyright Â© 2004, 2005 Jody Goldberg (jody@gnome.org)
+   Copyright Â© 2007 Randal Barlow
+   Copyright Â© 2007 Timon David Ter Braak
+   Copyright Â© 2002 Anders Carlsson <andersca@gnu.org>
+   Copyright Â© 2006 Mehdi Abaakouk
+   Copyright Â© 2004  Michiel Sikkes <michiel@eyesopened.nl>,
+   Copyright Â© 2004  Emmanuele Bassi <ebassi@gmail.com>
+   Copyright Â© 1999, 2000, 2001 Eazel, Inc.
+   Copyright Â© 2004 Canonical Ltd.
+   Copyright Â© 2002 Sun Microsystems Inc.
+   Copyright Â© 1997-2002 Alfredo K. Kojima
+   Copyright Â© 2007 Richard "nazrat" Beyer
+   Copyright Â© 2007 Jeff "Jawbreaker" Hubbard
+   Copyright Â© 2007 Nicolas de BONFILS
+   Copyright Â© 2006 Christian Hammond <chipx86@chipx86.com>
+   Copyright Â© 2007 Aantn
+   Copyright Â© 2006 Google Inc.
+   Copyright Â© 2008 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
+   Copyright Â© 2007 Tomas Kramar (kramar.tomas@gmail.com), 
                  Jonathan Rauprich (joni@noplu.de)
-   Copyright (C) 2004, 2005 Jody Goldberg (jody@gnome.org)
-   Copyright (C) 2001-2002 Open Source Telecom Corporation.
-   Copyright (c) 2007, 2008 Mark Lee <avant-wn@lazymalevolence.com>
+   Copyright Â© 2004, 2005 Jody Goldberg (jody@gnome.org)
+   Copyright Â© 2001-2002 Open Source Telecom Corporation.
+   Copyright Â© 2007, 2008 Mark Lee <avant-wn@lazymalevolence.com>
    Copyright 2007 Pavel Panchekha <pavpanchekha@gmail.com>
-   Copyright (c) 2007 Arvind Ganga
+   Copyright Â© 2007, 2008 Arvind Ganga
    Copyright 2007 Isaac J. 
-   Copyright (C) 2002  Red Hat, Inc.
-   Copyright (c) 2004 James M. Cape <jcape@ignore-your.tv>
-   Copyright (C) 2007 John Stowers <john.stower@gmail.com>
-   Copyright (c) 2008 Moses Palmér
-   Copyright (C) 2008  onox <denkpadje@gmail.com>
+   Copyright Â© 2002  Red Hat, Inc.
+   Copyright Â© 2004 James M. Cape <jcape@ignore-your.tv>
+   Copyright Â© 2007 John Stowers <john.stower@gmail.com>
+   Copyright Â© 2008 Moses PalmÃ©r
+   Copyright Â© 2008  onox <denkpadje@gmail.com>
    Copyright 2008 Allan Wirth <allanlw@gmail.com>
-   Copyright (c) 2008 Michal Hruby <michal.mhr at gmail.com>
+   Copyright Â© 2008 Michal Hruby <michal.mhr at gmail.com>
    Copyright 2007, 2008 Ryan Rushton (ryancr) <ryan@rrdesign.ca>
-   Copyright (c) 2008 Nathan Howard (triggerhapp@googlemail.com)
+   Copyright Â© 2008 Nathan Howard (triggerhapp@googlemail.com)
          2003-2005 Jon Gelo      (ziljian@users.sourceforge.net)
-   Copyright (c) 2008 Andrew Starr-Bochicchio (andrewsomething) <a.starr.b@gmail.com>
+   Copyright Â© 2008 Andrew Starr-Bochicchio (andrewsomething) <a.starr.b@gmail.com>
    Copyright 2008 Julien Lavergne <julien.lavergne@gmail.com>
 
 The Oxygen Icon Theme (in battery-applet/icons)
-    Copyright (C) 2007 David Vignoni <david@icon-king.com>
-    Copyright (C) 2007 Johann Ollivier Lapeyre <johann@oxygen-icons.org>
-    Copyright (C) 2007 Kenneth Wimer <kwwii@bootsplash.org>
-    Copyright (C) 2007 Nuno Fernades Pinheiro <nf.pinheiro@gmail.com>
-    Copyright (C) 2007 Riccardo Iaconelli <riccardo@oxygen-icons.org>
-    Copyright (C) 2007 David Miller <miller@oxygen-icons.org>
+    Copyright Â© 2007 David Vignoni <david@icon-king.com>
+    Copyright Â© 2007 Johann Ollivier Lapeyre <johann@oxygen-icons.org>
+    Copyright Â© 2007 Kenneth Wimer <kwwii@bootsplash.org>
+    Copyright Â© 2007 Nuno Fernades Pinheiro <nf.pinheiro@gmail.com>
+    Copyright Â© 2007 Riccardo Iaconelli <riccardo@oxygen-icons.org>
+    Copyright Â© 2007 David Miller <miller@oxygen-icons.org>
 
 
 Licence for applets and folders	arss
@@ -182,7 +182,7 @@ License (for others files):
 
    See also /usr/share/common-licenses/GPL-2 or COPYING
 
-The Debian packaging is (C) 2007, Julien Lavergne <julien.lavergne@gmail.com> 
+The Debian packaging is Â© 2007, Julien Lavergne <julien.lavergne@gmail.com> 
 and is licensed under the GPL, see `/usr/share/common-licenses/GPL-2'.
 
 ===================COMPLETE LICENCES==============================
@@ -359,9 +359,9 @@ Creative Commons Attribution-Share Alike 3.0 License.
    apart from the Work itself to be made subject to the terms of this License. 
    If You create a Collection, upon notice from any Licensor You must, to the 
    extent practicable, remove from the Collection any credit as required by 
-   Section 4(c), as requested. If You create an Adaptation, upon notice from 
+   Section 4Â©, as requested. If You create an Adaptation, upon notice from 
    any Licensor You must, to the extent practicable, remove from the Adaptation
-   any credit as required by Section 4(c), as requested.
+   any credit as required by Section 4Â©, as requested.
 
    2. You may Distribute or Publicly Perform an Adaptation only under the terms
    of: 
@@ -411,7 +411,7 @@ Creative Commons Attribution-Share Alike 3.0 License.
    (iv) , consistent with Ssection 3(b), in the case of an Adaptation, a credit
    identifying the use of the Work in the Adaptation (e.g., "French translation
    of the Work by Original Author," or "Screenplay based on original Work by 
-   Original Author"). The credit required by this Section 4(c) may be 
+   Original Author"). The credit required by this Section 4Â© may be 
    implemented in any reasonable manner; provided, however, that in the case 
    of a Adaptation or Collection, at a minimum such credit will appear, if a 
    credit for all contributing authors of the Adaptation or Collection 

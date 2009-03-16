@@ -19,11 +19,12 @@ Build-Depends: 	debhelper (>= 5),
 		python-dev,
 		python-gtk2-dev,
 		python-cairo-dev,
-		python-elementtree | python2.5
-		libtrackerclient-dev,
+		python-elementtree | python (>= 2.5),
 		awn-manager (>= 0.2.6),
-		valac (>= 0.3.4),
+		valac (>= 0.5.4),
 		libwebkit-dev,
+		libglade2-dev,
+		libgnomeui-dev
 Standards-Version: 3.8.0
 XS-Python-Version: >= 2.4
 Homepage: https://launchpad.net/awn-extras
@@ -31,8 +32,7 @@ Homepage: https://launchpad.net/awn-extras
 Package: awn-applets-c-core
 Section: gnome
 Architecture: any
-Depends: 	libawn-extras0 (= ${binary:Version}),
-		${shlibs:Depends}, 
+Depends: 	${shlibs:Depends}, 
 		${misc:Depends}, 
 		avant-window-navigator,
 Recommends: 	awn-manager (>= 0.3~bzr489),
@@ -51,6 +51,8 @@ Description: A collection of applets for avant-window-navigator
   * awnterm: A pop-up terminal that lives in AWN. 
   * cairo_main_menu: Displays a list of all the applications on your 
     computer in a standard menu format.
+  * notification-area : Replaces the gnome-panel notification area and shows
+    it right on your dock 
   * plugger: Displays mounted volumes and allows you to browse them.
   * separator: Display a white line to separate applets.
   * shinyswitcher: A workspace switcher supporting compiz and other WMs.
@@ -59,8 +61,7 @@ Description: A collection of applets for avant-window-navigator
 Package: awn-applets-c-extras
 Section: gnome
 Architecture: any
-Depends: 	libawn-extras0 (= ${binary:Version}),
-		${shlibs:Depends}, 
+Depends: 	${shlibs:Depends}, 
 		${misc:Depends}, 
 		avant-window-navigator,
 Recommends: awn-manager (>= 0.3~bzr489),
@@ -70,14 +71,10 @@ Description: A collection of applets for avant-window-navigator
  applets in the gnome-panel).
  .
  This package contains extras applets written in C:
-  * cairo_main_menu_classic: Displays a list of all the applications on your 
-    computer in a standard menu format - older version.
   * filebrowser: Displays the contents of a directory and allows you to 
     navigate folders.
   * main-menu: Display a list of all the applications on your computer.
   * places: Displays shortcuts in buttons.
-  * switcher: Display all the viewport and enable to switch to them by clicking
-    on it. Like the gnome-panel switcher.
   * trasher: Like the trash applet, but uses stacks to allow you to preview 
     your trash.
   * webapplet: Displays a web page.
@@ -90,16 +87,19 @@ Depends: 	${shlibs:Depends},
 		${python:Depends},
 		avant-window-navigator,
 		python-awn,
-		python-awnlib (>= 0.3~bzr912),
+		python-awnlib (>= 0.3.2)
 Recommends: 	awn-manager (>= 0.3~bzr489),
 		python-alsaaudio,
 		python-feedparser,
 		python-gst0.10,
 		python-dbus,
-		acpi,
+		hal,
 		python-sqlalchemy,
 		sqlite3,
-Suggests:	awn-applets-python-extras,
+		python-dateutil,
+		libgweather-common,
+		gnome-applets
+Suggests:	awn-applets-python-extras
 XB-Python-Version: ${python:Versions}
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
@@ -107,6 +107,7 @@ Description: A collection of applets for avant-window-navigator
  applets in the gnome-panel).
  .
  This package provides the core Python applets:
+  * animal-farm : Various animals tell your fortune. 
   * arss: A Python feed launcher.
   * battery-applet: This applet displays your computers current power status.
   * cairo-clock: Displays an analog clock.
@@ -140,10 +141,10 @@ Depends: 	${shlibs:Depends},
 		${python:Depends},
 		avant-window-navigator,
 		python-awn,
-		python-awnlib (>= 0.3~bzr912)
+		python-awnlib (>= 0.3.2),
+		fortune
 Recommends: 	awn-manager (>= 0.3~bzr489),
 		python-gnome2-desktop,
-		tsclient,
 		python-xlib,
 Suggests: 	tomboy,
 Conflicts: awn-applets-python-core (<< 0.3~bzr912)
@@ -165,7 +166,6 @@ Description: A collection of applets for avant-window-navigator
   * pynot: A Simple Python System tray. 
   * rtm: Use Remember The Milk from AWN. 
   * tomboy-applet: Control Tomboy with D-Bus.
-  * tsclient-app: Lets you browser your terminal services RDP shares.
 
 Package: libawn-extras0
 Section: libs

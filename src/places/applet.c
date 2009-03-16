@@ -230,8 +230,8 @@ void init_config(Places * places)
     GtkWidget *top_win = GTK_WIDGET(places->applet);
     places->normal_colours.base = gdkcolor_to_awncolor(&top_win->style->base[0]);
     places->normal_colours.text = gdkcolor_to_awncolor(&top_win->style->fg[0]);
-    places->hover_colours.base = gdkcolor_to_awncolor(&top_win->style->base[GTK_STATE_PRELIGHT]);
-    places->hover_colours.text = gdkcolor_to_awncolor(&top_win->style->fg[GTK_STATE_PRELIGHT]);
+    places->hover_colours.base = gdkcolor_to_awncolor(&top_win->style->bg[GTK_STATE_ACTIVE]);
+    places->hover_colours.text = gdkcolor_to_awncolor(&top_win->style->fg[GTK_STATE_ACTIVE]);
     places->border_colour = gdkcolor_to_awncolor(&top_win->style->text_aa[0]);
     places->menu_item_gradient_factor = 1.0;
   }
@@ -596,44 +596,38 @@ static void get_places(Places * places)
 
     while (getline(&line, &len, handle) != -1)
     {
-      char *p;
-      p = line + strlen(line);
-
-      if (p != line)
-      {
-        while (!isalpha(*p) && (p != line))
-        {
-          *p = '\0';
-          p--;
-        }
-
-        while ((*p != '/') && (p != line))
-          p--;
-
-        if (p != line)
-        {
-          char * tmp;
-          p++;
-          item = g_malloc(sizeof(Menu_Item));
-
-          for (tmp = p; *tmp && (*tmp != ' ');tmp++);
-
-          if (*tmp == ' ')
-          {
-            *tmp = '\0';
-            p = tmp + 1;
-          }
-
-          item->text = urldecode(g_strdup(p), NULL);
-
+			gchar ** tokens;
+			tokens = g_strsplit (line," ",2);
+			
+			if (tokens)
+			{
+				if (tokens[0] )
+				{
+          gchar * shell_quoted;
+					g_strstrip(tokens[0]);
+          item = g_malloc(sizeof(Menu_Item));					
+					if (tokens[1])
+					{
+						g_strstrip(tokens[1]);
+        		item->text = g_strdup(tokens[1]);
+					}
+					else
+					{
+						item->text = urldecode(g_path_get_basename (tokens[0]), NULL);
+					}
           item->icon = g_strdup("stock_folder");
-          item->exec = g_strdup_printf("%s %s", places->file_manager, line);
-          item->comment = g_strdup(line);
+          shell_quoted = g_shell_quote(tokens[0]);
+          item->exec = g_strdup_printf("%s %s", places->file_manager, shell_quoted);
+          g_free(shell_quoted);
+          item->comment = g_strdup(tokens[0]);
           item->places = places;
           places->menu_list = g_slist_append(places->menu_list, item);
-        }
-      }
-
+					
+				}
+				
+			}
+			
+			g_strfreev (tokens);
       free(line);
 
       line = NULL;

@@ -1,14 +1,12 @@
-usr/share/avant-window-navigator/applets/tsclient-app/
 usr/share/avant-window-navigator/applets/mimenu/*.py
 usr/share/avant-window-navigator/applets/mimenu/icons/*.svg
-usr/share/avant-window-navigator/applets/digitalClock/
+usr/share/avant-window-navigator/applets/digitalClock/*
 usr/share/avant-window-navigator/applets/media-icon-back/*.py
 usr/share/avant-window-navigator/applets/media-icon-back/icons/*.svg
 usr/share/avant-window-navigator/applets/media-icon-next/*.py
 usr/share/avant-window-navigator/applets/media-icon-next/icons/*.svg
 usr/share/avant-window-navigator/applets/media-icon-play/*.py
 usr/share/avant-window-navigator/applets/media-icon-play/icons/*.svg
-usr/share/avant-window-navigator/applets/tsclient-app.desktop
 usr/share/avant-window-navigator/applets/mimenu.desktop
 usr/share/avant-window-navigator/applets/digitalClock.desktop
 usr/share/avant-window-navigator/applets/media-icon-back.desktop
@@ -24,6 +22,8 @@ usr/share/avant-window-navigator/applets/digg/
 usr/share/avant-window-navigator/applets/digg.desktop
 usr/share/avant-window-navigator/applets/pynot/*.py
 usr/share/avant-window-navigator/applets/pynot/*.png
+usr/share/avant-window-navigator/applets/pynot/*.svg
+usr/share/avant-window-navigator/applets/pynot/*.glade
 usr/share/avant-window-navigator/applets/pynot.desktop
 usr/share/avant-window-navigator/applets/rtm/
 usr/share/avant-window-navigator/applets/rtm.desktop
@@ -31,6 +31,7 @@ usr/share/avant-window-navigator/applets/tomboy-applet/
 usr/share/avant-window-navigator/applets/tomboy-applet.desktop
 usr/share/avant-window-navigator/applets/calendar/
 usr/share/avant-window-navigator/applets/calendar.desktop
+usr/share/icons/hicolor/scalable/apps/awn-applet-digital-clock.svg
 etc/gconf/schemas/digitalClock.schemas
 etc/gconf/schemas/pynot.schemas
 #

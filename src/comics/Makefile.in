@@ -16,6 +16,7 @@
 
 # vim: set ft=automake :
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
@@ -34,8 +35,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(dist_applet_DATA) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.desktop-files \
+DIST_COMMON = $(dist_applet_DATA) $(dist_applet_SCRIPTS) \
+	$(dist_custom_icon_DATA) $(dist_feed_DATA) $(dist_feeds_DATA) \
+	$(dist_glade_DATA) $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(top_srcdir)/Makefile.common \
+	$(top_srcdir)/Makefile.desktop-files \
 	$(top_srcdir)/Makefile.python-applet COPYING
 subdir = src/comics
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,6 +51,12 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
+am__installdirs = "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(desktopdir)" \
+	"$(DESTDIR)$(appletdir)" "$(DESTDIR)$(custom_icondir)" \
+	"$(DESTDIR)$(feeddir)" "$(DESTDIR)$(feedsdir)" \
+	"$(DESTDIR)$(gladedir)" "$(DESTDIR)$(icondir)"
+dist_appletSCRIPT_INSTALL = $(INSTALL_SCRIPT)
+SCRIPTS = $(dist_applet_SCRIPTS)
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -62,12 +72,16 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(appletdir)" \
-	"$(DESTDIR)$(icondir)"
 desktopDATA_INSTALL = $(INSTALL_DATA)
 dist_appletDATA_INSTALL = $(INSTALL_DATA)
+dist_custom_iconDATA_INSTALL = $(INSTALL_DATA)
+dist_feedDATA_INSTALL = $(INSTALL_DATA)
+dist_feedsDATA_INSTALL = $(INSTALL_DATA)
+dist_gladeDATA_INSTALL = $(INSTALL_DATA)
 iconDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(desktop_DATA) $(dist_applet_DATA) $(icon_DATA)
+DATA = $(desktop_DATA) $(dist_applet_DATA) $(dist_custom_icon_DATA) \
+	$(dist_feed_DATA) $(dist_feeds_DATA) $(dist_glade_DATA) \
+	$(icon_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 ETAGS = etags
@@ -75,10 +89,9 @@ CTAGS = ctags
 DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-AFFINITY_CFLAGS = @AFFINITY_CFLAGS@
-AFFINITY_LIBS = @AFFINITY_LIBS@
 ALL_LINGUAS = @ALL_LINGUAS@
 AMTAR = @AMTAR@
+APPLETSDIR = @APPLETSDIR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -87,6 +100,8 @@ AWK = @AWK@
 AWN_BINDIR = @AWN_BINDIR@
 AWN_CFLAGS = @AWN_CFLAGS@
 AWN_LIBS = @AWN_LIBS@
+AWN_SYSTEM_MONITOR_CFLAGS = @AWN_SYSTEM_MONITOR_CFLAGS@
+AWN_SYSTEM_MONITOR_LIBS = @AWN_SYSTEM_MONITOR_LIBS@
 AWN_VAPIDIR = @AWN_VAPIDIR@
 CAIRO_MENU_GNOME_CFLAGS = @CAIRO_MENU_GNOME_CFLAGS@
 CAIRO_MENU_GNOME_LIBS = @CAIRO_MENU_GNOME_LIBS@
@@ -124,6 +139,8 @@ FILEBROWSER_CFLAGS = @FILEBROWSER_CFLAGS@
 FILEBROWSER_LIBS = @FILEBROWSER_LIBS@
 GCC_FLAGS = @GCC_FLAGS@
 GCONFTOOL = @GCONFTOOL@
+GCONF_CFLAGS = @GCONF_CFLAGS@
+GCONF_LIBS = @GCONF_LIBS@
 GCONF_SCHEMA_CONFIG_SOURCE = @GCONF_SCHEMA_CONFIG_SOURCE@
 GCONF_SCHEMA_FILE_DIR = @GCONF_SCHEMA_FILE_DIR@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
@@ -142,7 +159,6 @@ GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
 GSTREAMER_LIBS = @GSTREAMER_LIBS@
 GTOP_CFLAGS = @GTOP_CFLAGS@
 GTOP_LIBS = @GTOP_LIBS@
-ICONDIR = @ICONDIR@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -210,6 +226,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PLUGGER_CFLAGS = @PLUGGER_CFLAGS@
+PLUGGER_LIBS = @PLUGGER_LIBS@
 POFILES = @POFILES@
 POSUB = @POSUB@
 PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
@@ -229,8 +247,6 @@ PYTHON_LDFLAGS = @PYTHON_LDFLAGS@
 PYTHON_SITE_PKG = @PYTHON_SITE_PKG@
 PYTHON_VERSION = @PYTHON_VERSION@
 RANLIB = @RANLIB@
-RSVG_CFLAGS = @RSVG_CFLAGS@
-RSVG_LIBS = @RSVG_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -244,6 +260,8 @@ TASKMAND_APPLET_CFLAGS = @TASKMAND_APPLET_CFLAGS@
 TASKMAND_APPLET_LIBS = @TASKMAND_APPLET_LIBS@
 TASKMAND_CFLAGS = @TASKMAND_CFLAGS@
 TASKMAND_LIBS = @TASKMAND_LIBS@
+TRASHER_CFLAGS = @TRASHER_CFLAGS@
+TRASHER_LIBS = @TRASHER_LIBS@
 TRASH_CFLAGS = @TRASH_CFLAGS@
 TRASH_LIBS = @TRASH_LIBS@
 USE_NLS = @USE_NLS@
@@ -287,7 +305,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-icondir = @icondir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -310,36 +327,74 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = feeds glade locale icons
+
+# vim: set ts=8 sts=8 sw=8 :
+SUBDIRS = locale
 APPLET_NAME = comics
 APPLET_MAIN_FILE = comics.py
 
-# vim: set ft=automake :
+# vim: set ft=automake ts=8 sts=8 sw=8 :
 NULL = 
+applet_datadir = $(APPLETSDIR)/$(APPLET_NAME)
+
+# for now, assume that icons = SVG
 icon_DATA = $(APPLET_ICONS)
+icondir = $(datadir)/icons/hicolor/scalable/apps
 desktopdir = $(datadir)/avant-window-navigator/applets
 desktop_DATA = $(APPLET_NAME).desktop
-EXTRA_DIST = $(icon_DATA) $(desktop_DATA).in $(APPLET_MAIN_FILE)
+EXTRA_DIST = \
+	$(icon_DATA) \
+	$(desktop_DATA).in
+
 CLEANFILES = $(desktop_DATA)
-appletdir = $(datadir)/avant-window-navigator/applets/$(APPLET_NAME)
+
+# vim: set ft=automake ts=8 sts=8 sw=8:
+appletdir = $(applet_datadir)
+dist_applet_SCRIPTS = $(APPLET_MAIN_FILE)
 dist_applet_DATA = \
-		comics.pot  \
-		comics_add.py      \
-		comics_manage.py   \
-		comics_view.py      \
-		COPYING      \
-		downloader.py   \
-		feed.py	\
-		qfeed.py	\
-		settings.py	\
-		shared.py	\
-		sv_SE.po	\
-		widgets.py 
+	comics.pot	\
+	comics_add.py	\
+	comics_manage.py\
+	comics_view.py	\
+	COPYING		\
+	downloader.py	\
+	shared.py	\
+	sv_SE.po	\
+	widgets.py	\
+	$(NULL)
+
+feeddir = $(applet_datadir)/feed
+dist_feed_DATA = \
+	feed/__init__.py	\
+	feed/basic.py		\
+	feed/rss.py		\
+	feed/settings.py	\
+	$(NULL)
+
+feedsdir = $(applet_datadir)/feeds
+dist_feeds_DATA = $(wildcard feeds/*.feed)
+gladedir = $(applet_datadir)/glade
+dist_glade_DATA = \
+	glade/add.glade		\
+	glade/comics.svg	\
+	glade/logo.svg		\
+	glade/main.glade	\
+	glade/manage.glade	\
+	glade/manage.svg	\
+	glade/view.glade	\
+	$(NULL)
+
+custom_icondir = $(applet_datadir)/icons
+dist_custom_icon_DATA = \
+	icons/comics-icon.svg	\
+	icons/default.svg	\
+	icons/error.svg		\
+	$(NULL)
 
 all: all-recursive
 
 .SUFFIXES:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.python-applet $(top_srcdir)/Makefile.desktop-files $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.python-applet $(top_srcdir)/Makefile.common $(top_srcdir)/Makefile.desktop-files $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -368,6 +423,25 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+install-dist_appletSCRIPTS: $(dist_applet_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	test -z "$(appletdir)" || $(MKDIR_P) "$(DESTDIR)$(appletdir)"
+	@list='$(dist_applet_SCRIPTS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  if test -f $$d$$p; then \
+	    f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
+	    echo " $(dist_appletSCRIPT_INSTALL) '$$d$$p' '$(DESTDIR)$(appletdir)/$$f'"; \
+	    $(dist_appletSCRIPT_INSTALL) "$$d$$p" "$(DESTDIR)$(appletdir)/$$f"; \
+	  else :; fi; \
+	done
+
+uninstall-dist_appletSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_applet_SCRIPTS)'; for p in $$list; do \
+	  f=`echo "$$p" | sed 's|^.*/||;$(transform)'`; \
+	  echo " rm -f '$(DESTDIR)$(appletdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appletdir)/$$f"; \
+	done
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -407,6 +481,74 @@ uninstall-dist_appletDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appletdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appletdir)/$$f"; \
+	done
+install-dist_custom_iconDATA: $(dist_custom_icon_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(custom_icondir)" || $(MKDIR_P) "$(DESTDIR)$(custom_icondir)"
+	@list='$(dist_custom_icon_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_custom_iconDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(custom_icondir)/$$f'"; \
+	  $(dist_custom_iconDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(custom_icondir)/$$f"; \
+	done
+
+uninstall-dist_custom_iconDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_custom_icon_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(custom_icondir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(custom_icondir)/$$f"; \
+	done
+install-dist_feedDATA: $(dist_feed_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(feeddir)" || $(MKDIR_P) "$(DESTDIR)$(feeddir)"
+	@list='$(dist_feed_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_feedDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(feeddir)/$$f'"; \
+	  $(dist_feedDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(feeddir)/$$f"; \
+	done
+
+uninstall-dist_feedDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_feed_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(feeddir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(feeddir)/$$f"; \
+	done
+install-dist_feedsDATA: $(dist_feeds_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(feedsdir)" || $(MKDIR_P) "$(DESTDIR)$(feedsdir)"
+	@list='$(dist_feeds_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_feedsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(feedsdir)/$$f'"; \
+	  $(dist_feedsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(feedsdir)/$$f"; \
+	done
+
+uninstall-dist_feedsDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_feeds_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(feedsdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(feedsdir)/$$f"; \
+	done
+install-dist_gladeDATA: $(dist_glade_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(gladedir)" || $(MKDIR_P) "$(DESTDIR)$(gladedir)"
+	@list='$(dist_glade_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_gladeDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(gladedir)/$$f'"; \
+	  $(dist_gladeDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(gladedir)/$$f"; \
+	done
+
+uninstall-dist_gladeDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_glade_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(gladedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(gladedir)/$$f"; \
 	done
 install-iconDATA: $(icon_DATA)
 	@$(NORMAL_INSTALL)
@@ -601,10 +743,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(DATA)
+all-am: Makefile $(SCRIPTS) $(DATA)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(icondir)"; do \
+	for dir in "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(custom_icondir)" "$(DESTDIR)$(feeddir)" "$(DESTDIR)$(feedsdir)" "$(DESTDIR)$(gladedir)" "$(DESTDIR)$(icondir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -651,11 +793,13 @@ info: info-recursive
 info-am:
 
 install-data-am: install-desktopDATA install-dist_appletDATA \
-	install-iconDATA
+	install-dist_appletSCRIPTS install-dist_custom_iconDATA \
+	install-dist_feedDATA install-dist_feedsDATA \
+	install-dist_gladeDATA install-iconDATA
 
 install-dvi: install-dvi-recursive
 
-install-exec-am: install-exec-local
+install-exec-am:
 
 install-html: install-html-recursive
 
@@ -686,7 +830,9 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-desktopDATA uninstall-dist_appletDATA \
-	uninstall-iconDATA uninstall-local
+	uninstall-dist_appletSCRIPTS uninstall-dist_custom_iconDATA \
+	uninstall-dist_feedDATA uninstall-dist_feedsDATA \
+	uninstall-dist_gladeDATA uninstall-iconDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
 	install-strip
@@ -697,25 +843,22 @@ uninstall-am: uninstall-desktopDATA uninstall-dist_appletDATA \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-desktopDATA install-dist_appletDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-exec-local install-html install-html-am \
-	install-iconDATA install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am tags tags-recursive uninstall uninstall-am \
+	install-dist_appletSCRIPTS install-dist_custom_iconDATA \
+	install-dist_feedDATA install-dist_feedsDATA \
+	install-dist_gladeDATA install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-iconDATA \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am \
 	uninstall-desktopDATA uninstall-dist_appletDATA \
-	uninstall-iconDATA uninstall-local
+	uninstall-dist_appletSCRIPTS uninstall-dist_custom_iconDATA \
+	uninstall-dist_feedDATA uninstall-dist_feedsDATA \
+	uninstall-dist_gladeDATA uninstall-iconDATA
 
 @INTLTOOL_DESKTOP_RULE@
-
-install-exec-local:
-	test -d "$(DESTDIR)$(appletdir)" || mkdir -p "$(DESTDIR)$(appletdir)"
-	$(INSTALL) -m 755 "$(APPLET_MAIN_FILE)" "$(DESTDIR)$(appletdir)/$(APPLET_MAIN_FILE)"
-
-uninstall-local:
-	rm -f "$(DESTDIR)$(appletdir)/$(APPLET_MAIN_FILE)"
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

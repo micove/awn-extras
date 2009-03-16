@@ -6,7 +6,7 @@ m4_define(pycairo_required_version,      1.0.2) dnl or 1.1.7
 m4_define(pygtk_required_version,        2.10.0)
 
 
-AC_INIT(awn-extras-applets, 0.3.1, [])
+AC_INIT(awn-extras-applets, 0.3.2.1, [])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR(src)
 AM_CONFIG_HEADER(config.h)
@@ -75,13 +75,13 @@ AM_CONDITIONAL(WITH_WEBKIT, test "$with_webkit" != "no")
 PKG_CHECK_MODULES(AWN, [awn >= 0.3.1])
 #trash
 PKG_CHECK_MODULES(LIBGLADE, [libglade-2.0])
-# awn-notification-daemon, shiny-switcher, standalone-launcher, switcher, taskmand
+# notification-daemon, shiny-switcher, standalone-launcher, taskmand
 PKG_CHECK_MODULES(LIBWNCK, [libwnck-1.0])
-# affinity, awn-notification-daemon, shiny-switcher, trash
+# affinity, notification-daemon, shiny-switcher, trash
 PKG_CHECK_MODULES(LIBX11, [x11])
 PKG_CHECK_MODULES(COMPOSITE, [xcomposite])
 PKG_CHECK_MODULES(XRENDER, [xrender])
-# awn-notification-daemon, cairo-menu
+# cairo-menu, notification-daemon
 PKG_CHECK_MODULES(LIBSEXY, [libsexy])
 PKG_CHECK_MODULES(LIBNOTIFY, [libnotify])
 # standalone-launcher, taskmand, taskmand-applet
@@ -89,19 +89,26 @@ PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1])
 # awn-terminal
 PKG_CHECK_MODULES(VTE, [vte])
 
-if test "$with_gconf" != "no" -o "$with_gnome" != "no"; then
-# filebrowser
+# awn-system-monitor, cairo-menu, filebrowser, notification-daemon, plugger, trasher
+if test "$with_gconf" != "no" -a "$config_backend" != "GConf"; then
+  PKG_CHECK_MODULES(GCONF, [gconf-2.0])
+  gconf=gconf-2.0
+fi
+
+if test "$with_gconf" != "no" -a "$with_gnome" != "no"; then
+# affinity, filebrowser
 PKG_CHECK_MODULES(GNOMEUI, [libgnomeui-2.0])
 # filebrowser
 PKG_CHECK_MODULES(GNOME_DESKTOP, [gnome-desktop-2.0])
-# filebrowser, cairo-menu, trash, trasher
+# filebrowser, cairo-menu, plugger, trash, trasher
 PKG_CHECK_MODULES(GNOME_VFS, [gnome-vfs-2.0])
-# clock
-PKG_CHECK_MODULES(RSVG, [librsvg-2.0])
-# main-menu, cairo-menu
-PKG_CHECK_MODULES(GNOME_MENU, [libgnome-menu])
 # awn-system-monitor
 PKG_CHECK_MODULES(GTOP, [libgtop-2.0])
+fi
+
+if test "$with_gnome" != "no"; then
+# main-menu, cairo-menu
+PKG_CHECK_MODULES(GNOME_MENU, [libgnome-menu])
 fi
 
 webkit_module=no
@@ -117,9 +124,9 @@ AC_SUBST(WEBKIT_CFLAGS)
 AC_SUBST(WEBKIT_LIBS)
 fi
 
-#awn-notification-daemon
+# notification-daemon
 AC_ARG_ENABLE(sound,
-    AS_HELP_STRING([--enable-sound=auto|gstreamer|no],[Sound support for awn-notification-daemon (default=auto)])
+    AS_HELP_STRING([--enable-sound=auto|gstreamer|no],[Sound support for notification-daemon (default=auto)])
 )
 
 if test x$enable_sound != xno -a x$enable_sound != xgstreamer; then
@@ -144,36 +151,19 @@ if test x$enable_sound != xno; then
 fi
 
 
-# affinity
-affinity_pkgs="x11"
-affinity_beagle_pkg="libbeagle-0.0 >= affinity_beagle_min_version"
-AC_MSG_CHECKING([for optional Beagle support (Affinity)])
-PKG_CHECK_EXISTS([$affinity_beagle_pkg], [
-    AC_DEFINE(HAVE_BEAGLE, 1, [Define to enable beagle support])
-    have_beagle=yes
-    affinity_pkgs="$affinity_pkgs $affinity_beagle_pkg"
-], [have_beagle=no])
-AC_MSG_RESULT([$have_beagle])
-AM_CONDITIONAL(HAVE_BEAGLE, test "$have_beagle" = "yes")
-
-affinity_tracker_pkg="tracker >= affinity_tracker_min_version"
-AC_MSG_CHECKING([for optional Tracker support (Affinity)])
-PKG_CHECK_EXISTS([$affinity_tracker_pkg], [
-    AC_DEFINE(HAVE_TRACKER, 1, [Define to enable tracker support])
-    have_tracker=yes
-    affinity_pkgs="$affinity_pkgs $affinity_tracker_pkg"
-], [have_tracker=no])
-AC_MSG_RESULT([$have_tracker])
-AM_CONDITIONAL(HAVE_TRACKER, test "$have_tracker" = "yes")
 
 # applet-specific libraries
-PKG_CHECK_MODULES(AFFINITY, [$affinity_pkgs])
-if test "$with_gconf" != "no" -o "$with_gnome" != "no"; then
-PKG_CHECK_MODULES(FILEBROWSER, [gnome-desktop-2.0 gnome-vfs-2.0 libgnomeui-2.0])
-PKG_CHECK_MODULES(CAIRO_MENU_GNOME, [gnome-vfs-2.0 libgnome-menu libnotify libsexy])
+if test "$with_gconf" != "no" -a "$with_gnome" != "no"; then
+PKG_CHECK_MODULES(AWN_SYSTEM_MONITOR, [$gconf libgtop-2.0])
+PKG_CHECK_MODULES(FILEBROWSER, [$gconf gnome-desktop-2.0 gnome-vfs-2.0 libgnomeui-2.0])
+PKG_CHECK_MODULES(CAIRO_MENU_GNOME, [$gconf gnome-vfs-2.0 libgnome-menu libnotify libsexy])
+PKG_CHECK_MODULES(PLUGGER, [$gconf gnome-vfs-2.0])
 PKG_CHECK_MODULES(TRASH, [gnome-vfs-2.0 libglade-2.0 x11])
+PKG_CHECK_MODULES(TRASHER, [$gconf gnome-vfs-2.0])
 fi
-PKG_CHECK_MODULES(NOTIFICATION_DAEMON, [$gstreampkg libnotify libsexy libwnck-1.0 x11])
+if test "$with_gconf" != "no"; then
+PKG_CHECK_MODULES(NOTIFICATION_DAEMON, [$gconf $gstreampkg libnotify libsexy libwnck-1.0 x11])
+fi
 PKG_CHECK_MODULES(SHINY_SWITCHER, [libwnck-1.0 x11 xcomposite xrender])
 PKG_CHECK_MODULES(STANDALONE_LAUNCHER, [dbus-glib-1 libwnck-1.0])
 PKG_CHECK_MODULES(TASKMAND, [dbus-glib-1 libwnck-1.0])
@@ -194,6 +184,8 @@ if test x${enable_pymod_checks} = xyes; then
     AM_CHECK_PYMOD(pynotify,,,AC_MSG_ERROR([python module pynotify required (python-notify)]))
     # arss, mail
     AM_CHECK_PYMOD(feedparser,,,AC_MSG_ERROR([python module feedparser required (python-feedparser)]))
+    # cairo-clock
+    AM_CHECK_PYMOD(rsvg,,,AC_MSG_ERROR([python module rsvg required (gnome-python-desktop)]))
     if test "$with_gnome" != "no"; then
     # MiMenu
     AM_CHECK_PYMOD(gmenu,,,AC_MSG_ERROR([python module gmenu required]))
@@ -206,10 +198,12 @@ if test x${enable_pymod_checks} = xyes; then
     # stacks
     AM_CHECK_PYMOD(gnome.ui,,,AC_MSG_ERROR([python module gnome.ui required]))
     # awn-meebo, digg, pandora
-    AM_CHECK_PYMOD(gtkmozembed,,,AC_MSG_ERROR([python module gtkmozembed required]))
+    AM_CHECK_PYMOD(gtkmozembed,,,AC_MSG_ERROR([python module gtkmozembed required (python-gnome2-extras)]))
     fi
     if test "$with_gconf" != "no"; then
-    # lastfm
+    # calendar, media-control, media-player, mount-applet, stacks
+    AM_CHECK_PYMOD(gconf,,,AC_MSG_ERROR([python module gconf required]))
+    # lastfm, media-player
     AM_CHECK_PYMOD(gst,,,AC_MSG_ERROR([python module gstreamer required (python-gst0.10)]))
     fi
 fi
@@ -225,14 +219,18 @@ config_backend=`$PKG_CONFIG --variable=config_backend awn`
 dnl
 dnl Check for Vala support.
 dnl
+has_vala=no
 AWN_VAPIDIR=`$PKG_CONFIG --variable=vapidir awn`
 if test -n "$AWN_VAPIDIR" -a -f "$AWN_VAPIDIR/awn.vapi"; then
-    VALA_PROG_VALAC(0.3.4)
+    VALA_PROG_VALAC(0.5.4)
     AC_PATH_PROG(VAPIGEN, vapigen, vapigen, [])
     AC_SUBST(AWN_VAPIDIR)
+    if test -n "$VALAC"; then
+        has_vala=yes
+    fi
 fi
 AM_CONDITIONAL(GCONF_SCHEMAS, test "$config_backend" = "GConf")
-AM_CONDITIONAL(HAVE_VALA, test -n "$AWN_VAPIDIR" -a -n "$VALAC")
+AM_CONDITIONAL(HAVE_VALA, test "$has_vala" = "yes")
 AM_CONDITIONAL(LIBAWN_USE_GNOME, test -n "`echo $AWN_CFLAGS | grep LIBAWN_USE_GNOME`")
 
 dnl
@@ -252,18 +250,20 @@ AC_DEFINE_UNQUOTED(DBUS_MICRO_VER, $DBUS_MICRO_VER, [D-BUS micro version.])
 
 AC_DEFINE_UNQUOTED(DBUS_API_SUBJECT_TO_CHANGE, ,DBUS API is subject to change)
 
+appletsdir="$datarootdir/avant-window-navigator/applets"
 
-AS_AC_EXPAND(ICONDIR, $icondir)
+AS_AC_EXPAND(APPLETSDIR, $appletsdir)
 AS_AC_EXPAND(SYSCONFDIR, $sysconfdir)
 AS_AC_EXPAND(LIBDIR, $libdir)
 AS_AC_EXPAND(DATADIR, $datadir)
 AS_AC_EXPAND(LIBEXECDIR, $libexecdir)
 
+AC_DEFINE_UNQUOTED(APPLETSDIR, "$APPLETSDIR",
+                   [The base directory for applet data and Python applets.])
+AC_SUBST(APPLETSDIR)
+
 DBUS_SERVICES_DIR=`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`
 AC_SUBST(DBUS_SERVICES_DIR)
-
-icondir="$datarootdir/avant-window-navigator/applets/icons"
-AC_SUBST(icondir)
 
 if test "x$GCC" = "xyes"; then
         GCC_FLAGS="-g -Wall"
@@ -288,48 +288,15 @@ AC_OUTPUT([
 Makefile
 po/Makefile.in
 src/Makefile
-src/affinity/Makefile
-src/affinity/affinity.desktop.in
-src/affinity/affinity-preferences/Makefile
-src/affinity/affinity-preferences/affinity-preferences
-src/affinity/data/Makefile
-src/affinity/data/16x16/Makefile
-src/affinity/data/22x22/Makefile
-src/affinity/data/24x24/Makefile
-src/affinity/data/48x48/Makefile
-src/affinity/data/scalable/Makefile
-src/affinity/data/actions/Makefile
-src/affinity/po/Makefile.in
 src/animal-farm/Makefile
-src/animal-farm/icons/Makefile
 src/arss/Makefile
-src/arss/icons/Makefile
 src/awn-meebo/Makefile
-src/awn-meebo/icons/Makefile
-src/awn-meebo/profile/Makefile
-src/awn-notification-daemon/Makefile
-src/awn-notification-daemon/data/Makefile
-src/awn-notification-daemon/po/Makefile.in
-src/awn-notification-daemon/src/Makefile
-src/awn-notification-daemon/src/daemon/Makefile
-src/awn-notification-daemon/src/daemon/awnnotificationdaemon.desktop.in
 src/awnsystemmonitor/Makefile
 src/awnsystemmonitor/awnsystemmonitor.desktop.in
 src/awnterm/Makefile
 src/awnterm/awnterm.desktop.in
 src/battery-applet/Makefile
-src/battery-applet/themes/Makefile
-src/battery-applet/themes/gpm/Makefile
-src/battery-applet/themes/oxygen/Makefile
-src/clock/Makefile
-src/clock/clock.desktop.in
 src/cairo-clock/Makefile
-src/cairo-clock/themes/Makefile
-src/cairo-clock/themes/gnome/Makefile
-src/cairo-clock/themes/onox/Makefile
-src/cairo-clock/themes/tango/Makefile
-src/cairo-menu-classic/Makefile
-src/cairo-menu-classic/cairo_main_menu_classic.desktop.in
 src/cairo-menu/Makefile
 src/cairo-menu/cairo_main_menu.desktop.in
 src/calendar/Makefile
@@ -346,105 +313,70 @@ src/calendar/icalendar/Makefile
 src/calendar/dateutil/Makefile
 src/calendar/dateutil/zoneinfo/Makefile
 src/comic/Makefile
-src/comic/icons/Makefile
 src/comics/Makefile
-src/comics/feeds/Makefile
-src/comics/glade/Makefile
 src/comics/locale/Makefile
-src/comics/icons/Makefile
 src/comics/locale/sv_SE/Makefile
 src/comics/locale/sv_SE/LC_MESSAGES/Makefile
 src/cpufreq/Makefile
-src/cpufreq/images/Makefile
 src/DesktopManager/Makefile
 src/digg/Makefile
-src/digg/icons/Makefile
-src/digg/profile/Makefile
-src/digg/profile/Cache/Makefile
 src/digitalClock/Makefile
 src/file-browser-launcher/Makefile
-src/file-browser-launcher/icons/Makefile
 src/filebrowser/Makefile
 src/filebrowser/filebrowser.desktop.in
 src/lastfm/Makefile
-src/lastfm/icons/Makefile
 src/libawn-extras/Makefile
 src/libawn-extras/awn-extras.pc
 src/libawn-extras/bindings/Makefile
 src/libawn-extras/bindings/python/Makefile
 src/libawn-extras/bindings/vala/Makefile
 src/mail/Makefile
-src/mail/Themes/Makefile
-src/mail/Themes/Tango/Makefile
-src/mail/Themes/Reserved/Makefile
-src/mail/Themes/GMail/Makefile
 src/mail/locale/Makefile
 src/mail/locale/ru/Makefile
 src/mail/locale/ru/LC_MESSAGES/Makefile
 src/main-menu/Makefile
 src/main-menu/main-menu.desktop.in
 src/media-control/Makefile
-src/media-control/icons/Makefile
 src/media-icon-back/Makefile
-src/media-icon-back/icons/Makefile
 src/media-icon-next/Makefile
-src/media-icon-next/icons/Makefile
 src/media-icon-play/Makefile
-src/media-icon-play/icons/Makefile
 src/media-player/Makefile
-src/media-player/icons/Makefile
 src/mount-applet/Makefile
-src/mount-applet/icons/Makefile
 src/MiMenu/Makefile
-src/MiMenu/icons/Makefile
 src/notification-area/Makefile
 src/notification-area/notification-area.desktop.in
+src/notification-daemon/Makefile
+src/notification-daemon/data/Makefile
+src/notification-daemon/po/Makefile.in
+src/notification-daemon/src/Makefile
+src/notification-daemon/src/daemon/Makefile
+src/notification-daemon/src/daemon/awnnotificationdaemon.desktop.in
 src/pandora/Makefile
-src/pandora/icons/Makefile
 src/places/Makefile
 src/places/places.desktop.in
 src/plugger/Makefile
 src/plugger/plugger.desktop.in
 src/pynot/Makefile
+src/pynot-rgba/Makefile
 src/python-test/Makefile
 src/quit-applet/Makefile
-src/quit-applet/icons/Makefile
 src/rtm/Makefile
-src/rtm/icons/Makefile
 src/separator/Makefile
 src/separator/separator.desktop.in
 src/shiny-switcher/Makefile
 src/shiny-switcher/shinyswitcher.desktop.in
-src/simple-launcher/Makefile
-src/simple-launcher/simple-launcher.desktop.in
 src/showdesktop/Makefile
 src/stacks/Makefile
-src/stacks/icons/Makefile
-src/standalone-launcher/Makefile
-src/standalone-launcher/standalone-launcher.desktop.in
-src/switcher/Makefile
-src/switcher/switcher.desktop.in
-src/taskmand/Makefile
-src/taskmand/data/Makefile
-src/Taskmand-applet/Makefile
-src/Taskmand-applet/Taskmand-applet.desktop.in
 src/thinkhdaps/Makefile
-src/thinkhdaps/images/Makefile
 src/to-do/Makefile
 src/tomboy-applet/Makefile
-src/tomboy-applet/icons/Makefile
 src/trash/Makefile
 src/trash/trash.desktop.in
 src/trasher/Makefile
 src/trasher/trasher.desktop.in
-src/tsclient-applet/Makefile
-src/tsclient-applet/icons/Makefile
 src/vala-test/Makefile
 src/vala-test/vala-test.desktop.in
 src/volume-control/Makefile
-src/volume-control/themes/Makefile
-src/volume-control/themes/Black/Makefile
-src/volume-control/themes/Minimal/Makefile
 src/weather/Makefile
 src/weather/images/Makefile
 src/weather/locale/Makefile
@@ -462,7 +394,6 @@ src/webapplet/Makefile
 src/webapplet/webapplet.desktop.in
 src/wobblyzini/Makefile
 src/wobblyzini/wobblyzini.desktop.in
-src/wobblyzini/icons/Makefile
 ])
 
 dnl ========================================================================
@@ -475,7 +406,7 @@ echo "                   prefix:   ${prefix}"
 echo ""
 echo "    Configuration Backend:   $config_backend"
 echo ""
-echo "             Vala Support:   $HAVE_VALA"
+echo "             Vala Support:   $has_vala"
 echo ""
 echo "           WebKit Support:   $webkit_module"
 echo ""

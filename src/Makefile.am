@@ -3,17 +3,17 @@ if HAVE_VALA
 if MAINTAINER_MODE
 VALA_TEST = vala-test
 endif
-VALA_APPLETS = $(VALA_TEST) taskmand simple-launcher standalone-launcher Taskmand-applet 
+VALA_APPLETS = $(VALA_TEST)
 endif
 
 GCONF_APPLETS =
 
 if WITH_GCONF
 if WITH_GNOME
+# --with-gnome --with-gconf
 GCONF_APPLETS +=		\
 	awnsystemmonitor	\
 	cairo-menu		\
-	cairo-menu-classic	\
 	calendar		\
 	filebrowser		\
 	plugger			\
@@ -21,12 +21,14 @@ GCONF_APPLETS +=		\
 	trasher			\
 	$(NULL)
 endif
+# --with-gconf
 GCONF_APPLETS +=		\
-	awn-notification-daemon	\
+	notification-daemon	\
 	media-control		\
 	mount-applet		\
 	$(NULL)
 endif
+# --with-gnome
 if WITH_GNOME
 GCONF_APPLETS +=	\
 	digg		\
@@ -50,7 +52,6 @@ endif
 # please keep alphabetized (except for libawn-extras)
 SUBDIRS =			\
 	libawn-extras		\
-	affinity		\
 	animal-farm		\
 	arss			\
 	awn-meebo		\
@@ -72,16 +73,15 @@ SUBDIRS =			\
 	notification-area	\
 	places			\
 	pynot				\
+	pynot-rgba		\
 	$(PYTHON_TEST)		\
 	quit-applet		\
 	separator		\
 	shiny-switcher		\
 	showdesktop		\
-	switcher		\
 	thinkhdaps			\
 	to-do				\
 	tomboy-applet		\
-	tsclient-applet		\
 	volume-control		\
 	weather			\
 	$(WOBBLYZINI)		\

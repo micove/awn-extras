@@ -29,10 +29,11 @@ typedef struct
 	AwnApplet *applet;
 	GdkPixbuf *icon;
 	GtkWidget *dialog;
+	GtkWidget *box;
 	GtkWidget *notebook;
 	GtkWidget *label;
-	GtkWidget *terminal;
 	GtkWidget *menu;
+	guint32 number_of_tabs;
 	AwnConfigClient *config;
 }AwnTerm;
 
@@ -43,6 +44,12 @@ static unsigned int numTabs = 1;
 // Create new tab
 gboolean create_new_tab();
 
+// Callback when the icon is hovered.
+gboolean enter_notify_cb (GtkWidget *widget, GdkEventCrossing *event, gpointer null);
+
+// Callback when the icon is left.
+gboolean leave_notify_cb (GtkWidget *widget, GdkEventCrossing *event, gpointer null);
+
 // Callback when the icon is clicked on.
 gboolean icon_clicked_cb (GtkWidget *widget, GdkEventButton *event, gpointer null);
 
@@ -50,7 +57,7 @@ gboolean icon_clicked_cb (GtkWidget *widget, GdkEventButton *event, gpointer nul
 gboolean focus_out_cb (GtkWidget *window, GdkEventFocus *event, gpointer null);
 
 // Callback when a key is pressed. We check for the keyboard shortcuts for copy and paste. If they're found, we act accordingly.
-gboolean key_press_cb (GtkWidget *window, GdkEventKey *event, GtkWidget *terminal);
+gboolean key_press_cb (GtkWidget *terminal, GdkEventKey *event);
 
 // Callback when "exit" command is executed
 void exited_cb (GtkWidget *terminal, gpointer null);

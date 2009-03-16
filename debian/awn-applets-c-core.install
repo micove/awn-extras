@@ -17,7 +17,10 @@ usr/share/avant-window-navigator/applets/plugger.desktop
 usr/share/avant-window-navigator/applets/trash.desktop
 usr/share/avant-window-navigator/applets/cairo_main_menu.desktop
 usr/share/avant-window-navigator/applets/shinyswitcher.desktop
-usr/share/avant-window-navigator/applets/icons/separator.svg usr/share/avant-window-navigator/applets/icons/
+usr/lib/awn/applets/notification-area/*.so
+usr/share/avant-window-navigator/applets/notification-area.desktop
+usr/share/icons/hicolor/scalable/apps/notification-area.svg
+usr/share/icons/hicolor/scalable/apps/separator.svg
 etc/gconf/schemas/awn-notification-daemon.schemas
 etc/gconf/schemas/awnsystemmonitor.schemas
 etc/gconf/schemas/awnterm.schemas

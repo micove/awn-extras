@@ -31,10 +31,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+
+# --with-gnome --with-gconf
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@am__append_1 = \
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	awnsystemmonitor	\
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	cairo-menu		\
-@WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	cairo-menu-classic	\
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	calendar		\
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	filebrowser		\
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	plugger			\
@@ -42,12 +43,14 @@ host_triplet = @host@
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	trasher			\
 @WITH_GCONF_TRUE@@WITH_GNOME_TRUE@	$(NULL)
 
+# --with-gconf
 @WITH_GCONF_TRUE@am__append_2 = \
-@WITH_GCONF_TRUE@	awn-notification-daemon	\
+@WITH_GCONF_TRUE@	notification-daemon	\
 @WITH_GCONF_TRUE@	media-control		\
 @WITH_GCONF_TRUE@	mount-applet		\
 @WITH_GCONF_TRUE@	$(NULL)
 
+# --with-gnome
 @WITH_GNOME_TRUE@am__append_3 = \
 @WITH_GNOME_TRUE@	digg		\
 @WITH_GNOME_TRUE@	main-menu	\
@@ -81,24 +84,21 @@ RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = libawn-extras affinity animal-farm arss awn-meebo \
-	awnterm battery-applet cairo-clock comic comics cpufreq \
-	DesktopManager digitalClock file-browser-launcher lastfm mail \
-	media-icon-back media-icon-next media-icon-play media-player \
-	notification-area places pynot python-test quit-applet \
-	separator shiny-switcher showdesktop switcher thinkhdaps to-do \
-	tomboy-applet tsclient-applet volume-control weather \
-	wobblyzini awnsystemmonitor cairo-menu cairo-menu-classic \
+DIST_SUBDIRS = libawn-extras animal-farm arss awn-meebo awnterm \
+	battery-applet cairo-clock comic comics cpufreq DesktopManager \
+	digitalClock file-browser-launcher lastfm mail media-icon-back \
+	media-icon-next media-icon-play media-player notification-area \
+	places pynot pynot-rgba python-test quit-applet separator \
+	shiny-switcher showdesktop thinkhdaps to-do tomboy-applet \
+	volume-control weather wobblyzini awnsystemmonitor cairo-menu \
 	calendar filebrowser plugger stacks trasher \
-	awn-notification-daemon media-control mount-applet digg \
-	main-menu MiMenu pandora rtm trash vala-test taskmand \
-	simple-launcher standalone-launcher Taskmand-applet webapplet
+	notification-daemon media-control mount-applet digg main-menu \
+	MiMenu pandora rtm trash vala-test webapplet
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-AFFINITY_CFLAGS = @AFFINITY_CFLAGS@
-AFFINITY_LIBS = @AFFINITY_LIBS@
 ALL_LINGUAS = @ALL_LINGUAS@
 AMTAR = @AMTAR@
+APPLETSDIR = @APPLETSDIR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -107,6 +107,8 @@ AWK = @AWK@
 AWN_BINDIR = @AWN_BINDIR@
 AWN_CFLAGS = @AWN_CFLAGS@
 AWN_LIBS = @AWN_LIBS@
+AWN_SYSTEM_MONITOR_CFLAGS = @AWN_SYSTEM_MONITOR_CFLAGS@
+AWN_SYSTEM_MONITOR_LIBS = @AWN_SYSTEM_MONITOR_LIBS@
 AWN_VAPIDIR = @AWN_VAPIDIR@
 CAIRO_MENU_GNOME_CFLAGS = @CAIRO_MENU_GNOME_CFLAGS@
 CAIRO_MENU_GNOME_LIBS = @CAIRO_MENU_GNOME_LIBS@
@@ -144,6 +146,8 @@ FILEBROWSER_CFLAGS = @FILEBROWSER_CFLAGS@
 FILEBROWSER_LIBS = @FILEBROWSER_LIBS@
 GCC_FLAGS = @GCC_FLAGS@
 GCONFTOOL = @GCONFTOOL@
+GCONF_CFLAGS = @GCONF_CFLAGS@
+GCONF_LIBS = @GCONF_LIBS@
 GCONF_SCHEMA_CONFIG_SOURCE = @GCONF_SCHEMA_CONFIG_SOURCE@
 GCONF_SCHEMA_FILE_DIR = @GCONF_SCHEMA_FILE_DIR@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
@@ -162,7 +166,6 @@ GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
 GSTREAMER_LIBS = @GSTREAMER_LIBS@
 GTOP_CFLAGS = @GTOP_CFLAGS@
 GTOP_LIBS = @GTOP_LIBS@
-ICONDIR = @ICONDIR@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -230,6 +233,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PLUGGER_CFLAGS = @PLUGGER_CFLAGS@
+PLUGGER_LIBS = @PLUGGER_LIBS@
 POFILES = @POFILES@
 POSUB = @POSUB@
 PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
@@ -249,8 +254,6 @@ PYTHON_LDFLAGS = @PYTHON_LDFLAGS@
 PYTHON_SITE_PKG = @PYTHON_SITE_PKG@
 PYTHON_VERSION = @PYTHON_VERSION@
 RANLIB = @RANLIB@
-RSVG_CFLAGS = @RSVG_CFLAGS@
-RSVG_LIBS = @RSVG_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -264,6 +267,8 @@ TASKMAND_APPLET_CFLAGS = @TASKMAND_APPLET_CFLAGS@
 TASKMAND_APPLET_LIBS = @TASKMAND_APPLET_LIBS@
 TASKMAND_CFLAGS = @TASKMAND_CFLAGS@
 TASKMAND_LIBS = @TASKMAND_LIBS@
+TRASHER_CFLAGS = @TRASHER_CFLAGS@
+TRASHER_LIBS = @TRASHER_LIBS@
 TRASH_CFLAGS = @TRASH_CFLAGS@
 TRASH_LIBS = @TRASH_LIBS@
 USE_NLS = @USE_NLS@
@@ -307,7 +312,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-icondir = @icondir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -332,7 +336,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 NULL = 
 @HAVE_VALA_TRUE@@MAINTAINER_MODE_TRUE@VALA_TEST = vala-test
-@HAVE_VALA_TRUE@VALA_APPLETS = $(VALA_TEST) taskmand simple-launcher standalone-launcher Taskmand-applet 
+@HAVE_VALA_TRUE@VALA_APPLETS = $(VALA_TEST)
 GCONF_APPLETS = $(am__append_1) $(am__append_2) $(am__append_3)
 @WITH_WEBKIT_TRUE@WEBKIT_APPLETS = \
 @WITH_WEBKIT_TRUE@	webapplet	\
@@ -344,7 +348,6 @@ GCONF_APPLETS = $(am__append_1) $(am__append_2) $(am__append_3)
 # please keep alphabetized (except for libawn-extras)
 SUBDIRS = \
 	libawn-extras		\
-	affinity		\
 	animal-farm		\
 	arss			\
 	awn-meebo		\
@@ -366,16 +369,15 @@ SUBDIRS = \
 	notification-area	\
 	places			\
 	pynot				\
+	pynot-rgba		\
 	$(PYTHON_TEST)		\
 	quit-applet		\
 	separator		\
 	shiny-switcher		\
 	showdesktop		\
-	switcher		\
 	thinkhdaps			\
 	to-do				\
 	tomboy-applet		\
-	tsclient-applet		\
 	volume-control		\
 	weather			\
 	$(WOBBLYZINI)		\

@@ -30,6 +30,24 @@
 #include "awnterm.h"
 #include "settings.h"
 
+// Callback when the icon is hovered.
+gboolean enter_notify_cb (GtkWidget *widget, GdkEventCrossing *event, gpointer null)
+{
+	AwnAppletSimple *simple = AWN_APPLET_SIMPLE (widget);
+	awn_applet_simple_set_title_visibility (simple, TRUE);
+
+	return FALSE;
+}
+
+// Callback when the icon is left.
+gboolean leave_notify_cb (GtkWidget *widget, GdkEventCrossing *event, gpointer null)
+{
+	AwnAppletSimple *simple = AWN_APPLET_SIMPLE (widget);
+	awn_applet_simple_set_title_visibility (simple, FALSE);
+
+	return FALSE;
+}
+
 // Callback when the icon is clicked on.
 gboolean icon_clicked_cb (GtkWidget *widget, GdkEventButton *event, gpointer null)
 {
@@ -41,6 +59,7 @@ gboolean icon_clicked_cb (GtkWidget *widget, GdkEventButton *event, gpointer nul
 			if (!GTK_WIDGET_VISIBLE (applet->dialog))
 			{
 				gtk_widget_show_all (applet->dialog);
+				awn_applet_simple_set_title_visibility (AWN_APPLET_SIMPLE (applet->applet), FALSE);
 			}
 			else
 			{
@@ -76,7 +95,7 @@ gboolean focus_out_cb (GtkWidget *window, GdkEventFocus *event, gpointer null)
 }
 
 // Callback when a key is pressed. We check for the keyboard shortcuts for copy and paste. If they're found, we act accordingly.
-gboolean key_press_cb (GtkWidget *window, GdkEventKey *event, GtkWidget *terminal)
+gboolean key_press_cb (GtkWidget *terminal, GdkEventKey *event)
 {
 	// Checks if the modifiers control and shift are pressed
 	if (event->state & GDK_CONTROL_MASK && event->state & GDK_SHIFT_MASK)
@@ -108,6 +127,7 @@ gboolean key_press_cb (GtkWidget *window, GdkEventKey *event, GtkWidget *termina
 void exited_cb (GtkWidget *terminal, gpointer null)
 {
 	gint page;
+	
 	gint n_page = gtk_notebook_get_n_pages (GTK_NOTEBOOK(applet->notebook));
 
 	if (n_page > 1)
@@ -118,9 +138,10 @@ void exited_cb (GtkWidget *terminal, gpointer null)
 		
 		if (n_page == 2)
 		{
-			gtk_notebook_set_show_tabs (GTK_WIDGET(applet->notebook), FALSE);
-	  		gtk_notebook_set_show_border (GTK_WIDGET(applet->notebook), FALSE);
+			gtk_notebook_set_show_tabs (GTK_NOTEBOOK(applet->notebook), FALSE);
 		}
+		
+		gtk_widget_show_all(GTK_WIDGET(applet->dialog));
 	}
 	else {
 		// fork new vte
@@ -139,12 +160,13 @@ void exited_cb (GtkWidget *terminal, gpointer null)
 // Create a new tab
 gboolean create_new_tab()
 {
+	GtkWidget *terminal;
 	char buffer[32];
 	
 	// Set up the new vte terminal
-	applet->terminal = vte_terminal_new ();
-	vte_terminal_set_emulation (VTE_TERMINAL (applet->terminal), "xterm");
-	vte_terminal_fork_command (VTE_TERMINAL (applet->terminal),
+	terminal = vte_terminal_new ();
+	vte_terminal_set_emulation (VTE_TERMINAL (terminal), "xterm");
+	vte_terminal_fork_command (VTE_TERMINAL (terminal),
 								NULL,
 								NULL,
 								NULL,
@@ -154,20 +176,24 @@ gboolean create_new_tab()
 								FALSE);
 
 	// New Label
-	numTabs += 1;
-	sprintf(buffer, "Term #%d", numTabs);
+	applet->number_of_tabs += 1;
+	sprintf(buffer, "Term #%d", applet->number_of_tabs);
 	applet->label = gtk_label_new(buffer);
 
-	// Show Tab
-	if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(applet->notebook)))
-		gtk_notebook_set_show_tabs (GTK_NOTEBOOK(applet->notebook), TRUE);
-
 	// New Page
-	gtk_notebook_append_page (GTK_NOTEBOOK (applet->notebook), GTK_WIDGET(applet->terminal), applet->label);
-	gtk_widget_show_all(GTK_WIDGET(applet->dialog));
+	applet->label = gtk_label_new(buffer);
+	gtk_notebook_append_page (GTK_NOTEBOOK (applet->notebook), GTK_WIDGET(terminal), applet->label);
 	
-	// Set up event
-	g_signal_connect (G_OBJECT (applet->terminal), "child-exited", G_CALLBACK (exited_cb), NULL);
+	// Show Tab
+	if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(applet->notebook)) > 1)
+	{
+		gtk_notebook_set_show_tabs (GTK_NOTEBOOK(applet->notebook), TRUE);
+		gtk_widget_show_all(GTK_WIDGET(applet->dialog));
+	}
+	
+	// Connect to signals and events
+	g_signal_connect (G_OBJECT (terminal), "child-exited", G_CALLBACK (exited_cb), NULL);
+	g_signal_connect (G_OBJECT (terminal), "key-press-event", G_CALLBACK (key_press_cb), NULL);
 	
 	return TRUE;
 }
