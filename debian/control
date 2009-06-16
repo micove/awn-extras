@@ -2,8 +2,8 @@ Source: awn-extras-applets
 Section: gnome
 Priority: optional
 Maintainer: Julien Lavergne <julien.lavergne@gmail.com>
-Build-Depends: 	debhelper (>= 5), 
-		cdbs, 
+Build-Depends: 	debhelper (>= 7),
+		quilt,
 		intltool, 
 		libgnome-menu-dev, 
 		libgconf2-dev, 
@@ -25,12 +25,13 @@ Build-Depends: 	debhelper (>= 5),
 		libwebkit-dev,
 		libglade2-dev,
 		libgnomeui-dev
-Standards-Version: 3.8.0
-XS-Python-Version: >= 2.4
+Standards-Version: 3.8.1
 Homepage: https://launchpad.net/awn-extras
+Vcs-Git: git://github.com/gilir/awn-extras-debian.git
+Vcs-Browser: http://github.com/gilir/awn-extras-debian/tree
+
 
 Package: awn-applets-c-core
-Section: gnome
 Architecture: any
 Depends: 	${shlibs:Depends}, 
 		${misc:Depends}, 
@@ -59,7 +60,6 @@ Description: A collection of applets for avant-window-navigator
   * trash: A trash applet, like the one from gnome-panel.
 
 Package: awn-applets-c-extras
-Section: gnome
 Architecture: any
 Depends: 	${shlibs:Depends}, 
 		${misc:Depends}, 
@@ -80,13 +80,12 @@ Description: A collection of applets for avant-window-navigator
   * webapplet: Displays a web page.
 
 Package: awn-applets-python-core
-Section: gnome
 Architecture: all
 Depends: 	${shlibs:Depends}, 
 		${misc:Depends}, 
 		${python:Depends},
 		avant-window-navigator,
-		python-awn,
+		python-awn (>= 0.3.2.1),
 		python-awnlib (>= 0.3.2)
 Recommends: 	awn-manager (>= 0.3~bzr489),
 		python-alsaaudio,
@@ -100,7 +99,6 @@ Recommends: 	awn-manager (>= 0.3~bzr489),
 		libgweather-common,
 		gnome-applets
 Suggests:	awn-applets-python-extras
-XB-Python-Version: ${python:Versions}
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
@@ -134,22 +132,20 @@ Description: A collection of applets for avant-window-navigator
     and weather forecast from weather.com.
 
 Package: awn-applets-python-extras
-Section: gnome
 Architecture: all
 Depends: 	${shlibs:Depends}, 
 		${misc:Depends}, 
 		${python:Depends},
 		avant-window-navigator,
-		python-awn,
+		python-awn (>= 0.3.2.1),
 		python-awnlib (>= 0.3.2),
 		fortune
 Recommends: 	awn-manager (>= 0.3~bzr489),
-		python-gnome2-desktop,
+		python-rsvg | python-gnome2-desktop,
 		python-xlib,
 Suggests: 	tomboy,
 Conflicts: awn-applets-python-core (<< 0.3~bzr912)
 Replaces: awn-applets-python-core (<< 0.3~bzr912)
-XB-Python-Version: ${python:Versions}
 Description: A collection of applets for avant-window-navigator
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
@@ -205,11 +201,11 @@ Description: Python bindings for avant-window-navigator's applets
 Package: python-awnlib
 Section: python
 Architecture: any
-Depends:	${python:Depends},
+Depends:	${misc:Depends},	
+		${python:Depends},
 		python-awn-extras,
 		python-gtk2,
-		python-gobject,
-XB-Python-Version: ${python:Versions}
+		python-gobject
 Description: Python utilities for avant-window-navigator's applets
  This packages provides AWNLib, a collection of functions to simplify the 
  creation of applets with Python.
