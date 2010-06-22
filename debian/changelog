@@ -1,3 +1,13 @@
+awn-extras-applets (0.4.0-2) unstable; urgency=medium
+
+  * Urgency set to medium to close RC bug.
+  * debian/control:
+   - Add Conflicts/Replaces between python-awn-extras and python-awnlib, all
+     files from python-awnlib was moved into python-awn-extras.
+     (Closes: #586744).
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Wed, 23 Jun 2010 00:38:46 +0200
+
 awn-extras-applets (0.4.0-1) unstable; urgency=low
 
   * New upstream release.

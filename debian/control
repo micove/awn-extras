@@ -184,6 +184,8 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${python:Depends}
 Provides: ${python:Provides}
+Conflicts: python-awnlib
+Replaces: python-awnlib
 Description: Python bindings for avant-window-navigator's applets
  This package provides Python bindings to create and use Python applets with
  functions of libawn-extras. It also includes AWNLib, a collection of
