@@ -1,3 +1,22 @@
+awn-extras-applets (0.4.0-3) unstable; urgency=low
+
+  * debian/control:
+   - Add depends on python-awn-extras (>= 0.4.0) for all python applets.
+     Closes: #589317
+   - Fix wrong description for awn-applets-common. Closes: #587632
+   - Recommend python-pyinotify for thinkhdaps applet.
+   - Use Breaks instead of Replaces and Conflicts when moving files between
+     packages to conform to Standards-Version 3.9.0.
+   - Bump Standards-Version to 3.9.0.
+   - Fix Conflicts for python-awn-extras.
+   - Improve short descriptions.
+  * debian/pyversions: Build only for python >= 2.5. Thanks Jakub Wilk for the
+    patch. Closes: #587964
+  * debian/copyright: Remove mention of BSD license in
+    /usr/share/common-licenses to conform to Standards-Version 3.9.0.
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Sat, 17 Jul 2010 13:11:19 +0200
+
 awn-extras-applets (0.4.0-2) unstable; urgency=medium
 
   * Urgency set to medium to close RC bug.
