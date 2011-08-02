@@ -1,3 +1,15 @@
+awn-extras-applets (0.4.0-3.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * debian/patches/03-libnotify07.patch: Transition to libnotify 0.7
+    (Closes: #630262)
+  * debian/control:
+    - Bump libnotify build-dependency version to 0.7
+    - Build-depends against libawn-dev instead of vala-awn (Closes: #634552)
+    - Transition to webkitgtk+ (Closes: #635401)
+
+ -- Laurent Bigonville <bigon@debian.org>  Tue, 02 Aug 2011 22:02:29 +0200
+
 awn-extras-applets (0.4.0-3) unstable; urgency=low
 
   * debian/control:

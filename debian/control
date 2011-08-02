@@ -11,15 +11,15 @@ Build-Depends: debhelper (>= 7.0.50~),
                libawn-dev (>= 0.4.0), 
                libwnck-dev, 
                libsexy-dev, 
-               libnotify-dev, 
+               libnotify-dev (>= 0.7),
                libvte-dev,
                python-central (>= 0.6.0), 
                python-gtk2-dev,
                python-cairo-dev,
                valac (>= 0.7.7),
-               libwebkit-dev,
+               libwebkitgtk-dev,
                libdesktop-agnostic-bin,
-               vala-awn
+               libawn-dev
 Standards-Version: 3.9.0
 Homepage: https://launchpad.net/awn-extras
 Vcs-Git: git://github.com/gilir/awn-extras-debian.git
