@@ -1,3 +1,17 @@
+awn-extras-applets (0.4.0-4) unstable; urgency=low
+
+  * ACK NMU, thanks Laurent Bigonville (Closes: #636382).
+  * debian/control:
+   - Add DM-Upload-Allowed: yes
+   - Remove python-central build-depends (Closes: #616743)
+   - Add build-depends on python (>= 2.6.6-3~) for dh_python2 support.
+   - Use X-Python-Version instead of debian/pyversions.
+   - Explicit depends on python.
+  * debian/rules:
+   - Use --with python2 (Closes: #634684)
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Fri, 19 Aug 2011 00:14:54 +0200
+
 awn-extras-applets (0.4.0-3.1) unstable; urgency=low
 
   * Non-maintainer upload.

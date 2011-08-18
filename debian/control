@@ -8,22 +8,23 @@ Build-Depends: debhelper (>= 7.0.50~),
                libgconf2-dev,
                librsvg2-dev, 
                libgtop2-dev, 
-               libawn-dev (>= 0.4.0), 
+               libawn-dev (>= 0.4.1~bzr830), 
                libwnck-dev, 
                libsexy-dev, 
                libnotify-dev (>= 0.7),
                libvte-dev,
-               python-central (>= 0.6.0), 
+               python (>= 2.6.6-3~),
                python-gtk2-dev,
                python-cairo-dev,
                valac (>= 0.7.7),
                libwebkitgtk-dev,
-               libdesktop-agnostic-bin,
-               libawn-dev
+               libdesktop-agnostic-bin
 Standards-Version: 3.9.0
 Homepage: https://launchpad.net/awn-extras
 Vcs-Git: git://github.com/gilir/awn-extras-debian.git
 Vcs-Browser: http://github.com/gilir/awn-extras-debian/tree
+X-Python-Version: >= 2.5
+DM-Upload-Allowed: yes
 
 Package: awn-applets-c-core
 Architecture: any
@@ -83,6 +84,7 @@ Architecture: all
 Depends: ${shlibs:Depends}, 
         ${misc:Depends}, 
         ${python:Depends},
+        python,
         awn-applets-common,
         avant-window-navigator,
         python-awn (>= 0.3.2.1),
@@ -150,6 +152,7 @@ Architecture: all
 Depends: ${shlibs:Depends}, 
          ${misc:Depends}, 
          ${python:Depends},
+         python,
          awn-applets-common,
          avant-window-navigator,
          python-awn (>= 0.3.2.1),
