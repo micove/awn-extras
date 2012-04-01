@@ -19,7 +19,7 @@ Build-Depends: debhelper (>= 7.0.50~),
                valac (>= 0.7.7),
                libwebkitgtk-dev,
                libdesktop-agnostic-bin
-Standards-Version: 3.9.0
+Standards-Version: 3.9.3
 Homepage: https://launchpad.net/awn-extras
 Vcs-Git: git://github.com/gilir/awn-extras-debian.git
 Vcs-Browser: http://github.com/gilir/awn-extras-debian/tree
@@ -39,8 +39,9 @@ Suggests: awn-applets-c-extras,
           gconf-editor,
 # notification-area
           python-gconf,
+Provides: notification-daemon
 Breaks: awn-applets-python-core (<< 0.4.0-1), avant-windows-navigator (<< 0.4.0-1)
-Description: A collection of applets for Awn, written in C or Vala
+Description: Collection of applets for Awn, written in C or Vala
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).
@@ -67,7 +68,7 @@ Depends: ${shlibs:Depends},
          avant-window-navigator
 Recommends: awn-settings
 Breaks: awn-applets-python-extras (<< 0.4.0-1)
-Description: A collection of extras applets for Awn, written in C or Vala
+Description: Collection of extras applets for Awn, written in C or Vala
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).
@@ -116,7 +117,7 @@ Recommends: awn-settings (>= 0.3~bzr489),
 # Dialect
             python-xklavier,
 Suggests: awn-applets-python-extras
-Description: A collection of applets for Awn, written in python
+Description: Collection of applets for Awn, written in python
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).
@@ -168,7 +169,7 @@ Suggests: tomboy,
 #YAMA
           alacarte,
 Breaks: awn-applets-python-core (<< 0.3~bzr912)
-Description: A collection of extras applets for Awn, written in python
+Description: Collection of extras applets for Awn, written in python
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).
@@ -202,7 +203,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, 
          ${misc:Depends}, 
          awn-applets-c-extras (= ${binary:Version})
-Description: A collection of applets for avant-window-navigator - debug symbols
+Description: Collection of applets for avant-window-navigator - debug symbols
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).
@@ -213,7 +214,7 @@ Package: awn-applets-common
 Architecture: any
 Depends: ${shlibs:Depends}, 
          ${misc:Depends},
-Description: A collection of applets for avant-window-navigator - common files
+Description: Collection of applets for avant-window-navigator - common files
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like 
  applets in the gnome-panel).

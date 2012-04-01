@@ -1,3 +1,16 @@
+awn-extras-applets (0.4.0-5) unstable; urgency=low
+
+  * debian/patches:
+   - 04-glib-single-include.patch: Include only glib.h, to fix FTBFS with
+     glib 2.32. Thanks Michael Biebl for the patch. (Closes: #665509)
+  * debian/control:
+   - Provide notification-daemon for notification-daemon applet.
+     (Closes: #597678)
+   - Update Standards-Version to 3.9.3, no change needed.
+   - Update descriptions.
+
+ -- Julien Lavergne <julien.lavergne@gmail.com>  Sun, 01 Apr 2012 19:32:37 +0200
+
 awn-extras-applets (0.4.0-4) unstable; urgency=low
 
   * ACK NMU, thanks Laurent Bigonville (Closes: #636382).
