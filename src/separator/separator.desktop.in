@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+X-AWN-AppletType=C
+Encoding=UTF-8
+Name=Separator
+Comment=A simple separator.
+Exec=/usr/local/lib/awn/applets/separator/separator.so
+Icon=/separator.svg
+X-AWN-AppletCategory=Utility,Core
