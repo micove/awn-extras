@@ -50,6 +50,7 @@ class App(awn.AppletSimple):
         #AWN Applet Configuration
         awn.AppletSimple.__init__(self, 'to-do', uid, panel_id)
         self.dialog = awn.Dialog(self)
+        self.dialog.props.hide_on_unfocus = True
 
         self.uid = uid
         self.size = self.get_size()
@@ -200,7 +201,7 @@ class App(awn.AppletSimple):
         menu.append(prefs_menu)
         menu.append(about_menu)
         menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
+        self.popup_gtk_menu (menu, event.button, event.time)
 
     #Show the preferences menu
     def show_prefs(self, *args):
@@ -1354,7 +1355,9 @@ class ProgressButton(gtk.Button):
           lambda *a: applet.edit_details(self.Id, True))
 
         #Set the tooltip: X% done
-        self.set_tooltip_text(str(int(progress)) + '% done')
+        # Translators: %d is a number, %% is a percent sign, please don't change them,
+        # but you may add a space character between them, e.g. in German: %d %% erledigt
+        self.set_tooltip_text(_("%d%% done") % int(progress))
 
     def update(self, *args):
         progress = self.settings['progress'][self.Id]
@@ -1363,7 +1366,9 @@ class ProgressButton(gtk.Button):
         self.image.queue_draw()
 
         #Reset the tooltip
-        self.set_tooltip_text(str(int(progress)) + _("% done"))
+        # Translators: %d is a number, %% is a percent sign, please don't change them,
+        # but you may add a space character between them, e.g. in German: %d %% erledigt
+        self.set_tooltip_text(_("%d%% done") % int(progress))
 
         #Update the applet's icon
         self.applet.update_icon('progress')

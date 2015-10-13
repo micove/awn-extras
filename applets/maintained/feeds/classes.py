@@ -34,14 +34,16 @@ except:
 import dbus
 import dbus.service
 import dbus.glib
+from desktopagnostic import Color
+from desktopagnostic.config import GROUP_DEFAULT
 import feedparser
+import gtk
 
-from awn import extras
-from awn.extras import _, awnlib
+from awn.extras import _, awnlib, __version__, PREFIX
 
 pickle_path = '%s/.config/awn/applets/.feeds-tokens' % os.environ['HOME']
 
-twitter_path = extras.PREFIX + '/share/avant-window-navigator/applets/feeds/icons/twitter-16x16.png'
+twitter_path = PREFIX + '/share/avant-window-navigator/applets/feeds/icons/twitter-16x16.png'
 
 cache_dir = os.environ['HOME'] + '/.cache/awn-feeds-applet'
 
@@ -67,6 +69,24 @@ class DBusService(dbus.service.Object):
             self.applet.add_feed(url)
 
         return 'OK'
+
+class PlaceHolder(gtk.DrawingArea):
+    def __init__(self):
+        gtk.DrawingArea.__init__(self)
+
+        self.connect('expose-event', self.draw)
+
+    def draw(self, widget, event):
+        w = self.allocation.width
+        h = self.allocation.height
+
+        gdk_color = self.get_style().text[gtk.STATE_NORMAL].to_string()
+        color = Color.from_string(gdk_color + 'ffff')
+        cr = self.window.cairo_create()
+        cr.set_source_rgba(*color.get_cairo_color())
+        cr.set_dash((1, 0, 0, 1))
+        cr.rectangle(0.0, 0.0, w, h)
+        cr.stroke()
 
 #Used for storing tokens for service logins
 #(Also works as a conventient pickle wraparound)
@@ -119,6 +139,9 @@ class Entry(dict):
         self['new'] = new
         self['notify'] = notify
 
+    def basic(self):
+        return {'url': self['url'], 'title': self['title']}
+
 #Base class for all types of sources
 class FeedSource:
     io_error = False
@@ -154,6 +177,7 @@ class FeedSource:
         pass
 
     def post_data(self, uri,
+                  headers={},
                   data=None,
                   timeout=30,
                   server_headers=False,
@@ -167,7 +191,7 @@ class FeedSource:
             error_cb = self.error
 
         if self.applet:
-            self.applet.network_handler.post_data(uri, data, timeout, server_headers, opener, \
+            self.applet.network_handler.post_data(uri, headers, data, timeout, server_headers, opener, \
                 callback=cb, error=error_cb)
 
     #Also convenience
@@ -231,8 +255,6 @@ class FeedSource:
         self.icon = os.path.join(cache_dir, self._favicon_siteid + '.ico')
         self.applet.got_favicon(self)
 
-        del self._favicon_siteid
-
     #Do something if the feed icon was clicked.
     def icon_clicked(self):
         pass
@@ -244,10 +266,16 @@ class FeedSource:
 #TODO: Still need a better name. This is used if the feed may have items that are not considered new.
 class StandardNew:
     newest = None
+    last_new = []
     notified = []
 
     #Call this after getting the entries, but before calling applet.feed_updated()
     def get_new(self):
+        new_new = []
+
+        if not self.applet.client.get_bool(GROUP_DEFAULT, 'keep_unread'):
+            self.last_new = []
+
         #See if the feed was updated, etc...
         if self.newest is not None and self.newest['url'] != self.entries[0]['url'] and \
           self.newest['title'] != self.entries[0]['title']:
@@ -267,15 +295,23 @@ class StandardNew:
 
         #Mark the new feeds as new
         for i, entry in enumerate(self.entries):
-            entry['new'] = bool(i < self.num_new)
+            entry['new'] = bool(i < self.num_new) or entry.basic() in self.last_new
 
-            if entry['new'] and [entry['url'], entry['title']] not in self.notified:
-                self.notified.append([entry['url'], entry['title']])
-                entry['notify'] = True
-                self.num_notify += 1
+            if entry['new']:
+                new_new.append(entry.basic())
 
-            else:
-                entry['notify'] = False
+                if not i < self.num_new:
+                    self.num_new += 1
+
+                if [entry['url'], entry['title']] not in self.notified:
+                    self.notified.append([entry['url'], entry['title']])
+                    entry['notify'] = True
+                    self.num_notify += 1
+
+                else:
+                    entry['notify'] = False
+
+        self.last_new = new_new
 
 #Used for logging in
 class KeySaver:
@@ -298,7 +334,7 @@ class KeySaver:
                 if token is None or token == 0:
                     #No for i18n because if the user changes the language, he
                     #could lose the password (and most users won't even see this)
-                    self.key = self.applet.keyring.new('Feeds - ' + url,
+                    self.key = self.applet.keyring.new(None, 'Feeds - ' + url,
                         password,
                         {'username': username, 'network': self.base_id},
                         'network')
@@ -306,7 +342,7 @@ class KeySaver:
                     self.applet.tokens[url] = int(self.key.token)
 
                 else:
-                    self.key = self.applet.keyring.from_token(token)
+                    self.key = self.applet.keyring.from_token(None, token)
 
             #No password provided, e.g. on applet startup
             else:
@@ -315,7 +351,7 @@ class KeySaver:
                     self.error()
 
                 else:
-                    self.key = self.applet.keyring.from_token(token)
+                    self.key = self.applet.keyring.from_token(None, token)
                     self.password = self.key.password
 
         return self.key
@@ -324,6 +360,7 @@ class KeySaver:
 class GoogleFeed(KeySaver):
     opener = None
     SID = None
+    Auth = None
     logged_in = False
     title = _("Google")
     client_login_url = 'https://www.google.com/accounts/ClientLogin'
@@ -378,6 +415,7 @@ class GoogleFeed(KeySaver):
 
         #Now authenticate
         self.post_data(self.service_login_auth_url,
+                       {},
                        data,
                        opener=self.opener,
                        cb=self.did_auth,
@@ -425,11 +463,11 @@ class GoogleFeed(KeySaver):
                     data = urllib.urlencode({'service': service,
                         'Email': self.username,
                         'Passwd': self.password,
-                        'source': 'awn-feeds-applet-' + extras.__version__,
+                        'source': 'awn-feeds-applet-' + __version__,
                         'continue': 'http://www.google.com/'})
 
                     #Send the data to get the SID
-                    self.post_data(self.client_login_url, data, 15,
+                    self.post_data(self.client_login_url, {}, data, 15,
                         cb=self.got_sid, error_cb=self.login_error)
 
     def got_sid(self, data):
@@ -441,7 +479,12 @@ class GoogleFeed(KeySaver):
             return
 
         #Save the SID so we don't have to re-login every update
-        self.SID = data.split('=')[1].split('\n')[0]
+        for line in data.split('\n'):
+            if line.find('SID=') == 0:
+                self.SID = line.split('=')[1]
+            elif line.find('Auth=') == 0:
+                self.Auth = line.split('=')[1]
+
         self.logged_in = True
 
         if self.should_update:
@@ -451,7 +494,7 @@ class GoogleFeed(KeySaver):
     def get_search_results(self, query, cb, _error_cb):
         search_url = self.feed_search_url + urllib.urlencode({'q': query})
 
-        if self.SID is not None:
+        if None not in (self.SID, self.Auth):
             self.get_data(search_url, {'Cookie': 'SID=' + self.SID}, False,
                 user_data=(cb, _error_cb), cb=self.got_search_results, error_cb=_error_cb)
 
@@ -513,7 +556,8 @@ class GoogleReader(FeedSource, StandardNew, GoogleFeed):
 
         else:
             #Load the reading list with that magic SID as a cookie
-            self.get_data(self.fetch_url, {'Cookie': 'SID=' + self.SID}, True, cb=self.got_parsed)
+            self.get_data(self.fetch_url, {'Cookie': 'SID=' + self.SID,
+                'Authorization': 'GoogleLogin auth=' + self.Auth}, True, cb=self.got_parsed)
 
     def got_parsed(self, parsed):
         self.entries = []
@@ -619,9 +663,7 @@ class Reddit(FeedSource, KeySaver):
     title = _("Reddit Inbox")
     orangered_url = 'http://www.reddit.com/static/mail.png'
     login = 'https://www.reddit.com/api/login/%s' # % username
-    #RSS uses slightly less bandwidth, but JSON provides newness info
     messages_url = 'http://www.reddit.com/message/inbox/.json?mark=false'
-    mark_as_read = 'http://www.reddit.com/message/inbox/.rss?mark=true'
     inbox_url = 'http://www.reddit.com/message/messages/'
 
     def __init__(self, applet, username, password=None):
@@ -633,6 +675,7 @@ class Reddit(FeedSource, KeySaver):
         self.cookie = None
         self.should_update = False
         self.already_notified_about = []
+        self.marked_read = []
         self.init_network_error = False
 
         #Get ready to update the feed, but don't actually do so.
@@ -654,7 +697,7 @@ class Reddit(FeedSource, KeySaver):
                     self.error()
 
                 else:
-                    self.post_data(self.login % self.username.lower(), data,
+                    self.post_data(self.login % self.username.lower(), {}, data,
                         server_headers = True, cb=self.got_reddit_cookie, error_cb=self.cookie_error)
 
     def cookie_error(self, *args):
@@ -722,7 +765,7 @@ class Reddit(FeedSource, KeySaver):
                 else:
                     title = _("Post reply from %s") % message['data']['author']
 
-            new = message['data']['new']
+            new = message['data']['id'] not in self.marked_read and message['data']['new']
 
             if new:
                 self.num_new += 1
@@ -733,7 +776,9 @@ class Reddit(FeedSource, KeySaver):
                 notify = True
                 self.num_notify += 1
 
-            self.entries.append(Entry(url, title, new, notify))
+            entry = Entry(url, title, new, notify)
+            entry['id'] = message['data']['id']
+            self.entries.append(entry)
 
         self.applet.feed_updated(self)
 
@@ -748,16 +793,15 @@ class Reddit(FeedSource, KeySaver):
     #Unfortunately, we can only mark all messages as read, not individual ones.
     def item_clicked(self, i):
         if self.entries[i]['new'] == True:
-            if self.num_new == 1:
-                self.num_new = 0
-                deboldify(self.applet.feed_labels[self.url])
-                deboldify(self.applet.displays[self.url].get_children()[i], True)
-                self.get_favicon('www.reddit.com')
+            self.entries[i]['new'] = False
+            self.num_new -= 1
+            deboldify(self.applet.displays[self.url].get_children()[i], True)
 
-                self.get_data(self.mark_as_read, {'Cookie': self.cookie})
+            self.marked_read.append(self.entries[i]['id'])
 
-            else:
-                self.num_new -= 1
+            if self.num_new == 0:
+                 deboldify(self.applet.feed_labels[self.url])
+                 self.get_favicon('www.reddit.com')
 
 class Twitter(FeedSource, StandardNew, KeySaver):
     base_id = 'twitter'
@@ -893,12 +937,18 @@ class WebFeed(FeedSource, StandardNew):
 
         try:
             self.web_url = parsed.feed.link
+            if self.web_url[0] == '/':
+                self.web_url = '/'.join(self.url.split('/')[:3]) + self.web_url
         except:
             self.web_url = ''
 
         try:
             for entry in parsed.entries[:5]:
-                self.entries.append(Entry(entry.link, entry.title))
+                if entry.link[0] == '/':
+                    self.entries.append(Entry('/'.join(self.web_url.split('/')[:3]) + entry.link,
+                        entry.title))
+                else:
+                    self.entries.append(Entry(entry.link, entry.title))
         except:
             self.error()
             return
@@ -909,6 +959,17 @@ class WebFeed(FeedSource, StandardNew):
 
         self.get_favicon()
 
+
+class ErrorDialog(gtk.MessageDialog):
+
+    def __init__(self, parent, primary_msg, secondary_msg):
+        gtk.MessageDialog.__init__(self, type=gtk.MESSAGE_ERROR,
+                                   buttons=gtk.BUTTONS_CLOSE,
+                                   message_format=primary_msg)
+
+        self.format_secondary_markup(str(secondary_msg))
+        self.__parent = parent
+        self.set_skip_taskbar_hint(False)
 
 def get_16x16(pb):
     if pb.get_width() != 16 or pb.get_height() != 16:
@@ -922,7 +983,7 @@ def boldify(widget, button=False):
     if button:
         widget = widget.child
 
-    widget.set_markup('<span font_weight="bold">%s</span>' % safify(widget.get_text()))
+    widget.set_markup('<span font_weight="bold">%s</span>' % widget.get_text())
 
 def deboldify(widget, button=False):
     if button:
@@ -931,4 +992,26 @@ def deboldify(widget, button=False):
     widget.set_markup(widget.get_text())
 
 def safify(text):
-  return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+    """Removes HTML/XML character references and entities from a text string.
+       Taken from Fredrik Lundh - http://effbot.org/zone/re-sub.htm#unescape-html
+
+    """
+    def fixup(m):
+        text = m.group(0)
+        if text[:2] == "&#":
+            # character reference
+            try:
+                if text[:3] == "&#x":
+                    return unichr(int(text[3:-1], 16))
+                else:
+                    return unichr(int(text[2:-1]))
+            except ValueError:
+                pass
+        else:
+            # named entity
+            try:
+                text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+            except KeyError:
+                pass
+        return text # leave as is
+    return re.sub("&#?\w+;", fixup, text)

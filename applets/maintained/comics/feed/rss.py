@@ -89,9 +89,9 @@ class RSSFeed(Feed):
 
         # Update properties
         if 'description' in feed:
-            self.description = feed.description
+            self.description = self.unescape_html(feed.description)
         if 'title' in feed.feed:
-            self.name = feed.feed.title
+            self.name = self.unescape_html(feed.feed.title)
 
         # Create an item-thread tuple for every entry
         threads = []
@@ -165,6 +165,11 @@ class RSSFeed(Feed):
 
         items = self.items.itervalues()
         item = items.next()
+        # Get most recent item,
+        # fixes an issue with www.arcamax.com where oldest item has no comic
+        for i in items:
+            if i > item:
+                item = i
         result = list(enumerate(item[IMAGES]))
         for i in items:
             for index, value in enumerate(result):

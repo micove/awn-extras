@@ -26,12 +26,19 @@
 #include <glib/gi18n.h>
 #include <libdesktop-agnostic/fdo.h>
 #include <gio/gio.h>
+#include <stdarg.h>
 
 #include <libawn/libawn.h>
 #include "cairo-menu.h"
 #include "cairo-menu-item.h"
 #include "misc.h"
 #include "cairo-menu-applet.h"
+
+/* This sets the maximum number of volumes to show inline in Places.
+   If there are more items, they are shown in a submenu.
+   Maybe we should also apply this to bookmarks.
+   TODO Read this number from config. */
+#define MAX_ITEMS_OR_SUBMENU 7
 
 GMenuTree *  main_menu_tree = NULL;
 GMenuTree *  settings_menu_tree = NULL;    
@@ -66,14 +73,19 @@ get_image_from_gicon (GIcon * gicon)
 static gboolean
 add_special_item (GtkWidget * menu,
                   const gchar * name, 
-                  const gchar * icon_name,
                   const gchar * binary,
-                  const gchar * args)
+                  const gchar * args,
+                  ...)
 {
   GtkWidget * item;
   gchar *exec;
   GtkWidget * image;
   gchar * bin_path;
+  va_list ap;
+  gchar * icon_name;
+  int i;
+
+  va_start(ap, args);
 
   bin_path = g_find_program_in_path (binary);
   if (!bin_path)
@@ -85,7 +97,13 @@ add_special_item (GtkWidget * menu,
     g_free (bin_path);
   }
   item = cairo_menu_item_new_with_label (name);
-  image = get_gtk_image (icon_name);  
+  do
+  {
+    icon_name = va_arg(ap, gchar *);
+    image = get_gtk_image (icon_name);
+  } while (!image && icon_name);
+  va_end(ap);
+
   if (image)
   {
     gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
@@ -104,44 +122,50 @@ _fill_session_menu (GtkWidget * menu)
 
   if (have_gnome_session_manager)
   {
-    add_special_item (menu,_("Logout"),"gnome-logout","gnome-session-save","--logout-dialog --gui");
+    add_special_item (menu,_("Logout"),"gnome-session-save","--logout-dialog --gui","gnome-logout",NULL);
   }
   else if (dbus_service_exists ("org.xfce.SessionManager") )
   {
-    add_special_item (menu,_("Logout"),"gnome-logout","xfce4-session-logout","");
+    add_special_item (menu,_("Logout"),"xfce4-session-logout","","gnome-logout",NULL);
+  }
+  else
+  {
+    /* hope that gnome-session-save exists; needed for GNOME 2.22, at least. */
+    add_special_item (menu, _("Logout"), "gnome-session-save",
+                      "--kill --gui", "gnome-logout",NULL);
   }
   if (dbus_service_exists ("org.gnome.ScreenSaver"))
   {
-    if (!add_special_item (menu,_("Lock Screen"),"gnome-lockscreen","gnome-screensaver-command","--lock"))
+    if (!add_special_item (menu,_("Lock Screen"),"gnome-screensaver-command","--lock","gnome-lockscreen",NULL))
     {
-      add_special_item (menu,_("Lock Screen"),"gnome-lockscreen","dbus-send","--session --dest=org.gnome.ScreenSaver --type=method_call --print-reply --reply-timeout=2000 /org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock");
+      add_special_item (menu,_("Lock Screen"),"dbus-send","--session --dest=org.gnome.ScreenSaver --type=method_call --print-reply --reply-timeout=2000 /org/gnome/ScreenSaver org.gnome.ScreenSaver.Lock","gnome-lockscreen",NULL);
     }
   }
   else
   {
-    add_special_item (menu,_("Lock Screen"),"system-lock-screen","xscreensaver-command","-lock");
+    add_special_item (menu,_("Lock Screen"),"xscreensaver-command","-lock","system-lock-screen",NULL);
   }
   if (dbus_service_exists ("org.freedesktop.PowerManagement"))
   {
-    if (!add_special_item (menu,_("Suspend"),"gnome-session-suspend","gnome-power-cmd","suspend"))
+    if (!add_special_item (menu,_("Suspend"),"gnome-power-cmd","suspend","gnome-session-suspend",NULL))
     {
-      add_special_item (menu,_("Suspend"),"gnome-session-suspend","dbus-send","--session --dest=org.freedesktop.PowerManagement --type=method_call --print-reply --reply-timeout=2000 /org/freedesktop/PowerManagement org.freedesktop.PowerManagement.Suspend");
+      add_special_item (menu,_("Suspend"),"dbus-send","--session --dest=org.freedesktop.PowerManagement --type=method_call --print-reply --reply-timeout=2000 /org/freedesktop/PowerManagement org.freedesktop.PowerManagement.Suspend","gnome-session-suspend",NULL);
     }
     
-    if (!add_special_item (menu,_("Hibernate"),"gnome-session-hibernate","gnome-power-cmd","hibernate"))
+    if (!add_special_item (menu,_("Hibernate"),"gnome-power-cmd","hibernate","gnome-session-hibernate",NULL))
     {
-      add_special_item (menu,_("Hibernate"),"gnome-session-hibernate","dbus-send","--session --dest=org.freedesktop.PowerManagement --type=method_call --print-reply --reply-timeout=2000 /org/freedesktop/PowerManagement org.freedesktop.PowerManagement.Hibernate");
+      add_special_item (menu,_("Hibernate"),"dbus-send","--session --dest=org.freedesktop.PowerManagement --type=method_call --print-reply --reply-timeout=2000 /org/freedesktop/PowerManagement org.freedesktop.PowerManagement.Hibernate","gnome-session-hibernate",NULL);
     }
 
   }
   else if (dbus_service_exists ("org.gnome.PowerManagement"))
   {
-    if (!add_special_item (menu,_("Suspend"),"gnome-session-suspend","gnome-power-cmd","suspend"))
+    if (!add_special_item (menu,_("Suspend"),"gnome-power-cmd","suspend","gnome-session-suspend",NULL))
     {
 
     }
       
-    if (!add_special_item (menu,_("Hibernate"),"gnome-session-hibernate","gnome-power-cmd","hibernate"))
+    if (!add_special_item (menu,_("Hibernate"),"gnome-power-cmd","hibernate","gnome-session-hibernate",NULL))
     {
 
     }
@@ -149,7 +173,7 @@ _fill_session_menu (GtkWidget * menu)
   
   if (have_gnome_session_manager)
   {
-    add_special_item (menu,_("Shutdown"),"gnome-logout","gnome-session-save","--shutdown-dialog --gui");  
+    add_special_item (menu,_("Shutdown"),"gnome-session-save","--shutdown-dialog --gui","gnome-shutdown","gnome-logout",NULL);  
   }
   gtk_widget_show_all (menu);
   return FALSE;
@@ -174,6 +198,7 @@ _get_places_menu (GtkWidget * menu)
 {  
   static GVolumeMonitor* vol_monitor = NULL;
   static DesktopAgnosticVFSGtkBookmarks *bookmarks_parser = NULL;  
+  static DesktopAgnosticVFSTrash* trash_handler = NULL;
   
   GtkWidget *item = NULL;
   GError *error = NULL;
@@ -181,17 +206,28 @@ _get_places_menu (GtkWidget * menu)
   gchar * exec;
   const gchar *desktop_dir = g_get_user_special_dir (G_USER_DIRECTORY_DESKTOP);
   const gchar *homedir = g_get_home_dir();
+  guint trash_file_count;    
 
   gtk_container_foreach (GTK_CONTAINER (menu),(GtkCallback)_remove_menu_item,menu);
 
-  add_special_item (menu,_("Computer"),"computer","nautilus","computer:///");
-  add_special_item (menu,_("Home"),"stock_home",XDG_OPEN,homedir);
-  add_special_item (menu,_("Desktop"),"desktop",XDG_OPEN,desktop_dir?desktop_dir:homedir);
-/*
-TODO: check the trash and set to stock_trash_empty if trash is empty
-                     */
-  add_special_item (menu,_("Trash"),"stock_trash_full","nautilus","trash:///");
-  add_special_item (menu,_("File System"),"system",XDG_OPEN,"/");
+  add_special_item (menu,_("Computer"),"nautilus","computer:///","computer",NULL);
+  gchar *home_quoted, *desktop_quoted;
+  home_quoted = g_shell_quote (homedir);
+  desktop_quoted = g_shell_quote (desktop_dir);
+  add_special_item (menu,_("Home"),XDG_OPEN,home_quoted,"folder-home","stock_home",NULL);
+  add_special_item (menu,_("Desktop"),XDG_OPEN,desktop_dir?desktop_quoted:home_quoted,"desktop",NULL);
+  g_free (home_quoted);
+  g_free (desktop_quoted);
+  
+  if (trash_handler)
+    trash_file_count = desktop_agnostic_vfs_trash_get_file_count (trash_handler);
+
+  if (trash_file_count == 0)
+    add_special_item (menu,_("Trash"),"nautilus","trash:///","user-trash",NULL);
+  else
+    add_special_item (menu,_("Trash"),"nautilus","trash:///","stock_trash_full",NULL);
+
+  add_special_item (menu,_("File System"),XDG_OPEN,"/","system",NULL);
     
   if (!vol_monitor)
   {
@@ -200,6 +236,12 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
     these actions once.*/
     vol_monitor = g_volume_monitor_get();
     bookmarks_parser = desktop_agnostic_vfs_gtk_bookmarks_new (NULL, TRUE);
+    trash_handler = desktop_agnostic_vfs_trash_get_default (&error);
+    if (error)
+    {
+      g_critical ("Error with trash handler: %s", error->message);
+      g_error_free (error);
+    }
   }
   g_signal_handlers_disconnect_by_func (vol_monitor, G_CALLBACK(_get_places_menu), menu);
   g_signal_handlers_disconnect_by_func (vol_monitor, G_CALLBACK(_get_places_menu), menu);
@@ -209,6 +251,7 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
   g_signal_handlers_disconnect_by_func (vol_monitor, G_CALLBACK(_get_places_menu), menu);
   g_signal_handlers_disconnect_by_func (vol_monitor, G_CALLBACK(_get_places_menu), menu);
   g_signal_handlers_disconnect_by_func (G_OBJECT (bookmarks_parser), G_CALLBACK (_get_places_menu), menu);
+  g_signal_handlers_disconnect_by_func (trash_handler, G_CALLBACK(_get_places_menu), menu);
     
   g_signal_connect_swapped(vol_monitor, "volume-changed", G_CALLBACK(_get_places_menu), menu);
   g_signal_connect_swapped(vol_monitor, "drive-changed", G_CALLBACK(_get_places_menu), menu);
@@ -219,34 +262,47 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
   g_signal_connect_swapped(vol_monitor, "mount-removed", G_CALLBACK(_get_places_menu), menu);
   g_signal_connect_swapped (G_OBJECT (bookmarks_parser), "changed",
                       G_CALLBACK (_get_places_menu), menu);
+  g_signal_connect_swapped(trash_handler, "file-count-changed", G_CALLBACK(_get_places_menu), menu);
 
-    /*process mount etc*/
-  GList *drives = g_volume_monitor_get_connected_drives(vol_monitor);
+  /* Process mounts and volumes */
+  GList *volumes = g_volume_monitor_get_volumes (vol_monitor);
   GList *mounts = g_volume_monitor_get_mounts (vol_monitor);
   GList * iter;
+  GVolume * volume = NULL;
 
-/*  if (volumes)
-  {
-    g_message("Number of volumes: %d", g_list_length(volumes));
-    g_list_foreach(volumes, (GFunc)_fillin_connected, menu);
-  }*/
-/*
-     this iterating through mounts then drives may change.
-     May go to using mounts and volumes.
-     */
   for (iter = mounts; iter ; iter = g_list_next (iter))
   {
     GMount *mount = iter->data;
+
+    /* Volumes (mounted or not) are added later, don't show twice */
+    volume = g_mount_get_volume (mount);
+    if (volume)
+    {
+      g_object_unref (volume);
+      continue;
+    }
+    
+#if GLIB_CHECK_VERSION(2,20,0)
+    /* Shadowed mounts should not be displayed, see GIO reference manual */
+    if (g_mount_is_shadowed (mount))
+    {
+      continue;
+    }
+#endif
+
     gchar * name = g_mount_get_name (mount);
     GIcon * gicon = g_mount_get_icon (mount);
     GFile * file = g_mount_get_root (mount);
     gchar * uri = g_file_get_uri (file);
+
     item = cairo_menu_item_new_with_label (name);    
+#if GTK_CHECK_VERSION(2,14,0)
+    image = gtk_image_new_from_gicon (gicon, GTK_ICON_SIZE_MENU);
+#else
     image = get_image_from_gicon (gicon);
-    if (image)
-    {
-      gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
-    }    
+#endif
+    gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
+
     gtk_menu_shell_append (GTK_MENU_SHELL(menu),item);
 
     exec = g_strdup_printf("%s %s", XDG_OPEN, uri);
@@ -259,66 +315,67 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
     g_object_unref (gicon);
   }
 
-  if (drives)
+  g_list_foreach (mounts,(GFunc)g_object_unref,NULL);
+  g_list_free (mounts);
+ 
+  if (volumes)
   {
     item = gtk_separator_menu_item_new ();
     gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
   }
-    
-  for (iter = drives; iter ; iter = g_list_next (iter))
-  {
-    GDrive * drive = iter->data;
-    if (g_drive_has_volumes (drive))
-    {
-      GList * drive_volumes = g_drive_get_volumes (drive);
-      GList * vol_iter = NULL;
-      for (vol_iter =drive_volumes;vol_iter;vol_iter=g_list_next(vol_iter))
-      {
-        GVolume * volume = vol_iter->data;
-        GIcon * gicon = g_volume_get_icon (volume);
-        gchar * name = g_volume_get_name (volume);
-        
-        item = cairo_menu_item_new_with_label (name);
-        image = get_image_from_gicon (gicon);
-        if (image)
-        {
-          gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
-        }            
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
-        g_free (name);
-      }
-      g_list_foreach (drive_volumes,(GFunc)g_object_unref,NULL);
-      g_list_free (drive_volumes);
-    }
-    else
-    {
-      gboolean mounted = FALSE;
-      gchar * name = g_drive_get_name (drive);
-      GIcon * gicon = g_drive_get_icon (drive);
-      
-      item = cairo_menu_item_new_with_label (name);
-      image = get_image_from_gicon (gicon);
-      if (image)
-      {
-        gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
-      }          
-      gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
-      g_free (name);      
-    }
-  }
-    
-  g_list_foreach (drives,(GFunc)g_object_unref,NULL);
-  g_list_free (drives);
-  g_list_foreach (mounts,(GFunc)g_object_unref,NULL);
-  g_list_free (mounts);
 
-  add_special_item (menu,_("Network"),"network","nautilus","network:/");
-  add_special_item (menu,_("Connect to Server"),"stock_connect","nautilus-connect-server","");
+  /* Get Volumes */
+
+  GtkWidget *volumes_menu;
+  
+  volumes_menu = ((g_list_length (volumes) <= MAX_ITEMS_OR_SUBMENU)) ?
+                 menu :
+                 cairo_menu_new();
+
+  for (iter = volumes; iter ; iter = g_list_next (iter))
+  {
+    GIcon * gicon = g_volume_get_icon (iter->data);
+    gchar * name = g_volume_get_name (iter->data);
+    
+    item = cairo_menu_item_new_with_label (name);
+#if GTK_CHECK_VERSION(2,14,0)
+    image = gtk_image_new_from_gicon (gicon, GTK_ICON_SIZE_MENU);
+#else
+    image = get_image_from_gicon (gicon);
+#endif
+    gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
+
+    gtk_menu_shell_append(GTK_MENU_SHELL(volumes_menu),item);
+
+    /* the callback opens unmounted as well as mounted volumes */
+    g_signal_connect_data (G_OBJECT(item), "activate",
+                           G_CALLBACK(_mount), g_object_ref (iter->data),
+                           (GClosureNotify) g_object_unref, 0);
+
+    g_free (name);
+    g_object_unref (gicon);
+  }
+  
+  if (g_list_length (volumes) > MAX_ITEMS_OR_SUBMENU)
+  {
+    item = cairo_menu_item_new_with_label (_("Removable Media"));
+    image = get_gtk_image ("gnome-dev-removable");
+    gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
+
+    gtk_menu_item_set_submenu (GTK_MENU_ITEM(item),volumes_menu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
+  }
+
+  g_list_foreach (volumes,(GFunc)g_object_unref,NULL);
+  g_list_free (volumes);
+
+  add_special_item (menu,_("Network"),"nautilus","network:/","network",NULL);
+  add_special_item (menu,_("Connect to Server"),"nautilus-connect-server","","stock_connect",NULL);
   item = gtk_separator_menu_item_new ();
   gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
 
     
-  /* bookmarks    */
+  /* Bookmarks */
   GSList *bookmarks;
   GSList *node;
 
@@ -331,7 +388,7 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
     gchar *b_path;
     gchar *b_uri;
     gchar *shell_quoted = NULL;
-    gchar *icon_name = NULL;
+    item = NULL;
     
     bookmark = (DesktopAgnosticVFSBookmark*)node->data;
     b_file = desktop_agnostic_vfs_bookmark_get_file (bookmark);
@@ -339,7 +396,11 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
     b_path = desktop_agnostic_vfs_file_get_path (b_file);
     b_uri = desktop_agnostic_vfs_file_get_uri (b_file);
 
-    if (b_path)
+    if (b_path && !desktop_agnostic_vfs_file_exists(b_file))
+    {
+      /* leave item as NULL */
+    }
+    else if (b_path)
     {
       shell_quoted = g_shell_quote (b_path);
       exec = g_strdup_printf("%s %s", XDG_OPEN,shell_quoted);
@@ -347,13 +408,11 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
       if (b_alias)
       {
         item = cairo_menu_item_new_with_label (b_alias);
-        icon_name = g_utf8_strdown (b_alias,-1);
       }
       else
       {
         gchar * base = g_path_get_basename (b_path);
         item = cairo_menu_item_new_with_label (base);        
-        icon_name = g_utf8_strdown (base,-1);        
         g_free (base);
       }
       g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_exec), exec);              
@@ -367,13 +426,11 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
       if (b_alias)
       {
         item = cairo_menu_item_new_with_label (b_alias);
-        icon_name = g_utf8_strdown (b_alias,-1);        
       }
       else
       {
         gchar * base = g_path_get_basename (b_uri);
         item = cairo_menu_item_new_with_label (b_uri);
-        icon_name = g_utf8_strdown (base,-1);        
         g_free (base);
       }
       g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_exec), exec);              
@@ -391,42 +448,80 @@ TODO: check the trash and set to stock_trash_empty if trash is empty
       if (b_alias)
       {
         item = cairo_menu_item_new_with_label (b_alias);
-        icon_name = g_utf8_strdown (b_alias,-1);        
       }
       else
       {
         gchar * base = g_path_get_basename (b_uri);
         item = cairo_menu_item_new_with_label (base);
-        icon_name = g_utf8_strdown (base,-1);        
         g_free (base);
       }
-      g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_exec), exec);      
-      gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
-    }
-    else
-    {
-      g_object_ref_sink (item);
-      item = NULL;
+      if (item)
+      {
+        g_signal_connect(G_OBJECT(item), "activate", G_CALLBACK(_exec), exec);      
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu),item);
+      }
     }
 
     if (item)
     {
-      if (icon_name)
+      /* Set icons for known paths and remote destinations */
+      
+      if (g_strcmp0 (b_uri, "computer:///") == 0)
       {
-        gchar * folderfied_icon_name = g_strdup_printf("folder-%s",icon_name);
-        g_free (icon_name);
-        icon_name = folderfied_icon_name;
-        image = get_gtk_image (icon_name);
-        g_free (icon_name);
+        image = get_gtk_image ("computer");
       }
+      else if (g_strcmp0 (b_path, homedir) == 0)
+      {
+        image = get_gtk_image ("folder-home");
+      }
+      else if (g_strcmp0 (b_path, desktop_dir) == 0)
+      {
+        image = get_gtk_image ("desktop");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_DOCUMENTS)) == 0)
+      {
+        image = get_gtk_image ("folder-documents");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_DOWNLOAD)) == 0)
+      {
+        image = get_gtk_image ("folder-download");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_MUSIC)) == 0)
+      {
+        image = get_gtk_image ("folder-music");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_PICTURES)) == 0)
+      {
+        image = get_gtk_image ("folder-pictures");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_PUBLIC_SHARE)) == 0)
+      {
+        image = get_gtk_image ("folder-publicshare");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_TEMPLATES)) == 0)
+      {
+        image = get_gtk_image ("folder-templates");
+      }
+      else if (g_strcmp0 (b_path, g_get_user_special_dir (G_USER_DIRECTORY_VIDEOS)) == 0)
+      {
+        image = get_gtk_image ("folder-videos");
+      }
+      else if (!b_path)
+      {
+        image = get_gtk_image ("folder-remote");
+      }
+      else
+      {
+        image = get_gtk_image ("stock_folder");
+      }
+
+      /* For icon themes that don't feature icons for special directories */
       if (!image)
       {
         image = get_gtk_image ("stock_folder");
       }
-      if (image)
-      {
-        gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
-      }
+
+      gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (item),image);
     }
     g_free (b_path);
     g_free (b_uri);
@@ -489,7 +584,7 @@ fill_er_up(MenuInstance * instance,GMenuTreeDirectory *directory, GtkWidget * me
         }
         txt = gmenu_tree_entry_get_name( (GMenuTreeEntry*)item);
         desktop_file = g_strdup (gmenu_tree_entry_get_desktop_file_path ((GMenuTreeEntry*)item));
-        uri = g_strdup_printf("file://%s\n",desktop_file);
+        uri = g_strdup_printf("file://%s",desktop_file);
         if (desktop_file)
         {
           entry = get_desktop_entry (desktop_file);
@@ -794,7 +889,7 @@ submenu_build (MenuInstance * instance)
   else if (g_strcmp0(instance->submenu_name,":::RECENT")==0)
   {
     g_assert (!instance->menu);    
-    menu = get_recent_menu ();
+    menu = get_recent_menu (NULL);
   }
   else if (g_strcmp0(instance->submenu_name,":::SESSION")==0)
   {
@@ -980,9 +1075,9 @@ menu_build (MenuInstance * instance)
     }
     else
     {
-      sub_menu = get_recent_menu ();        
       gchar * icon_name;
       instance->recent = menu_item = cairo_menu_item_new_with_label (_("Recent Documents"));
+      sub_menu = get_recent_menu (menu_item);        
       image = get_gtk_image (icon_name = "document-open-recent");
       if (!image)
       {
@@ -1054,7 +1149,7 @@ menu_build (MenuInstance * instance)
     if ( !instance->submenu_name)
     {    
       /*generates a compiler warning due to the ellipse*/
-      menu_item = cairo_menu_item_new_with_label (_("Search\u2026"));
+      menu_item = cairo_menu_item_new_with_label (_("Search\342\200\246"));
       /* add proper ellipse*/
       image = get_gtk_image ("stock_search");
       if (image)
@@ -1071,7 +1166,7 @@ menu_build (MenuInstance * instance)
     if ( !instance->submenu_name)
     {    
       /*generates a compiler warning due to the ellipse*/    
-      menu_item = cairo_menu_item_new_with_label (_("Launch\u2026"));
+      menu_item = cairo_menu_item_new_with_label (_("Launch\342\200\246"));
       /* add proper ellipse*/
       image = get_gtk_image ("gnome-run");
       if (image)

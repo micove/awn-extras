@@ -23,13 +23,16 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 
-from desktopagnostic import config, Color
-from desktopagnostic.ui import ColorButton
+from desktopagnostic import config, Color, vfs
 import awn
-from awn.extras import configbinder, __version__
+from awn.extras import _, configbinder, __version__
 
 import cairo
-import cPickle as cpickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+import glib
 import gobject
 
 ___file___ = sys.argv[0]
@@ -74,23 +77,29 @@ def add_cell_renderer_text(combobox):
     combobox.add_attribute(text, "text", 0)
 
 
-def deprecated(old, new):
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            m = "\nawnlib warning in %s:\n\t%s is deprecated; use %s instead\n"
-            print m % (os.path.split(___file___)[1], old, new)
-            return f(*args, **kwargs)
-        return wrapper
-    return decorator
+def is_required_version(version, required_version):
+    """Return True if version is higher than or equal to
+    required_version, False otherwise.
+
+    """
+    for i, j in zip(version, required_version):
+        if i > j:
+            return True
+        elif i < j:
+            return False
+    return True
 
 
-class KeyRingError:
+class KeyringError(Exception):
+    pass
 
-    def __init__(self, str):
-        self.msg = str
 
-    def __str__(self):
-        return self.msg
+class KeyringCancelledError(KeyringError):
+    pass
+
+
+class KeyringNoMatchError(KeyringError):
+    pass
 
 
 class Dialogs:
@@ -118,13 +127,14 @@ class Dialogs:
         if all([key in meta_keys for key in ("name", "author", "copyright-year")]):
             about_dialog = self.new("about")
 
-            about_item = gtk.ImageMenuItem("_About %s" % self.__parent.meta["name"])
-            if gtk.gtk_version >= (2, 16, 0):
-                about_item.props.always_show_image = True
+            about_item = gtk.ImageMenuItem(_("_About %s") % self.__parent.meta["name"])
+            about_item.props.always_show_image = True
             about_item.set_image(gtk.image_new_from_stock(gtk.STOCK_ABOUT, gtk.ICON_SIZE_MENU))
             self.menu.append(about_item)
             about_item.connect("activate", lambda w: self.toggle("about"))
+            about_item.show()
 
+    def connect_signals(self, parent):
         def popup_menu_cb(widget, event):
             self.toggle("menu", once=True, event=event)
         parent.connect("context-menu-popup", popup_menu_cb)
@@ -160,11 +170,10 @@ class Dialogs:
                 position = position - 1
 
             prefs_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_PREFERENCES)
-            if gtk.gtk_version >= (2, 16, 0):
-                prefs_item.props.always_show_image = True
+            prefs_item.props.always_show_image = True
             self.menu.insert(prefs_item, position)
-            prefs_item.connect("activate", lambda w: self.toggle(
-               "preferences", "show"))
+            prefs_item.connect("activate", lambda w: self.toggle("preferences", "show"))
+            prefs_item.show()
         else:
             dlog = awn.Dialog(self.__parent)
 
@@ -192,7 +201,7 @@ class Dialogs:
         if dialog in self.__register:
             raise RuntimeError("Dialog '%s' already registered" % dialog)
 
-        if focus and dialog not in self.__special_dialogs:
+        if focus and dialog not in self.__special_dialogs and isinstance(dlog, awn.Dialog):
             dlog.props.hide_on_unfocus = focus
 
         self.__register[dialog] = dlog
@@ -210,6 +219,9 @@ class Dialogs:
         if dialog in self.__special_dialogs:
             raise RuntimeError("Unregistering special dialog '%s' is forbidden" % dialog)
 
+        if dialog == self.__current:
+            self.__register[dialog].hide()
+            self.__current = None
         del self.__register[dialog]
 
     def toggle(self, dialog, force="", once=False, event=None):
@@ -234,11 +246,10 @@ class Dialogs:
         assert dialog in self.__register, "Dialog '%s' must be registered" % dialog
 
         if dialog == "menu":
-            self.__register["menu"].show_all()
-            self.__register["menu"].popup(None, None, None, event.button, event.time)
+            self.show_menu(self.__parent, event)
         elif dialog == "about":
             self.__register["about"].show()
-            self.__register["about"].deiconify()
+            self.__register["about"].present()
         else:
             if force == "hide" or (self.__register[dialog].is_active() and force != "show"):
                 self.__register[dialog].hide()
@@ -249,7 +260,8 @@ class Dialogs:
             else:
                 self.__parent.tooltip.hide()
 
-                if self.__current is not None and self.__current not in self.__special_dialogs:
+                if self.__current is not None and self.__current not in self.__special_dialogs \
+                        and dialog != self.__current:
                     current = self.__register[self.__current]
                     current_was_active = current.is_active()
 
@@ -262,7 +274,11 @@ class Dialogs:
                 self.__register[dialog].show_all()
                 self.__current = dialog
                 if dialog == "preferences":
-                    self.__register[dialog].deiconify()
+                    self.__register[dialog].present()
+
+    def show_menu(self, parent, event):
+        self.__register["menu"].show()
+        parent.popup_gtk_menu(self.__register["menu"], event.button, event.time)
 
     def hide(self):
         """Hide the currently visible dialog.
@@ -294,15 +310,11 @@ class Dialogs:
                 self.update_logo_icon()
                 parent.connect_size_changed(self.update_logo_icon)
             elif "theme" in parent.meta:
-                self.update_theme_icon()
-                parent.connect_size_changed(self.update_theme_icon)
+                self.set_icon_name(parent.meta["theme"])
 
             # Connect some signals to be able to hide the window
             self.connect("response", self.response_event)
-            self.connect("delete_event", self.delete_event)
-
-        def delete_event(self, widget, event):
-            return True
+            self.connect("delete_event", gtk.Widget.hide_on_delete)
 
         def response_event(self, widget, response):
             if response < 0:
@@ -312,16 +324,7 @@ class Dialogs:
             """Update the logo to be of the same height as the panel.
 
             """
-            size = self.__parent.get_size()
-            self.set_icon(gtk.gdk.pixbuf_new_from_file_at_size( \
-                self.__parent.meta["logo"], size, size))
-
-        def update_theme_icon(self):
-            """Updates the logo to be of the same height as the panel.
-
-            """
-            self.set_icon(self.__parent.get_icon() \
-                .get_icon_at_size(self.__parent.get_size()))
+            self.set_icon_from_file(self.__parent.meta["logo"])
 
     class AboutDialog(BaseDialog, gtk.AboutDialog):
 
@@ -352,11 +355,9 @@ class Dialogs:
 
             if "logo" in parent.meta:
                 self.set_logo(gtk.gdk.pixbuf_new_from_file_at_size( \
-                        parent.meta["logo"], 48, 48))
+                    parent.meta["logo"], 48, 48))
             elif "theme" in parent.meta:
-                # It is assumed that the C{awn.Icons}
-                # object has been set via set_awn_icon() in C{Icon}
-                self.set_logo(parent.get_icon().get_icon_at_size(48))
+                self.set_logo_icon_name(parent.meta["theme"])
 
     class PreferencesDialog(BaseDialog, gtk.Dialog):
 
@@ -374,7 +375,8 @@ class Dialogs:
             self.set_resizable(False)
             self.set_border_width(5)
 
-            self.set_title(parent.meta["name"] + " Preferences")
+            # This is a window title, %s is an applet's name.
+            self.set_title(_("%s Preferences") % parent.meta["name"])
             self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
 
 
@@ -417,7 +419,7 @@ class Tooltip:
     def set(self, text):
         """Set the applet tooltip.
 
-        @param text: The new tooltip text. Defaults to "".
+        @param text: The new tooltip text.
         @type text: C{string}
 
         """
@@ -442,10 +444,10 @@ class Icon:
         self.__parent = parent
 
         self.__previous_context = None
+        self.__has_remove_custom_icon_item = False
 
         # Set the themed icon to set the C{awn.Icons} object
         if "theme" in parent.meta:
-            # TODO does not handle multiple icons yet
             self.theme(parent.meta["theme"])
 
     def file(self, file, set=True, size=None):
@@ -482,11 +484,18 @@ class Icon:
 
         @param name: The name of the theme icon.
         @type name: C{string}
-        @return: The resultant pixbuf
-        @rtype: C{gtk.gdk.Pixbuf}
 
         """
-        return self.__parent.set_icon_name(name)
+        self.__parent.set_icon_name(name)
+
+        if not self.__has_remove_custom_icon_item:
+            self.__has_remove_custom_icon_item = True
+
+            icon = self.__parent.get_icon()
+            assert isinstance(icon, awn.ThemedIcon)
+
+            item = icon.create_remove_custom_icon_item()
+            self.__parent.dialog.menu.insert(item, 1)
 
     def set(self, icon):
         """Set a C{gtk.gdk.pixbuf} or C{cairo.Context} as your applet icon.
@@ -542,6 +551,98 @@ class Theme:
         self.__parent.get_icon().override_gtk_theme(theme)
 
 
+class Icons:
+
+    def __init__(self, parent):
+        """Create a new Icons object.
+
+        @param parent: The parent applet of the icons instance.
+        @type parent: L{Applet}
+
+        """
+        self.__parent = parent
+
+        self.__icon_box = awn.IconBox(parent)
+        parent.add(self.__icon_box)
+
+        def update_size():
+            size = self.__parent.get_size()
+            for icon in self.__icon_box.get_children():
+                icon.set_size(size)
+
+        parent.connect_size_changed(update_size)
+
+    def add(self, icon_name, tooltip_text, context_menu=None):
+        """Set an icon from the default icon theme and set the applet
+        tooltip. Optionally provide a context menu that should be
+        displayed instead of the applet's standard context menu. The
+        resultant themed icon will be returned.
+
+        @param icon_name: The name of the theme icon.
+        @type icon_name: C{string}
+        @param tooltip_text: The new tooltip text.
+        @type tooltip_text: C{string}
+        @param context_menu: Optional context menu.
+        @type context_menu: C{gtk.Menu} or C{None}
+        @return: The resultant themed icon
+        @rtype: C{awn.ThemedIcon}
+
+        """
+        icon = awn.ThemedIcon()
+        icon.set_tooltip_text(tooltip_text)
+        icon.set_size(self.__parent.get_size())
+        if isinstance(icon_name, vfs.File):
+            icon_pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(icon_name.props.path, -1, self.__parent.get_size())
+            icon.set_from_pixbuf(icon_pixbuf)
+            # TODO make sure icon gets refreshed when doing update_size() (see above)
+        else:
+            icon.set_info_simple(self.__parent.meta["short"], self.__parent.get_uid(), icon_name)
+
+        # Callback context menu
+        if context_menu is None:
+            # TODO make sure item will not be added more than once
+            item = icon.create_remove_custom_icon_item()
+            self.__parent.dialog.menu.insert(item, 1)
+
+            def popup_menu_cb(widget, event):
+                self.__parent.dialog.show_menu(widget, event)
+            icon.connect("context-menu-popup", popup_menu_cb)
+        else:
+            assert isinstance(context_menu, gtk.Menu)
+
+            # TODO make sure item will not be added more than once
+            item = icon.create_remove_custom_icon_item()
+            context_menu.insert(item, 1)
+
+            def popup_menu_cb(widget, event, menu):
+                menu.show()
+                widget.popup_gtk_menu(menu, event.button, event.time)
+            icon.connect("context-menu-popup", popup_menu_cb, context_menu)
+
+        icon.show_all()
+        self.__icon_box.add(icon)
+        return icon
+
+    def remove(self, icon):
+        """Remove the specified icon from the applet. The icon will not
+        be destroyed.
+
+        @param icon: The icon to be removed.
+        @type icon: C{awn.ThemedIcon}
+
+        """
+        assert isinstance(icon, awn.ThemedIcon)
+
+        self.__icon_box.remove(icon)
+
+    def destroy_all(self):
+        """Remove and destroy all icons in the applet.
+
+        """
+        for icon in self.__icon_box.get_children():
+            icon.destroy()
+
+
 class Errors:
 
     def __init__(self, parent):
@@ -567,8 +668,8 @@ class Errors:
 
         """
         try:
-            """ Don't add the module to globals[name], otherwise
-            awn.check_dependencies() won't show an error dialog. """
+            """ Do not add the module to globals[name], otherwise
+            awn.check_dependencies() will not show an error dialog. """
             scope[name] = __import__(name, scope)
         except ImportError:
             self.__parent.icon.theme("dialog-error")
@@ -578,6 +679,7 @@ class Errors:
 
     def set_error_icon_and_click_to_restart(self):
         self.__parent.icon.theme("dialog-error")
+
         def crash_applet(widget=None, event=None):
             gtk.main_quit()
         self.__parent.connect("clicked", crash_applet)
@@ -604,16 +706,19 @@ class Errors:
             error_type = type(error).__name__
             error = str(error)
             if traceback is not None:
-                print "\n".join(["-"*80, traceback, "-"*80])
+                print "\n".join(["-" * 80, traceback, "-" * 80])
                 summary = "%s in %s: %s" % (error_type, self.__parent.meta["name"], error)
                 if self.__parent.meta["version"] == __version__:
-                    args["message"] = "Visit Launchpad and report the bug by following these steps:\n\n" \
+                    args["message"] = "If you speak English and know how a bug tracker works, then visit Launchpad and report the bug by following these steps:\n\n" \
                                     + "1) Paste the error summary text in the 'summary' field\n" \
-                                    + "2) Press Continue and then check whether the bug has already been reported or not\n" \
-                                    + "3) If you continue and report the bug, paste the following in the big textarea:\n" \
+                                    + "2) Press Continue and then check whether the bug has already been reported or not. Do NOT add duplicates. Instead comment on the bug report that already exists.\n" \
+                                    + "3) If you continue and report the bug, put the following in the big textarea:\n" \
+                                    + "    - exact version of awn-extras\n" \
+                                    + "    - operating system name and version\n" \
                                     + "    - the traceback\n" \
-                                    + "    - applet version: '%s'\n" % self.__parent.meta["version"] \
-                                    + "    - other info requested by the guidelines found below the big textarea"
+                                    + "    - other info requested by the guidelines found below the big textarea\n\n" \
+                                    + "Remember: you must be able to speak English and check regularly whether the developers ask you questions. Do NOT add duplicates, but comment on the existing bug report. You cannot expect a bug to be fixed if you don't provide information.\n\n" \
+                                    + "If you don't think you can meet these conditions, then don't file a bug report."
                     args["url"] = bug_report_link
                 else:
                     args["message"] = "Report this bug at the bug tracker of the %s applet." % self.__parent.meta["name"]
@@ -647,6 +752,7 @@ class Errors:
             copy_summary_button.connect("clicked", clicked_cb, summary)
 
         if callable(callback):
+
             def response_cb(widget, response):
                 if response < 0:
                     callback()
@@ -679,9 +785,13 @@ class Errors:
             if len(message) > 0:
                 self.format_secondary_markup(message)
 
+            # Make texts non-selectable to stop unhelpful bug reports from stupid users
+            for i in self.get_message_area().get_children():
+                i.set_selectable(False)
+
             if url is not None:
                 alignment = gtk.Alignment(xalign=0.5, xscale=0.0)
-                alignment.add(gtk.LinkButton(url))
+                alignment.add(gtk.LinkButton(url, url))
                 self.vbox.pack_start(alignment, expand=False)
 
 
@@ -702,7 +812,7 @@ class Settings:
 
         """
         type_parent = type(parent)
-        if type_parent in (Applet, config.Client):
+        if type_parent in (AppletSimple, AppletMultiple, config.Client):
             self.__folder = config.GROUP_DEFAULT
         elif type_parent is str:
             self.__folder = parent
@@ -748,8 +858,9 @@ class Settings:
 
         """
         value = self.__client.get(key)
+
         if type(value) is str and value[:9] == "!pickle;\n":
-            value = cpickle.loads(value[9:])
+            value = pickle.loads(value[9:])
         return value
 
     def __setitem__(self, key, value):
@@ -762,9 +873,10 @@ class Settings:
         unpickled_value = value
 
         if type(value) not in self.__setting_types:
-            value = "!pickle;\n%s" % cpickle.dumps(value)
+            value = "!pickle;\n%s" % pickle.dumps(value)
         elif type(value) is long:
             value = int(value)
+
         self.__client.set(key, value)
 
     def __contains__(self, key):
@@ -792,16 +904,19 @@ class Settings:
 
             """
             self.__config_object = None
-            
+            self.__parent = None
+
             type_client = type(client)
             if client is None:
                 self.__client = awn.config_get_default(awn.PANEL_ID_DEFAULT)
-            elif type_client is Applet:
+            elif type_client in (AppletSimple, AppletMultiple):
                 self.__client = awn.config_get_default_for_applet(client)
 
                 def applet_deleted_cb(applet):
                     self.__client.remove_instance()
                 client.connect("applet-deleted", applet_deleted_cb)
+                
+                self.__parent = client
             elif type_client is config.Client:
                 self.__client = client
             else:
@@ -836,7 +951,9 @@ class Settings:
                 try:
                     self.__client.set_value(self.__folder, key, value)
                 except:
-                    raise ValueError("Could not set new value of '%s'" % key)
+                    name = self.__parent.meta["name"] if self.__parent is not None else "UNKNOWN" 
+                    print "%s: Could not set new value for key '%s'" % (name, key)
+                    raise
 
         def get(self, key):
             """Get an existing key's value.
@@ -853,7 +970,9 @@ class Settings:
                 try:
                     return self.__client.get_value(self.__folder, key)
                 except:
-                    raise ValueError("'%s' does not exist" % key)
+                    name = self.__parent.meta["name"] if self.__parent is not None else "UNKNOWN"
+                    print "%s: key '%s' does not exist" % (name, key)
+                    raise
 
         def contains(self, key):
             """Test if the key maps to a value.
@@ -895,21 +1014,24 @@ class Keyring:
             awn.check_dependencies(globals(), "gnomekeyring")
 
         if not gnomekeyring.is_available():
-            raise KeyRingError("Keyring not available")
+            raise KeyringError("Keyring not available")
 
         keyring_list = gnomekeyring.list_keyring_names_sync()
 
         if len(keyring_list) == 0:
-            raise KeyRingError("No keyrings available")
+            raise KeyringError("No keyrings available")
 
         try:
             gnomekeyring.get_default_keyring_sync()
         except gnomekeyring.NoKeyringDaemonError:
-            raise KeyRingError("Had trouble connecting to daemon")
+            raise KeyringError("Had trouble connecting to daemon")
 
-    def new(self, name=None, pwd=None, attrs={}, type="generic"):
+    def new(self, keyring=None, name=None, pwd=None, attrs={}, type="generic"):
         """Create a new keyring key.
 
+        @param keyring: The keyring holding the key. If omitted, the default
+            keyring is returned.
+        @type keyring: C{string}
         @param name: The display name of the key. If omitted, an empty key is
             returned.
         @type name: C{string}
@@ -924,41 +1046,67 @@ class Keyring:
         @rtype: L{Key}
 
         """
-        k = self.Key()
+        k = self.Key(keyring)
         if name and pwd:
-            k.set(name, pwd, attrs, type)
+            k.set(k.keyring, name, pwd, attrs, type)
         return k
 
-    def from_token(self, token):
-        """Load the key with the given token.
+    def from_token(self, keyring, token):
+        """Load the key with the given token. Note: If keyring is None, the
+        default keyring is used. However, this is not recommended.
 
+        @param keyring: The keyring holding the key. If omitted, the default
+            keyring is used.
+        @type keyring: C{string}
         @param token: The password token of the key
         @type token: C{int} or C{long}
         @return: A new L{Key} object
         @rtype: L{Key}
 
         """
-        k = self.Key()
-        k.token = token
+        k = self.Key(keyring, token)
+
+        keys = gnomekeyring.list_item_ids_sync(k.keyring)
+        if k.token not in keys:
+            raise KeyringNoMatchError("Token does not exist")
+
         return k
 
     class Key(object):
 
-        def __init__(self, token=0):
-            """Create a new key.
+        def __init__(self, keyring=None, token=0):
+            """Create a new key. If keyring is None, the default keyring or
+            "login" keyring is used. Note: self.keyring will hold the name of
+            the keyring eventually used. To identify a key unambiguously
+            keyring name and token are needed.
 
-            @param keyring: The keyring module.
-            @type keyring: C{module}
+            @param keyring: The keyring holding the key. If omitted, the
+                default keyring is used.
+            @type keyring: C{string}
             @param token: The token of an already-existing key. Optional.
             @type token: C{long}
 
             """
+            keyring_list = gnomekeyring.list_keyring_names_sync()
+            if keyring is None:
+                keyring = gnomekeyring.get_default_keyring_sync()
+                if keyring is None:
+                    if "login" in keyring_list:
+                        keyring = "login"
+                    else:
+                        raise KeyringError("No default keyring set")
+            if keyring not in keyring_list:
+                raise KeyringNoMatchError("Keyring does not exist")
+
+            self.keyring = keyring
             self.token = token
 
-        def set(self, name, pwd, attrs={}, type="generic"):
+        def set(self, keyring, name, pwd, attrs={}, type="generic"):
             """Create a new keyring key. Note that if another key
             exists with the same name, it will be overwritten.
 
+            @param keyring: The keyring holding the key.
+            @type keyring: C{string}
             @param name: The display name of the key.
             @type name: C{string}
             @param pwd: The password stored in the key.
@@ -976,8 +1124,36 @@ class Keyring:
             else:  # Generic included
                 type = gnomekeyring.ITEM_GENERIC_SECRET
 
-            self.token = gnomekeyring.item_create_sync(None, type, name, \
-                attrs, pwd, True)
+            try:
+                self.token = gnomekeyring.item_create_sync(keyring, type, \
+                    name, attrs, pwd, True)
+                self.keyring = keyring
+            except gnomekeyring.CancelledError:
+                self.token = 0
+
+        def __unlock(self):
+            """Unlock the key's keyring."""
+
+            info = gnomekeyring.get_info_sync(self.keyring)
+            if not info.get_is_locked():
+                return
+
+            # The straight way would be:
+            # gnomekeyring.unlock_sync(self.keyring, None)
+            # But this results in a type error, see launchpad bugs #432882.
+            # We create a dummy key instead, this triggers a user dialog to
+            # unlock the keyring. We delete the dummy key then immediately.
+            try:
+                tmp = gnomekeyring.item_create_sync(self.keyring, \
+                      gnomekeyring.ITEM_GENERIC_SECRET, "awn-extras dummy", \
+                      {"dummy_attr": "none"}, "dummy_pwd", True)
+            except gnomekeyring.CancelledError:
+                raise KeyringCancelledError("Operation cancelled by user")
+            try:
+                gnomekeyring.item_delete_sync(self.keyring, tmp)
+            except gnomekeyring.BadArgumentsError:
+                # Race condition if several applets use this method at once
+                pass
 
         def delete(self):
             """Delete the current key. Will also reset the token. Note that
@@ -985,29 +1161,37 @@ class Keyring:
             destructive. delete() MUST be called manually.
 
             """
-            gnomekeyring.item_delete_sync(None, self.token)
+            self.__unlock()
+            gnomekeyring.item_delete_sync(self.keyring, self.token)
             self.token = 0
 
         def __get(self):
-            return gnomekeyring.item_get_info_sync(None, self.token)
+            self.__unlock()
+            return gnomekeyring.item_get_info_sync(self.keyring, self.token)
 
         def __getAttrs(self):
-            return gnomekeyring.item_get_attributes_sync(None, self.token)
+            self.__unlock()
+            return gnomekeyring.item_get_attributes_sync(self.keyring, self.token)
 
         def __setAttrs(self, a):
-            return gnomekeyring.item_set_attributes_sync(None, self.token, a)
+            self.__unlock()
+            return gnomekeyring.item_set_attributes_sync(self.keyring, self.token, a)
 
         def __getName(self):
             return self.__get().get_display_name()
 
         def __setName(self, name):
-            self.__get().set_display_name(name)
+            info = self.__get()
+            info.set_display_name(name)
+            return gnomekeyring.item_set_info_sync(self.keyring, self.token, info)
 
         def __getPass(self):
             return self.__get().get_secret()
 
         def __setPass(self, passwd):
-            self.__get().set_secret(passwd)
+            info = self.__get()
+            info.set_secret(passwd)
+            return gnomekeyring.item_set_info_sync(self.keyring, self.token, info)
 
         attrs = property(__getAttrs, __setAttrs)
         """
@@ -1126,9 +1310,9 @@ class Timing:
                 return False
 
             if int(self.__seconds) == self.__seconds:
-                self.__timer_id = gobject.timeout_add_seconds(int(self.__seconds), self.__callback)
+                self.__timer_id = glib.timeout_add_seconds(int(self.__seconds), self.__callback)
             else:
-                self.__timer_id = gobject.timeout_add(int(self.__seconds * 1000), self.__callback)
+                self.__timer_id = glib.timeout_add(int(self.__seconds * 1000), self.__callback)
             return True
 
         def stop(self):
@@ -1142,7 +1326,7 @@ class Timing:
             if self.__timer_id is None:
                 return False
 
-            gobject.source_remove(self.__timer_id)
+            glib.source_remove(self.__timer_id)
             self.__timer_id = None
             return True
 
@@ -1198,7 +1382,7 @@ class Notify:
         notification = self.Notification(self.__parent, *args, **kwargs)
         notification.show()
 
-    def create_notification(self, *args, **kwargs):
+    def create(self, *args, **kwargs):
         """Return a notification that can be shown via show().
 
         @param subject: The subject of your message. If blank, "Message from
@@ -1230,35 +1414,10 @@ class Notify:
                 self.__notification.set_timeout(timeout * 1000)
 
         def show(self):
-            self.__notification.show()            
-
-
-class Effects:
-
-    def __init__(self, parent):
-        """Create a new Effects object.
-
-        @param parent: The parent applet of the effects instance.
-        @type parent: L{Applet}
-
-        """
-        self.__effects = parent.get_icon().get_effects()
-
-    def attention(self):
-        """Launch the notify effect.
-
-        Should be used when the user's attention is required.
-
-        """
-        self.__effects.start("attention")
-
-    def launch(self):
-        """Launch the launch effect.
-
-        Should be used when launching another program.
-
-        """
-        self.__effects.start("launching")
+            try:
+                self.__notification.show()
+            except glib.GError:
+                pass  # Ignore error when no reply has been received
 
 
 class Meta:
@@ -1280,57 +1439,16 @@ class Meta:
         self.__parent = parent
 
         self.__info = info
-
-        self.__options = {}
-        self.options(options)
-
-    def update(self, info):
-        """Update the meta instance with new information.
-
-        @param info: Updated values for the meta dictionary
-        @type info: C{dict}
-
-        """
-        self.__info.update(info)
-
-    def options(self, opts):
-        """Update the options the applet has set
-
-        @param opts: Options to set
-        @type opts: C{list} or C{tuple}
-
-        """
-        self.__options.update(self.__parse_options(opts))
+        self.__options = options
 
     def has_option(self, option):
         """Check if the applet has set a specific option.
 
-        @param option: Option to check. Format: "option/suboption/suboption"
+        @param option: Option to check
         @type option: C{str}
 
         """
-        option = option.split("/")
-        srch = self.__options
-        for i in option:
-            if i not in srch or not srch[i]:
-                return False
-            elif srch[i] == True:  # tuples evaluate to True
-                return True
-            else:
-                srch = srch[i]
-        return True
-
-    def __parse_options(self, options):
-        t = {}
-        for i in options:
-            if type(i) is str:
-                t[i] = True
-            elif type(i) in (tuple, list):
-                if type(i[1]) is bool:
-                    t[i[0]] = i[1]
-                elif type(i[1]) in (tuple, list):
-                    t[i[0]] = f(i[1])
-        return t
+        return option in self.__options
 
     def __getitem__(self, key):
         """Get a key from the dictionary.
@@ -1340,26 +1458,6 @@ class Meta:
 
         """
         return self.__info[key]
-
-    def __setitem__(self, key, value):
-        """Set a key in the dictionary.
-
-        @param key: The key
-        @type key: C{string}
-        @param value: The value
-        @type value: C{string}
-
-        """
-        self.__info[key] = value
-
-    def __delitem__(self, key):
-        """Delete a key from the dictionary.
-
-        @param key: The key
-        @type key: C{string}
-
-        """
-        del self.__info[key]
 
     def keys(self):
         """Return a list of keys from the dictionary.
@@ -1377,60 +1475,87 @@ class Meta:
         return key in self.__info
 
 
-class Applet(awn.AppletSimple, object):
+def _getmodule(module):
+    """Return a getter that lazy-loads a module, represented by a
+    single instantiated class.
 
-    def __init__(self, uid, panel_id, meta={}, options=[]):
+    @param module: The class of the module to initialize and get
+    @type module: C{class}
+
+    """
+    instance = {}
+
+    def getter(self):
+        key = (self, module)
+        if key not in instance:
+            instance[key] = module(self)
+        return instance[key]
+    return property(getter)
+
+
+class Applet(object):
+
+    def __init__(self, meta, options):
         """Create a new instance of the Applet object.
 
-        @param uid: The unique identifier of the applet
-        @type uid: C{string}
-        @param orient: The orientation of the applet. 0 means that the AWN bar
-            is on the bottom of the screen.
-        @type orient: C{int}
-        @param height: The height of the applet.
-        @type height: C{int}
         @param meta: The meta information to be passed to the Meta constructor
         @type meta: C{dict}
 
         """
-        awn.AppletSimple.__init__(self, meta["short"], uid, panel_id)
-
-        self.uid = uid
-
         # Create all required child-objects, others will be lazy-loaded
         self.meta = Meta(self, meta, options)
-        self.icon = Icon(self)
-        self.tooltip = Tooltip(self)
-
-        # Dialogs depends on settings
-        self.dialog = Dialogs(self)
 
     def connect_size_changed(self, callback):
         self.connect("size-changed", lambda w, e: callback())
 
-    def __getmodule(module):
-        """Return a getter that lazy-loads a module, represented by a
-        single instantiated class.
+    settings = _getmodule(Settings)
+    timing = _getmodule(Timing)
+    keyring = _getmodule(Keyring)
+    notification = _getmodule(Notify)
 
-        @param module: The class of the module to initialize and get
-        @type module: C{class}
+
+class AppletSimple(awn.AppletSimple, Applet):
+
+    def __init__(self, uid, panel_id, meta={}, options=[]):
+        """Create a new instance of the AppletSimple object.
+
+        @param uid: The unique identifier of the applet
+        @type uid: C{string}
+        @param panel_id: Identifier of the panel in which the applet resides.
+        @type panel_id: C{int}
 
         """
-        instance = {}
+        awn.AppletSimple.__init__(self, meta["short"], uid, panel_id)
+        Applet.__init__(self, meta, options)
 
-        def getter(self):
-            if module not in instance:
-                instance[module] = module(self)
-            return instance[module]
-        return property(getter)
+        # Create all required child-objects, others will be lazy-loaded
+        self.tooltip = Tooltip(self)
+        self.dialog = Dialogs(self)
+        self.icon = Icon(self)
 
-    settings = __getmodule(Settings)
-    theme = __getmodule(Theme)
-    timing = __getmodule(Timing)
-    errors = __getmodule(Errors)
-    keyring = __getmodule(Keyring)
-    notify = __getmodule(Notify)
-    effects = __getmodule(Effects)
+        self.dialog.connect_signals(self)
+
+    theme = _getmodule(Theme)
+    errors = _getmodule(Errors)
+
+
+class AppletMultiple(awn.Applet, Applet):
+
+    def __init__(self, uid, panel_id, meta={}, options=[]):
+        """Create a new instance of the AppletMultiple object.
+
+        @param uid: The unique identifier of the applet
+        @type uid: C{string}
+        @param panel_id: Identifier of the panel in which the applet resides.
+        @type panel_id: C{int}
+
+        """
+        awn.Applet.__init__(self, meta["short"], uid, panel_id)
+        Applet.__init__(self, meta, options)
+
+        # Create all required child-objects, others will be lazy-loaded
+        self.icons = Icons(self)
+        self.dialog = Dialogs(self)
 
 
 def init_start(applet_class, meta={}, options=[]):
@@ -1453,18 +1578,25 @@ def init_start(applet_class, meta={}, options=[]):
     """
     assert callable(applet_class)
 
-    gobject.threads_init()
+    glib.threads_init()
 
     awn.init(sys.argv[1:])
-    applet = Applet(awn.uid, awn.panel_id, meta, options)
+    if "multiple-icons" in options:
+        applet = AppletMultiple(awn.uid, awn.panel_id, meta, options)
+    else:
+        applet = AppletSimple(awn.uid, awn.panel_id, meta, options)
 
     try:
         applet_class(applet)
     except Exception, e:
-        applet.errors.set_error_icon_and_click_to_restart()
-        import traceback
-        traceback = traceback.format_exception(type(e), e, sys.exc_traceback)
-        applet.errors.general(e, traceback=traceback, callback=gtk.main_quit)
+        # TODO don't know what to do for multiple-icons applets
+        if "multiple-icons" not in options:
+            applet.errors.set_error_icon_and_click_to_restart()
+            import traceback
+            traceback = traceback.format_exception(type(e), e, sys.exc_traceback)
+            applet.errors.general(e, traceback=traceback, callback=gtk.main_quit)
+        else:
+            raise
 
     awn.embed_applet(applet)
     gtk.main()

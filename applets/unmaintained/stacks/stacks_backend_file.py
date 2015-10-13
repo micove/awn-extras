@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright (c) 2007 Timon ter Braak
 #
 # This library is free software; you can redistribute it and/or
@@ -18,7 +17,8 @@
 # Boston, MA 02111-1307, USA.
 
 import gtk
-import gnomevfs
+import gio
+
 from stacks_backend import *
 
 
@@ -30,28 +30,21 @@ class FileBackend(Backend):
     def __init__(self, applet, vfs_uri, icon_size):
         Backend.__init__(self, applet, icon_size)
         self.backend_uri = vfs_uri
-        mode = gnomevfs.OPEN_WRITE | gnomevfs.OPEN_READ | gnomevfs.OPEN_RANDOM
-        if not gnomevfs.exists(self.backend_uri.as_uri()):
+        uri = self.backend_uri.as_uri()
+        if not uri.query_exists():
             # create folder
-            path = self.backend_uri.as_uri().parent.path
-            uri = self.backend_uri.as_uri().resolve_relative("/")
-            for folder in path.split("/"):
-                if not folder:
-                    continue
-                uri = uri.append_string(folder)
-                try:
-                    gnomevfs.make_directory(uri, 0777)
-                except gnomevfs.FileExistsError:
-                    pass
+            try:
+                uri.get_parent().make_directory_with_parents(gio.Cancellable())
+            except gio.Error:
+                pass
             # create file
-            self.handle = gnomevfs.create(self.backend_uri.as_uri(), mode)
+            self.handle = uri.create()
         else:
-            self.handle = gnomevfs.Handle(self.backend_uri.as_uri(), mode)
-
+            self.handle = uri.append_to()
 
     def remove(self,vfs_uris):
         buffer = ""
-        content = gnomevfs.read_entire_file(self.backend_uri.as_string())
+        content, length, etag = self.backend_uri.as_uri().load_contents()
         lines = content.splitlines()
         for line in lines:
             for vfs_uri in vfs_uris:
@@ -65,18 +58,15 @@ class FileBackend(Backend):
             self.handle.write(buffer)
         return Backend.remove(self, vfs_uris)
 
-
     def add(self, vfs_uris, action=None):
         if action is not None:
             for vfs_uri in vfs_uris:
-                self.handle.seek(0, gnomevfs.SEEK_END)
+                self.handle.seek(0, 2) # hopefully 2 is SEEK_END
                 self.handle.write(vfs_uri.as_string() + os.linesep)
         return Backend.add(self, vfs_uris)
 
-
     def read(self):
-        content = gnomevfs.read_entire_file(
-                self.backend_uri.as_string())
+        content, length, etag = self.backend_uri.as_uri().load_contents()
         lines = content.splitlines()
         vfs_uris = []
         for line in lines:
@@ -88,24 +78,19 @@ class FileBackend(Backend):
         if vfs_uris:
             self.add(vfs_uris)
 
-
     def clear(self):
         self.handle.truncate(0)
         Backend.clear(self)
-
 
     # Do nothing on "open"; not really useful
     def open(self):
         return
 
-
     def get_type(self):
         return BACKEND_TYPE_FILE
 
-
     def _clear_cb(self, widget):
         self.clear()
-
 
     def get_menu_items(self):
         items = []

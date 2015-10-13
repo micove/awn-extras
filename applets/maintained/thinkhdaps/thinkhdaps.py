@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (C) 2008 - 2009  onox <denkpadje@gmail.com>
+# Copyright (C) 2008 - 2010  onox <denkpadje@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import operator
 import os
 import platform
 
@@ -21,7 +20,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 
-from awn.extras import awnlib, __version__
+from awn.extras import _, awnlib, __version__
 from awn import OverlayThemedIcon
 
 import glib
@@ -32,31 +31,29 @@ try:
 except ImportError:
     pyinotify = None
 
-applet_name = "ThinkHDAPS"
-applet_description = "Applet that shows the shock protection status of your disks"
+applet_name = _("ThinkHDAPS")
+applet_description = _("Applet that shows the shock protection status of your disks")
 
 # Interval in seconds between two successive status checks
 check_status_interval = 0.1
 
-hdaps_short_description = "%s protected from shocks"
-no_hdaps_short_description = "%s not protected from shocks"
+hdaps_short_description = _("%s protected from shocks")
+no_hdaps_short_description = _("%s not protected from shocks")
 
 # Logo of the applet, shown in the GTK+ About dialog
 applet_logo = os.path.join(os.path.dirname(__file__), "images/thinkhdaps-logo.svg")
 
 
-def compare_linux_version(wanted_version, op):
-    assert callable(op)
-
+def compare_linux_version(wanted_version):
     version = map(int, platform.release().split("-")[0].split("."))
-    return all(map(lambda i: op(*i), zip(version, wanted_version)))
+    return awnlib.is_required_version(version, wanted_version)
 
 
-version_ge_2_6_28 = compare_linux_version([2, 6, 28], operator.ge)
+version_at_least_2_6_27 = compare_linux_version([2, 6, 27])
 
 sysfs_dir = "/sys/block"
 
-if version_ge_2_6_28:
+if version_at_least_2_6_27:
     protect_file = "device/unload_heads"
 else:
     method_file = "queue/protect_method"
@@ -107,7 +104,7 @@ class ThinkHDAPSApplet:
         applet.tooltip.disable_toggle_on_click()
         applet.icon.theme("drive-harddisk")
 
-        if version_ge_2_6_28:
+        if version_at_least_2_6_27:
             def can_unload(disk):
                 file = os.path.join(sysfs_dir, disk, protect_file)
                 if not os.path.isfile(file):
@@ -125,8 +122,6 @@ class ThinkHDAPSApplet:
 
         if len(disks) > 0:
             self.__hdaps_device = disks[0]
-
-        icon = applet.get_icon()
 
         self.icon_running = OverlayThemedIcon("thinkhdaps-running")
         self.icon_running.props.scale = 0.6
@@ -153,7 +148,7 @@ class ThinkHDAPSApplet:
                 applet.timing.register(self.check_status_cb, check_status_interval)
         else:
             self.set_error_icon()
-            applet.tooltip.set("No hard disk found")
+            applet.tooltip.set(_("No hard disk found"))
 
     def setup_inotify(self):
         if pyinotify is None:
@@ -187,5 +182,5 @@ if __name__ == "__main__":
         "authors": ["onox <denkpadje@gmail.com>"],
         "artists": ["Jakub Steiner", "Lapo Calamandrei", "Rodney Dawes", "Garrett LeSage", "onox"]})
 
-    if isinstance(notifier, ThreadedNotifier):
+    if notifier is not None:
         notifier.stop()

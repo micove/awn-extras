@@ -22,11 +22,11 @@
 #include <gtk/gtk.h>
 #include <libawn/libawn.h>
 #include "cairo-menu-applet.h"
-#include "cairo-menu.h"
 #include "cairo-main-icon.h"
 #include "cairo-aux-icon.h"
 #include "gnome-menu-builder.h"
 #include "config.h"
+#include <glib/gi18n-lib.h>
 
 G_DEFINE_TYPE (CairoMenuApplet, cairo_menu_applet, AWN_TYPE_APPLET)
 
@@ -49,7 +49,7 @@ struct _CairoMenuAppletPrivate {
 };
 
 
-static gchar * gnome_run_cmds[] = { "gnome-do","grun","gmrun","gnome-launch-box",
+static gchar * gnome_run_cmds[] = { "synapse","gnome-do","kupfer","grun","gmrun","gnome-launch-box",
                           "gnome-panel-control --run-dialog","xfrun4",NULL};
 
 static gchar * gnome_search_cmds[] = { "tracker-search-tool","gnome-do","gnome-search-tool",NULL};
@@ -156,12 +156,11 @@ cairo_menu_applet_constructed (GObject *object)
    TODO fix the various travesties*/
   GList * iter;
   GError * error = NULL;
-  gchar * filename = APPLETSDIR"/../../../lib/awn/applets/cairo-menu/gnome-menu-builder";
+  gchar * filename = LIBDIR"/awn/applets/cairo-menu/gnome-menu-builder";
   GModule      *module;
 
   G_OBJECT_CLASS (cairo_menu_applet_parent_class)->constructed (object);
-  module = g_module_open (filename, 
-                          G_MODULE_BIND_LAZY);  
+  module = g_module_open (filename,G_MODULE_BIND_LAZY);  
   g_assert (module);
   if (!g_module_symbol (module, "menu_build", (gpointer *)&menu_build))
   {
@@ -295,6 +294,8 @@ cairo_menu_applet_init (CairoMenuApplet *self)
   gtk_container_add (GTK_CONTAINER (self), priv->box);
   gtk_widget_show (priv->box);
 
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
 }
 
 CairoMenuApplet*
@@ -307,22 +308,43 @@ cairo_menu_applet_new (const gchar *name,const gchar* uid, gint panel_id)
                         NULL);
 }
 
+static gboolean
+cmd_found (gchar *cmd)
+{
+  gchar * p;
+  gchar **split = NULL;
+
+  if (strlen (cmd) == 0)
+  {
+    return FALSE;
+  }
+
+  /* Split into executable and arguments */
+  split = g_strsplit (cmd, " ", 2);
+  p = g_find_program_in_path (split[0]);
+  if (p)
+  {
+    if (p!=split[0])
+    {
+      g_free (p);
+    }
+    g_strfreev (split);
+    return TRUE;
+  }
+  g_strfreev (split);
+  return FALSE;
+}
+
 static const gchar *
 cairo_menu_applet_get_cmd (CairoMenuApplet * applet, gchar * def_cmd, gchar **cmd_list)
 {
   CairoMenuAppletPrivate * priv = GET_PRIVATE (applet);
-  gchar * p;
   gchar **iter;
 
   if (def_cmd)
   {
-    p = g_find_program_in_path (def_cmd);
-    if (p)
+    if (cmd_found (def_cmd))
     {
-      if (p!=def_cmd)
-      {
-        g_free (p);
-      }
       g_message ("Cairo Menu default command found '%s'",def_cmd);
       return def_cmd;
     }
@@ -335,13 +357,8 @@ cairo_menu_applet_get_cmd (CairoMenuApplet * applet, gchar * def_cmd, gchar **cm
   for (iter = cmd_list; *iter; iter++)
   {
     g_debug ("%s",*iter);
-    p = g_find_program_in_path (*iter);
-    if (p)
+    if (cmd_found (*iter))
     {
-      if (p != *iter)
-      {
-        g_free (p);
-      }
       g_message ("%s found.",*iter);
       return *iter;
     }

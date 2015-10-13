@@ -23,12 +23,12 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
-from awn.extras import awnlib, __version__
+from awn.extras import _, awnlib, __version__
 
 import glib
 
-applet_name = "Mount Applet"
-applet_description = "An applet to (un)mount devices"
+applet_name = _("Mount Applet")
+applet_description = _("An applet to (un)mount devices")
 
 ui_file = os.path.join(os.path.dirname(__file__), "mount.ui")
 image_dir = os.path.join(os.path.dirname(__file__), "icons")
@@ -144,5 +144,4 @@ if __name__ == "__main__":
         "logo": applet_logo,
         "author": "onox",
         "copyright-year": "2009 - 2010",
-        "authors": ["Arvind Ganga", "onox <denkpadje@gmail.com>"]},
-        ["settings-per-instance"])
+        "authors": ["Arvind Ganga", "onox <denkpadje@gmail.com>"]})

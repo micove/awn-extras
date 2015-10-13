@@ -23,7 +23,7 @@ pygtk.require('2.0')
 import gtk
 from gtk import gdk
 
-from awn.extras import awnlib, __version__
+from awn.extras import _, awnlib, __version__
 
 try:
     import dbus
@@ -36,8 +36,8 @@ except ImportError:
 except dbus.DBusException:
     dbus = None
 
-applet_name = "CPU Frequency Monitor"
-applet_description = "An applet to monitor and control the CPU frequency"
+applet_name = _("CPU Frequency Monitor")
+applet_description = _("An applet to monitor and control the CPU frequency")
 
 # Themed logo of the applet, used as the applet's icon and shown in the GTK About dialog
 applet_logo = os.path.join(os.path.dirname(__file__), "cpufreq.svg")
@@ -129,6 +129,7 @@ class CpuFreqApplet:
         applet.connect_size_changed(self.size_changed_cb)
 
         applet.timing.register(self.draw_freq_cb, draw_freq_interval)
+        self.draw_freq_cb()
 
         if dbus is not None:
             try:
@@ -152,6 +153,7 @@ class CpuFreqApplet:
             frequency ranges and map the frequencies in those ranges to the various images
             """
             self.freq_range_per_image = (self.backend.get_phys_max_frequency() - self.backend.get_phys_min_frequency()) / (len(self.icon_states) - 1)
+            assert self.freq_range_per_image > 0
 
         self.setup_main_dialog()
 
@@ -230,7 +232,7 @@ class CpuFreqApplet:
             self.vbox.add(hbox)
 
             hbox.add(gtk.image_new_from_icon_name("dialog-information", gtk.ICON_SIZE_DIALOG))
-            label = gtk.Label("<span size=\"large\"><b>Scaling unavailable</b></span>\n\nFrequency scaling is not\navailable for the selected CPU.")
+            label = gtk.Label(_("<span size=\"large\"><b>Scaling unavailable</b></span>\n\nFrequency scaling is not\navailable for the selected CPU."))
             label.set_use_markup(True)
             hbox.add(label)
 
@@ -258,10 +260,10 @@ class CpuFreqApplet:
 
         if frequency >= 1e6:
             divisor = 1e6
-            unit = "GHz"
+            unit = _("GHz")
         else:
             divisor = 1e3
-            unit = "MHz"
+            unit = _("MHz")
 
         if frequency % divisor == 0:
             ffreq = str(int(frequency / divisor))
@@ -325,12 +327,13 @@ class SysFSBackend:
     """
 
     __selector_binary = "cpufreq-selector"
+    __scaling_files = ["scaling_available_governors", "scaling_available_frequencies", "scaling_governor"]
 
     def __init__(self, cpu_nr):
         self.__cpu_nr = cpu_nr
-        self.__supports_scaling = self.__can_support_scaling()
-
         self.__command = self.__selector_binary
+
+        self.__supports_scaling = self.__can_support_scaling()
 
     @staticmethod
     def backend_useable(cpu_nr):
@@ -340,6 +343,17 @@ class SysFSBackend:
         return self.__supports_scaling
 
     def __can_support_scaling(self):
+        cpufreq_dir = os.path.join(sysfs_dir, "cpu" + str(self.__cpu_nr), "cpufreq")
+
+        if not all(os.path.isfile(os.path.join(cpufreq_dir, f)) for f in self.__scaling_files):
+            return False
+        if len(self.get_frequencies()) <= 1:
+            return False
+        if not self.__has_freq_selector():
+            return False
+        return True
+
+    def __has_freq_selector(self):
         get_path = lambda d: os.path.join(d, self.__selector_binary)
         paths = [get_path(i) for i in os.environ["PATH"].split(":") if os.access(get_path(i), os.X_OK)]
 
@@ -386,12 +400,6 @@ class SysFSBackend:
 
     def get_phys_max_frequency(self):
         return self.__read_frequency("cpuinfo_max_freq")
-
-    def get_min_frequency(self):
-        return self.__read_frequency("scaling_min_freq")
-
-    def get_max_frequency(self):
-        return self.__read_frequency("scaling_max_freq")
 
     def __read_frequency(self, file):
         return int(open(os.path.join(sysfs_dir, "cpu" + str(self.__cpu_nr), "cpufreq", file)).read().strip())

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright (c) 2007 Timon ter Braak
 #
 # This library is free software; you can redistribute it and/or
@@ -17,17 +16,18 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import sys
 import os
-import gobject
+import random
+
 import gtk
 from gtk import gdk
-import random
-import gnome.ui
-import gnomevfs
-import gnomedesktop
+
 from awn.extras import _
 from desktopagnostic.config import GROUP_DEFAULT
+from desktopagnostic import fdo, vfs
+
+import gio
+import gobject
 
 from stacks_vfs import VfsUri, Monitor
 from stacks_icons import IconFactory, Thumbnailer
@@ -57,6 +57,7 @@ COL_LABEL = 3
 COL_MIMETYPE = 4
 COL_ICON = 5
 COL_BUTTON = 6
+
 
 class Backend(gobject.GObject):
 
@@ -93,7 +94,6 @@ class Backend(gobject.GObject):
         else:
         	self.store.set_sort_func(COL_URI, self._file_sort)
 
-
     # we use a sorted liststore.
     # this sort function sorts:
     # -directories first
@@ -102,11 +102,11 @@ class Backend(gobject.GObject):
     def _file_sort(self, model, iter1, iter2):
         t1 = model.get_value(iter1, COL_TYPE)
         t2 = model.get_value(iter2, COL_TYPE)
-        if self.applet.config['sort_folders_before_files'] and t1 == gnomevfs.FILE_TYPE_DIRECTORY and not \
-                t2 == gnomevfs.FILE_TYPE_DIRECTORY:
+        if self.applet.config['sort_folders_before_files'] and t1 == gio.FILE_TYPE_DIRECTORY and not \
+                t2 == gio.FILE_TYPE_DIRECTORY:
             return -1
-        elif self.applet.config['sort_folders_before_files'] and t2 == gnomevfs.FILE_TYPE_DIRECTORY and not \
-                t1 == gnomevfs.FILE_TYPE_DIRECTORY:
+        elif self.applet.config['sort_folders_before_files'] and t2 == gio.FILE_TYPE_DIRECTORY and not \
+                t1 == gio.FILE_TYPE_DIRECTORY:
             return 1
         else:
             n1 = model.get_value(iter1, COL_LABEL)
@@ -118,42 +118,34 @@ class Backend(gobject.GObject):
             else:
             	return cmp(n2, n1)
 
-
     # this sort function sorts:
     # -directories first
     # -sort by date
     def _file_sort_date(self, model, iter1, iter2):
     	t1 = model.get_value(iter1, COL_TYPE)
         t2 = model.get_value(iter2, COL_TYPE)
-        if self.applet.config['sort_folders_before_files'] and t1 == gnomevfs.FILE_TYPE_DIRECTORY and not \
-                t2 == gnomevfs.FILE_TYPE_DIRECTORY:
+        if self.applet.config['sort_folders_before_files'] and t1 == gio.FILE_TYPE_DIRECTORY and not \
+                t2 == gio.FILE_TYPE_DIRECTORY:
             return -1
-        elif self.applet.config['sort_folders_before_files'] and t2 == gnomevfs.FILE_TYPE_DIRECTORY and not \
-                t1 == gnomevfs.FILE_TYPE_DIRECTORY:
+        elif self.applet.config['sort_folders_before_files'] and t2 == gio.FILE_TYPE_DIRECTORY and not \
+                t1 == gio.FILE_TYPE_DIRECTORY:
             return 1
         else:
-			u1 = model.get_value(iter1, COL_URI)
-			u2 = model.get_value(iter2, COL_URI)
-			i1 = gnomevfs.get_file_info(
-					u1.uri,
-					gnomevfs.FILE_INFO_DEFAULT |
-					gnomevfs.FILE_INFO_FOLLOW_LINKS )
-			c1 = i1.mtime
-			i2 = gnomevfs.get_file_info(
-					u2.uri,
-					gnomevfs.FILE_INFO_DEFAULT |
-					gnomevfs.FILE_INFO_FOLLOW_LINKS )
-			c2 = i2.mtime
+            u1 = model.get_value(iter1, COL_URI)
+            u2 = model.get_value(iter2, COL_URI)
+            i1 = u1.uri.query_info(gio.FILE_ATTRIBUTE_TIME_MODIFIED, 0)
+            c1 = i1.get_modification_time()
+            i2 = u2.uri.query_info(gio.FILE_ATTRIBUTE_TIME_MODIFIED, 0)
+            c2 = i2.get_modification_time()
 
-			if self.applet.config['sort_direction'] == BACKEND_SORT_ASCENDING:
-				return cmp(c1, c2)
-			else:
-				return cmp(c2, c1)			
+            if self.applet.config['sort_direction'] == BACKEND_SORT_ASCENDING:
+                return cmp(c1, c2)
+            else:
+                return cmp(c2, c1)
 
     # emits attention signal
     def _get_attention(self):
         self.emit("attention", self.get_type())
-
 
     def _created_cb(self, widget, vfs_uri):
         assert isinstance(vfs_uri, VfsUri)
@@ -161,8 +153,10 @@ class Backend(gobject.GObject):
              self._get_attention()
 
 
-    def _deleted_cb(self, widget, vfs_uri):
+    def _deleted_cb(self, monitor, vfs_uri, is_dir_monitor=None):
         assert isinstance(vfs_uri, VfsUri)
+        if not is_dir_monitor:
+            monitor.close()
         if self.remove([vfs_uri]):
              self._get_attention()
 
@@ -176,14 +170,12 @@ class Backend(gobject.GObject):
         for vfs_uri in vfs_uris:
             uri = vfs_uri.as_uri()
             path = vfs_uri.as_string()
-            name = uri.short_name
+            name = uri.get_basename()
             mime_type = ""
             pixbuf = None
-            
-            
 
             # check for existence:
-            if uri.scheme == "file" and not gnomevfs.exists(uri):
+            if not uri.query_exists():
                 continue
 
             # check for duplicates
@@ -199,71 +191,64 @@ class Backend(gobject.GObject):
 
             # check for desktop item
             if name.endswith(".desktop"):
-                item = gnomedesktop.item_new_from_uri(
-                        path, gnomedesktop.LOAD_ONLY_IF_EXISTS)
-                if not item:
+                file = vfs.File.for_uri(path)
+
+                if file is None or not file.exists():
                     continue
-                command = item.get_string(gnomedesktop.KEY_EXEC)
-                name = item.get_localestring(gnomedesktop.KEY_NAME)
-                mime_type = item.get_localestring(gnomedesktop.KEY_MIME_TYPE)
-                type = gnomevfs.FILE_TYPE_REGULAR
-                icon_name = item.get_localestring(gnomedesktop.KEY_ICON)
-                icon_uri = None
+
+                entry = fdo.DesktopEntry.for_file (file)
+
+                name = entry.get_name()
+                icon_name = entry.get_icon() if entry.key_exists("Icon") else "application-x-executable"
+                mime_type = ""
+                type = gio.FILE_TYPE_REGULAR
+
                 if icon_name:
-                    icon_uri = gnomedesktop.find_icon(
-                                        gtk.icon_theme_get_default(),
-                                        icon_name,
-                                        self.icon_size,
-                                        0)
-                    if not icon_uri:
-                        icon_uri = path
+                    icon_info = gtk.icon_theme_get_default().lookup_icon(icon_name, self.icon_size, 0)
+                    icon_uri = icon_info.get_filename() if icon_info else icon_name
                     pixbuf = IconFactory().load_icon(icon_uri, self.icon_size)
-                    if pixbuf:
-                    	pixbuf.add_alpha (True, '\0', '\0', '\0')
+                if pixbuf:
+                    pixbuf.add_alpha (True, '\0', '\0', '\0')
             else:
                 # get file info
                 try:
-                    fileinfo = gnomevfs.get_file_info(
-                            path,
-                            gnomevfs.FILE_INFO_DEFAULT |
-                            gnomevfs.FILE_INFO_GET_MIME_TYPE |
-                            gnomevfs.FILE_INFO_FORCE_SLOW_MIME_TYPE |
-                            gnomevfs.FILE_INFO_FOLLOW_LINKS )
-                    type = fileinfo.type
-                    mime_type = fileinfo.mime_type
-                except gnomevfs.NotFoundError:
+                    fileinfo = uri.query_info(','.join([
+                        gio.FILE_ATTRIBUTE_STANDARD_TYPE,
+                        gio.FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+                        gio.FILE_ATTRIBUTE_STANDARD_IS_HIDDEN,
+                        gio.FILE_ATTRIBUTE_STANDARD_IS_BACKUP]))
+                    if fileinfo.get_is_hidden() or fileinfo.get_is_backup():
+                        continue
+                    type = fileinfo.get_file_type()
+                    mime_type = fileinfo.get_content_type()
+                except:
                     continue
                 # get pixbuf for icon
                 pixbuf = Thumbnailer(path, mime_type).get_icon(self.icon_size)
                 if pixbuf:
                 	pixbuf.add_alpha (True, '\0', '\0', '\0')
-            
+
             # create monitor
             try:
                 monitor = Monitor(vfs_uri)
                 monitor.connect("deleted", self._deleted_cb)
-            except gnomevfs.NotSupportedError:
+            except:
                 monitor = None
 
-            
             # add to store
-            
             iter = self.store.append([vfs_uri, monitor, type, name, mime_type, pixbuf, None])
-                
+
             if self.store.iter_is_valid(iter):
             	self.emit("item-created", iter)
             else:
             	print "ERROR in STACK: iter is NOK (stacks_backend.py)"
-            
 
             # return pixbuf later?
-            if pixbuf: retval = pixbuf
-            
-            
+            if pixbuf:
+                retval = pixbuf
 
         # restructure of dialog needed
         return (retval is not None)
-
 
     # remove file from store
     def remove(self, vfs_uris):
@@ -282,20 +267,16 @@ class Backend(gobject.GObject):
     def read(self):
         return
 
-
     def clear(self):
         self.store.clear()
         self.emit("item-removed", None)
 
-
     def open(self):
         return
-
 
     def is_empty(self):
         iter = self.store.get_iter_first()
         return not (iter and self.store.iter_is_valid(iter))
-
 
     def get_title(self):
         title = self.applet.client.get_string(GROUP_DEFAULT, "title")
@@ -304,18 +285,14 @@ class Backend(gobject.GObject):
             title = _("Stacks")
         return title;
 
-
     def get_number_items(self):
         return self.store.iter_n_children(None)
-
 
     def get_menu_items(self):
         return []
 
-
     def get_type(self):
         return stacksbackend.BACKEND_TYPE_INVALID
-
 
     def get_random_pixbuf(self):
         max = self.get_number_items()
@@ -325,10 +302,8 @@ class Backend(gobject.GObject):
         if not iter: return None
         return self.store.get_value(iter, COL_ICON)
 
-
     def get_store(self):
         return self.store
-
 
     def destroy(self):
         return

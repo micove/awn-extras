@@ -18,7 +18,10 @@
 # Boston, MA 02111-1307, USA.
 
 
-import sys, os
+import sys
+import os
+import subprocess
+import atexit
 
 import gobject
 import pygtk
@@ -30,7 +33,30 @@ import dbus
 from dbus.mainloop.glib import DBusGMainLoop
 import string
 
+try:
+    import mutagen.mp3
+    import mutagen.mp4
+    from mutagen.id3 import ID3
+    import tempfile
+    album_art_file = "%s/awnmediaplayer_%s.png" % (tempfile.gettempdir(), os.getenv('USERNAME'))
+    art_icon_from_tag = True
+except ImportError:
+    art_icon_from_tag = False
+
+if gtk.gtk_version >= (2, 18):
+    from urllib import unquote
+
 DBusGMainLoop(set_as_default=True)
+
+
+def cleanup():
+    if art_icon_from_tag:
+        try:
+            os.remove(album_art_file)
+        except OSError:
+            pass
+
+atexit.register(cleanup)
 
 
 def get_app_name():
@@ -66,13 +92,39 @@ def get_app_name():
         player_name = "DragonPlayer"
     elif bus_obj.NameHasOwner('org.freedesktop.MediaPlayer') == True:
         player_name = "mpDris"
+    elif bus_obj.NameHasOwner('org.mpris.clementine') == True:
+        player_name = "Clementine"
+    elif bus_obj.NameHasOwner('org.mpris.guayadeque') == True:
+        player_name = "Guayadeque"
     return player_name
+
+
+def player_available(executable):
+    """Check if player is installed if it's not in 'Activatable Services' on DBus"""
+
+    for path in os.getenv('PATH').split(':'):
+        if path == '':
+            continue
+        if os.path.isfile(os.path.join(path, executable)):
+            return True
+    return False
+
+
+def launch_player(args):
+    """Launch player if this can't be done via DBus"""
+
+    try:
+        subprocess.Popen(args)
+    except OSError, e:
+        print "awnmediaplayer: error launching %s: %s" % (args, e)
+        return False
+    return True
 
 
 class GenericPlayer(object):
     """Insert the level of support here"""
 
-    def __init__(self, dbus_name = None):
+    def __init__(self, dbus_name=None):
         # set signalling_supported to True in your subclass's constructor if you use signal(s) which are received when currently played song changes (e.g. playingUriChanged signal)
         self.signalling_supported = False
         # set to DBus service name string in your subclass
@@ -119,11 +171,13 @@ class GenericPlayer(object):
         """
         if (self.dbus_base_name != None):
             object_path = '/' + self.dbus_base_name.replace('.', '/')
-            bus = dbus.SessionBus()
-            obj = bus.get_object(self.dbus_base_name, object_path)
-            return True
-        else:
-            return False
+            try:
+                bus = dbus.SessionBus()
+                obj = bus.get_object(self.dbus_base_name, object_path)
+                return True
+            except Exception, e:
+                print "awnmediaplayer: error launching %s: %s" % (self.__class__.__name__, e)
+        return False
 
     def get_dbus_name(self):
         """
@@ -157,13 +211,13 @@ class GenericPlayer(object):
         """
         return False
 
-    def previous (self):
+    def previous(self):
         pass
 
-    def play_pause (self):
+    def play_pause(self):
         pass
 
-    def next (self):
+    def next(self):
         pass
 
     def play_uri(self, uri):
@@ -214,12 +268,11 @@ class MPRISPlayer(GenericPlayer):
         elif 'location' in info.keys():
             pos = info['location'].rfind("/")
             if pos is not -1:
-              result['title'] = str(info['location'][pos+1:])
+                result['title'] = str(info['location'][pos + 1:])
             else:
-              result['title'] = ''
+                result['title'] = ''
         else:
             result['title'] = ''
-
 
         if 'artist' in info.keys():
             result['artist'] = str(info['artist'])
@@ -231,7 +284,6 @@ class MPRISPlayer(GenericPlayer):
             if info['arturl'][0:7] == "file://":
                 result['album-art'] = str(info['arturl'][7:])
                 if gtk.gtk_version >= (2, 18):
-                    from urllib import unquote
                     result['album-art'] = unquote(result['album-art'])
             else:
                 print "Don't understand the album art location: %s" % info['arturl']
@@ -286,36 +338,96 @@ class Rhythmbox(GenericPlayer):
     def get_media_info(self):
         self.dbus_driver()
         ret_dict = {}
-        result = self.rbShell.getSongProperties(self.player.getPlayingUri())
+        playinguri = self.player.getPlayingUri()
+        result = self.rbShell.getSongProperties(playinguri)
 
         # Currently Playing Title
         if result['artist'] != '':
             ret_dict['artist'] = result['artist']
             ret_dict['title'] = result['title']
-            if 'album' in result: ret_dict['album'] = result['album']
+            if 'album' in result:
+                ret_dict['album'] = result['album']
         elif 'rb:stream-song-title' in result:
             if result['title'] != '':
                 ret_dict['title'] = result['rb:stream-song-title'] + ' (' + result['title'] + ')'
             else:
-               ret_dict['title'] = result['rb:stream-song-title']
+                ret_dict['title'] = result['rb:stream-song-title']
         elif 'title' in result:
             ret_dict['title'] = result['title']
 
         # cover-art
         if 'rb:coverArt-uri' in result:
-            albumart_exact = result['rb:coverArt-uri']
+            albumart_exact = result['rb:coverArt-uri'].encode('utf8')
             # bug in rhythmbox 0.11.6 - returns uri, but not properly encoded,
             # but it's enough to remove the file:// prefix
             albumart_exact = albumart_exact.replace('file://', '', 1)
             if gtk.gtk_version >= (2, 18):
-                from urllib import unquote
                 albumart_exact = unquote(albumart_exact)
-            ret_dict['album-art'] = albumart_exact
+            # Sanity check if encoding and unquoting did work
+            if os.path.isfile(albumart_exact):
+                ret_dict['album-art'] = albumart_exact
+                return ret_dict
+            else:
+                print "awnmediaplayers: Unquoting error:\n%s\ndoes not match\n%s" % (result['rb:coverArt-uri'], albumart_exact)
+
+        # perhaps it's in the cache folder
+        if 'album' in result and 'artist' in result:
+            cache_dir = os.path.expanduser("~/.cache/rhythmbox/covers")
+            cache_file = '%s/%s - %s.jpg' % (cache_dir, result['artist'], result['album'])
+            if os.path.isfile(cache_file):
+                ret_dict['album-art'] = cache_file
+                return ret_dict
+
+        # The following is based on code from Dockmanager
+        # Copyright (C) 2009-2010 Jason Smith, Rico Tzschichholz, Robert Dyer
+
+        # Look in song folder
+        filename = playinguri.encode('utf8').replace('file://', '', 1)
+        if gtk.gtk_version >= (2, 18):
+            filename = unquote(filename)
+        coverdir = os.path.dirname(filename)
+        if os.path.isdir(coverdir):
+            covernames = ["cover", "album", "albumart", ".folder", "folder"]
+            extensions = [".jpg", ".jpeg", ".png"]
+            for f in os.listdir(coverdir):
+                for ext in extensions:
+                    if f.lower().endswith(ext):
+                        for name in covernames:
+                            if f.lower() == (name + ext):
+                                ret_dict['album-art'] = os.path.join(coverdir, f)
+                                return ret_dict
         else:
-            # perhaps it's in the cache folder
-            if 'album' in result and 'artist' in result:
-                cache_dir = ".cache/rhythmbox/covers"
-                ret_dict['album-art'] = '%s/%s - %s.jpg' % (cache_dir, result['artist'], result['album'])
+            print "awnmediaplayers: Unquoting error:\n%s (file)\ndoes not match\n%s (directory)" % (playinguri, coverdir)
+
+        # Look for image in tags
+        if art_icon_from_tag and 'mimetype' in result:
+            image_data = None
+            if result['mimetype'] == "application/x-id3":
+                try:
+                    f = ID3(filename)
+                    apicframes = f.getall("APIC")
+                    if len(apicframes) >= 1:
+                        frame = apicframes[0]
+                        image_data = frame.data
+                except:
+                    pass
+            elif result['mimetype'] == "audio/x-aac":
+                try:
+                    f = mutagen.mp4.MP4(filename)
+                    if "covr" in f.tags:
+                        covertag = f.tags["covr"][0]
+                        image_data = covertag
+                except:
+                    pass
+            if image_data:
+                try:
+                    loader = gtk.gdk.PixbufLoader()
+                    loader.write(image_data)
+                    loader.close()
+                    loader.get_pixbuf().save(album_art_file, "png", {})
+                    ret_dict['album-art'] = album_art_file
+                except:
+                    pass
 
         return ret_dict
 
@@ -323,14 +435,14 @@ class Rhythmbox(GenericPlayer):
         self.dbus_driver()
         return self._is_playing
 
-    def previous (self):
-        self.player.previous ()
+    def previous(self):
+        self.player.previous()
 
-    def play_pause (self):
-        self.player.playPause (1)
+    def play_pause(self):
+        self.player.playPause(1)
 
-    def next (self):
-        self.player.next ()
+    def next(self):
+        self.player.next()
 
     def play_uri(self, uri):
         # unfortunatelly this only works for items present in media library
@@ -340,7 +452,7 @@ class Rhythmbox(GenericPlayer):
     def enqueue_uris(self, uris):
         # unfortunatelly this only works for items present in media library
         for uri in uris:
-          self.rbShell.addToQueue(uri)
+            self.rbShell.addToQueue(uri)
         return True
 
 
@@ -376,13 +488,13 @@ class Exaile(GenericPlayer):
 
         return result
 
-    def previous (self):
+    def previous(self):
         self.player.prev_track()
 
-    def play_pause (self):
+    def play_pause(self):
         self.player.play_pause()
 
-    def next (self):
+    def next(self):
         self.player.next_track()
 
     def play_uri(self, uri):
@@ -391,8 +503,9 @@ class Exaile(GenericPlayer):
 
     def enqueue_uris(self, uris):
         for uri in uris:
-          self.player.play_file(uri)
+            self.player.play_file(uri)
         return True
+
 
 class Banshee(GenericPlayer):
     """Full Support for the banshee media player
@@ -409,7 +522,7 @@ class Banshee(GenericPlayer):
         bus_obj = dbus.SessionBus().get_object('org.freedesktop.DBus', '/org/freedesktop/DBus')
         if bus_obj.NameHasOwner('org.gnome.Banshee') == True:
             self.session_bus = dbus.SessionBus()
-            self.proxy_obj = self.session_bus.get_object('org.gnome.Banshee',"/org/gnome/Banshee/Player")
+            self.proxy_obj = self.session_bus.get_object('org.gnome.Banshee', "/org/gnome/Banshee/Player")
             self.player = dbus.Interface(self.proxy_obj, "org.gnome.Banshee.Core")
 
     def get_media_info(self):
@@ -424,13 +537,13 @@ class Banshee(GenericPlayer):
 
         return result
 
-    def previous (self):
+    def previous(self):
         self.player.Previous()
 
-    def play_pause (self):
-        self.player.TogglePlaying ()
+    def play_pause(self):
+        self.player.TogglePlaying()
 
-    def next (self):
+    def next(self):
         self.player.Next()
 
     def play_uri(self, uri):
@@ -458,8 +571,8 @@ class BansheeOne(GenericPlayer):
         bus_obj = dbus.SessionBus().get_object('org.freedesktop.DBus', '/org/freedesktop/DBus')
         if bus_obj.NameHasOwner('org.bansheeproject.Banshee') == True:
             self.session_bus = dbus.SessionBus()
-            self.proxy_obj = self.session_bus.get_object('org.bansheeproject.Banshee',"/org/bansheeproject/Banshee/PlayerEngine")
-            self.proxy_obj1 = self.session_bus.get_object('org.bansheeproject.Banshee',"/org/bansheeproject/Banshee/PlaybackController")
+            self.proxy_obj = self.session_bus.get_object('org.bansheeproject.Banshee', "/org/bansheeproject/Banshee/PlayerEngine")
+            self.proxy_obj1 = self.session_bus.get_object('org.bansheeproject.Banshee', "/org/bansheeproject/Banshee/PlaybackController")
             self.player = dbus.Interface(self.proxy_obj, "org.bansheeproject.Banshee.PlayerEngine")
             self.player1 = dbus.Interface(self.proxy_obj1, "org.bansheeproject.Banshee.PlaybackController")
             self.player.connect_to_signal('EventChanged', self.event_changed, member_keyword='member')
@@ -483,7 +596,7 @@ class BansheeOne(GenericPlayer):
     def get_media_info(self):
         self.dbus_driver()
         result = {}
-        
+
         self.albumart_general = os.environ['HOME'] + "/.cache/media-art/"
         self.albumart_general2 = os.environ['HOME'] + "/.cache/album-art/"
 
@@ -505,9 +618,9 @@ class BansheeOne(GenericPlayer):
             result['album-art'] = '%s.jpg' % (self.albumart_general + info['artwork-id'])
             if not os.path.isfile(result['album-art']):
                 result['album-art'] = '%s.jpg' % (self.albumart_general2 + info['artwork-id'])
-        elif 'album' in info:
+        elif 'album' in info and 'artist' in result:
             albumart_exact = '%s-%s.jpg' % (self.albumart_general + result['artist'], info['album'])
-            result['album-art'] = albumart_exact.replace(' ','').lower()
+            result['album-art'] = albumart_exact.replace(' ', '').lower()
 
         return result
 
@@ -515,13 +628,13 @@ class BansheeOne(GenericPlayer):
         self.dbus_driver()
         return self._is_playing
 
-    def previous (self):
+    def previous(self):
         self.player1.Previous(False)
 
-    def play_pause (self):
-        self.player.TogglePlaying ()
+    def play_pause(self):
+        self.player.TogglePlaying()
 
-    def next (self):
+    def next(self):
         self.player1.Next(False)
 
 
@@ -538,28 +651,43 @@ class Listen(GenericPlayer):
         bus_obj = dbus.SessionBus().get_object('org.freedesktop.DBus', '/org/freedesktop/DBus')
         if bus_obj.NameHasOwner('org.gnome.Listen') == True:
             self.session_bus = dbus.SessionBus()
-            self.proxy_obj = self.session_bus.get_object('org.gnome.Listen',"/org/gnome/listen")
+            self.proxy_obj = self.session_bus.get_object('org.gnome.Listen', "/org/gnome/listen")
             self.player = dbus.Interface(self.proxy_obj, "org.gnome.Listen")
 
     def get_media_info(self):
         self.dbus_driver()
+        result = {}
 
         # Currently Playing Title
-        result = {}
-        result['title'] = self.player.current_playing().split(" - ",3)[0]
-        result['artist'] = self.player.current_playing().split(" - ",3)[2]
-        result['album'] = self.player.current_playing().split(" - ",3)[1][1:]
-        result['album-art'] = os.environ['HOME'] + "/.listen/cover/" + result['artist'].lower() + "+" + result['album'].lower() + ".jpg"
+        try:
+            # Version => 0.6
+            result['title'] = self.player.get_title()
+            if result['title'] == None:  # if paused
+                result['title'] = ''
+            result['artist'] = self.player.get_artist()
+            result['album'] = self.player.get_album()
+            result['album-art'] = self.player.get_cover_path()
+        except:
+            # Version == 0.5
+            # A single string of this pattern: Title - (Album - Artist)
+            # Streaming media can have less fields
+            result['title'] = self.player.current_playing().split(" - ", 3)[0]
+            try:
+                result['album'] = self.player.current_playing().split(" - ", 3)[1][1:]
+                result['artist'] = self.player.current_playing().split(" - ", 3)[2][:-1]
+                result['album-art'] = os.environ['HOME'] + "/.listen/cover/" + result['artist'].lower() + "+" + result['album'].lower() + ".jpg"
+            except IndexError:
+                pass
 
         return result
 
-    def previous (self):
+    def previous(self):
         self.player.previous()
 
-    def play_pause (self):
-        self.player.play_pause ()
+    def play_pause(self):
+        self.player.play_pause()
 
-    def next (self):
+    def next(self):
         self.player.next()
 
     def play_uri(self, uri):
@@ -572,7 +700,7 @@ class Listen(GenericPlayer):
 
 
 class QuodLibet(GenericPlayer):
-    """Full Support with signals""" #(but not implemented yet)
+    """Full Support with signals"""  # (but not implemented yet)
 
     def __init__(self):
         GenericPlayer.__init__(self, 'net.sacredchao.QuodLibet')
@@ -599,17 +727,18 @@ class QuodLibet(GenericPlayer):
 
         return albumart_exact, markup, tooltip
 
-    def previous (self):
-        self.player.Previous ()
+    def previous(self):
+        self.player.Previous()
 
-    def play_pause (self):
-        self.player.PlayPause ()
+    def play_pause(self):
+        self.player.PlayPause()
 
-    def next (self):
-        self.player.Next ()
+    def next(self):
+        self.player.Next()
 
 
 class Songbird(MPRISPlayer):
+    """Discontinued in 2010"""
 
     def __init__(self):
         MPRISPlayer.__init__(self, 'org.mpris.songbird')
@@ -620,14 +749,27 @@ class VLC(MPRISPlayer):
     def __init__(self):
         MPRISPlayer.__init__(self, 'org.mpris.vlc')
 
+    def is_available(self):
+        return player_available('vlc')
+
+    def start(self):
+        return launch_player(['vlc', '--control', 'dbus'])
+
 
 class Audacious(MPRISPlayer):
 
     def __init__(self):
         MPRISPlayer.__init__(self, 'org.mpris.audacious')
 
+    def is_available(self):
+        return player_available('audacious')
+
+    def start(self):
+        return launch_player('audacious')
+
 
 class BMP(MPRISPlayer):
+    """Beep Media Player, discontinued"""
 
     def __init__(self):
         MPRISPlayer.__init__(self, 'org.mpris.bmp')
@@ -645,8 +787,15 @@ class Amarok(MPRISPlayer):
     def __init__(self):
         MPRISPlayer.__init__(self, 'org.mpris.amarok')
 
+    def is_available(self):
+        return player_available('amarok')
+
+    def start(self):
+        return launch_player('amarok')
+
 
 class Aeon(MPRISPlayer):
+    """Discontinued"""
 
     def __init__(self):
         MPRISPlayer.__init__(self, 'org.mpris.aeon')
@@ -666,3 +815,44 @@ class mpDris(MPRISPlayer):
         MPRISPlayer.__init__(self, 'org.freedesktop.MediaPlayer')
 
 
+class Clementine(MPRISPlayer):
+
+    def __init__(self):
+        MPRISPlayer.__init__(self, 'org.mpris.clementine')
+
+    def is_available(self):
+        return player_available('clementine')
+
+    def start(self):
+        return launch_player('clementine')
+
+    def previous(self):
+        self.player.Prev()
+        # We have to emit song changed signal ourselves (Clementine 0.5)
+        self.song_changed_emitter()
+
+    def next(self):
+        self.player.Next()
+        # We have to emit song changed signal ourselves (Clementine 0.5)
+        self.song_changed_emitter()
+
+
+class Guayadeque(MPRISPlayer):
+
+    def __init__(self):
+        MPRISPlayer.__init__(self, 'org.mpris.guayadeque')
+
+    def dbus_driver(self):
+        bus_obj = dbus.SessionBus().get_object('org.freedesktop.DBus', '/org/freedesktop/DBus')
+        if bus_obj.NameHasOwner(self.dbus_base_name) == True:
+            self.session_bus = dbus.SessionBus()
+            self.proxy_obj = self.session_bus.get_object(self.dbus_base_name, '/Player')
+            self.player = dbus.Interface(self.proxy_obj, 'org.freedesktop.MediaPlayer')
+            self.player.connect_to_signal('TrackChange', self.song_changed_emitter, member_keyword='member')
+            self.player.connect_to_signal('StatusChange', self.playing_changed_emitter)
+
+    def is_available(self):
+        return player_available('guayadeque')
+
+    def start(self):
+        return launch_player('guayadeque')
