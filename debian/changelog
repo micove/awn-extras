@@ -1,3 +1,13 @@
+awn-extras (0.4.1~bzr1542-0.1) UNRELEASED; urgency=medium
+
+  * QA upload.
+  * New upstream snapshot.
+  * Rename source package to 'awn-extras'.
+  * debian/rules:
+    - Add a get-orig-source target.
+
+ -- Miguel A. Colón Vélez <debian.micove@gmail.com>  Mon, 12 Oct 2015 22:59:51 -0400
+
 awn-extras-applets (0.4.0-5) unstable; urgency=low
 
   * debian/patches:
