@@ -17,25 +17,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* This is one of the most basic applets you can make, it just embeds the 
-   WnckPager into the applet container*/ 
-
 #include "config.h"
 #define GMENU_I_KNOW_THIS_IS_UNSTABLE 1
 #include <gmenu-tree.h>
-#include <libgnome/gnome-desktop-item.h>
 
 #include <string.h>
 
 #include <gtk/gtk.h>
 #include <libawn/awn-applet.h>
+#include <libawn/awn-config-client.h>
+#include <libawn/awn-desktop-item.h>
 #include <glib/gmacros.h>
 #include <glib/gerror.h>
-#include <gconf/gconf-value.h> 
 
 #include <libawn/awn-applet-dialog.h>
 #include <libawn/awn-applet-simple.h>
+#include <libawn-extras/awn-extras.h>
 
+#define APPLET_NAME "main-menu"
 
 typedef struct {
 
@@ -143,18 +142,22 @@ get_icon (const gchar *name, gint size)
 static void
 launch (GMenuTreeEntry *entry)
 {
-  GnomeDesktopItem *item;
-
- item = gnome_desktop_item_new_from_file  (
-            gmenu_tree_entry_get_desktop_file_path (entry),
-            0,
-            NULL);
-  if (!item)
+  AwnDesktopItem *item;
+  gchar *path = gmenu_tree_entry_get_desktop_file_path (entry);
+  if (!g_file_test (path, G_FILE_TEST_IS_REGULAR))
+  {
     return;
+  }
 
-  gnome_desktop_item_launch (item, NULL, 0, NULL);
+  item = awn_desktop_item_new (path);
+  if (!item)
+  {
+    return;
+  }
 
-  gnome_desktop_item_unref (item);
+  awn_desktop_item_launch (item, NULL, NULL);
+  gtk_widget_hide(menu->window);
+  awn_desktop_item_free (item);
 } 
 
 static void
@@ -340,18 +343,36 @@ on_icon_clicked (GtkWidget *eb,
                  GdkEventButton *event,
                  Menu *app)
 {
-  if(!GTK_WIDGET_VISIBLE(app->window)) {
-  app->root = gmenu_tree_get_root_directory (app->tree);
-  populate (app);
-  } else {
-  	gtk_widget_hide(app->window);
+  if (event->button == 1)
+  {
+    if(!GTK_WIDGET_VISIBLE(app->window)) {
+      app->root = gmenu_tree_get_root_directory (app->tree);
+      populate (app);
+    } else {
+    	gtk_widget_hide(app->window);
+    }
+  }
+  else if (event->button == 3)
+  {
+    static GtkWidget * menu=NULL;
+    static GtkWidget * item;
+
+    if (!menu)
+    {
+      menu = awn_applet_create_default_menu (app->applet);
+    }
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,event->button, 
+                   event->time);
   }
 }
 
 static gboolean
 on_focus_out (GtkWidget *window, GdkEventFocus *event, gpointer null)
 {
-    gtk_widget_hide (window);
+    if (share_config_bool(SHR_KEY_FOCUS_LOSS) )
+    {    
+        gtk_widget_hide (window);
+    }        
 }
 
 
@@ -395,7 +416,8 @@ awn_applet_factory_initp (const gchar * uid, gint orient, gint height )
 {
   AwnApplet *applet = AWN_APPLET (awn_applet_simple_new (uid, orient, height));
   Menu      *app = menu =  g_new0 (Menu, 1);
- 
+  app->applet = applet;
+    
   app->apps = gmenu_tree_lookup ("applications.menu", GMENU_TREE_FLAGS_NONE);
   if (!app->apps)
   {
@@ -424,14 +446,10 @@ awn_applet_factory_initp (const gchar * uid, gint orient, gint height )
                        
   g_signal_connect (G_OBJECT (applet), "button-press-event",
                     G_CALLBACK (on_icon_clicked), (gpointer)app);
-
-  GdkPixbuf *icon;
-  icon = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                   "gnome-main-menu",
-                                   height-2,
-                                   0, NULL);
-	
-  awn_applet_simple_set_icon (AWN_APPLET_SIMPLE (applet), icon);
+  
+  awn_applet_simple_set_awn_icon( AWN_APPLET_SIMPLE(app->applet),
+                                    APPLET_NAME,
+                                    "gnome-main-menu")  ;
 
   gtk_widget_show_all (GTK_WIDGET (applet));                              
   return applet;

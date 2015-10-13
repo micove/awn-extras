@@ -1,6 +1,6 @@
 #!/usr/bin/python
-
-# Copyright (c) 2007 Randal Barlow
+# Copyright (c) 2007  Randal Barlow <im.tehk at gmail.com>
+#               2008  onox <denkpadje@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,116 +17,105 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import sys, os
-import gobject
+import commands
+import os
+import subprocess
+
 import pygtk
+pygtk.require("2.0")
 import gtk
-from gtk import gdk
-import awn
-import gconf
 
-class App (awn.AppletSimple):
-    def __init__ (self, uid, orient, height):
-        self.location = __file__.replace('quit-applet.py','')
-        self.keylocation = "/apps/avant-window-navigator/applets/QuitApplet"
-        self.client = gconf.client_get_default()
-        self.load_keys()
-	self.client.notify_add(self.keylocation, self.config_event)
-        awn.AppletSimple.__init__ (self, uid, orient, height)
-        self.height = height
-        self.theme = gtk.IconTheme ()
-        try:
-            icon = gdk.pixbuf_new_from_file (self.icon_location)
-        except: icon = gdk.pixbuf_new_from_file (self.location + "icons/application-exit.svg")
-        if height != icon.get_height():
-            icon = icon.scale_simple(height,height,gtk.gdk.INTERP_BILINEAR)
-        self.set_temp_icon (icon)
-        self.title = awn.awn_title_get_default ()
-        self.connect ("button-press-event", self.button_press)
-        self.connect ("enter-notify-event", self.enter_notify)
-        self.connect ("leave-notify-event", self.leave_notify)
+from awn.extras import AWNLib
 
-	# Setup popup menu
-	self.popup_menu = gtk.Menu()
-	pref_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_PREFERENCES)
-	self.popup_menu.append(pref_item)
-	pref_item.connect_object("activate", self.pref_callback, self)
-	pref_item.show()
+try:
+    import dbus
+except ImportError:
+    dbus = None
 
-    def pref_callback(self, widget):
-	window = PreferenceDialog(self)
-	window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_DIALOG)
-	window.set_destroy_with_parent(True)
-	window.show_all()
+applet_name = "Quit-Log Out"
+applet_version = "0.2.8"
+applet_description = "An applet to exit or log out of your session"
 
-    def button_press (self, widget, event):
-	self.title.hide(self)
-	if event.button == 3:
-	    # right click
-	    self.popup_menu.popup(None, None, None, event.button, event.time)
-	else:
-            os.system(self.command)
-    #def dialog_focus_out (self, widget, event):
-    #  print ""
-    def enter_notify (self, widget, event):
-        self.title.show (self, "Quit/Logout?")
-    def leave_notify (self, widget, event):
-        self.title.hide (self)
-    def config_event(self, gconf_client, *args, **kwargs):
-	self.load_keys()
-    def load_keys(self):
-        #<Name of Variable> = self.key_control (<Name of Key>,<Default Value>)
-        self.icon_location                       = self.key_control ("/IconLocation",self.location + "icons/application-exit.svg")
-	self.command				 = self.key_control ("/LogoutCommand", "gnome-session-save --kill")
+# Themed logo of the applet, used as the applet's icon and shown in the GTK About dialog
+applet_logo = "application-exit"
 
-    def key_control(self,keyname,default):
-        keylocation_with_name               = self.keylocation + keyname
-        try:
-            var                             = self.client.get_string(keylocation_with_name)
-            if var                         == None:
-                var                         = default
-                self.client.set_string        (keylocation_with_name,var)
-        except NameError:
-            var                             = default
-        return var  
 
-class PreferenceDialog(gtk.Window):
-    def __init__(self,applet):
-	super(PreferenceDialog, self).__init__(gtk.WINDOW_TOPLEVEL)
-	self.applet = applet
+class QuitLogOutApplet:
 
-	self.set_title("Preferences")
-	vbox = gtk.VBox(True, 0)
-	self.add(vbox)
-
-	vbox1 = gtk.VBox(True, 0)
-	label1 = gtk.Label("Logout command:")
-	self.logout_command = gtk.Entry(max=0)
-	self.logout_command.set_text(applet.command)
-	vbox1.pack_start(label1)
-	vbox1.pack_end(self.logout_command)
-	vbox.pack_start(vbox1,True,False,2)
-
-	hbox4 = gtk.HBox(True, 0)
-	ok = gtk.Button(stock=gtk.STOCK_OK)
-	ok.connect("clicked", self.ok_button, "ok")
-	hbox4.add(ok)
-	cancel = gtk.Button(stock=gtk.STOCK_CANCEL)
-	cancel.connect("clicked", self.cancel_button, "cancel")
-	hbox4.add(cancel)
-	vbox.pack_end(hbox4,True,False,2)
-
-    def ok_button(self, widget, event):
-	self.applet.client.set_string(self.applet.keylocation + "/LogoutCommand", self.logout_command.get_text().strip())
-	self.destroy()
-
-    def cancel_button(self, widget, event):		
-	self.destroy()
+    """An applet to exit or log out of your session.
+    
+    """
+    
+    def __init__(self, applet):
+        self.applet = applet
+        
+        applet.title.set("Log Out " + commands.getoutput("/usr/bin/whoami") + "...")
+        
+        self.logout_cb = None
+        
+        if dbus is not None:
+            try:
+                bus = dbus.SessionBus()
+                names = bus.list_names()
+                if "org.gnome.SessionManager" in names and "org.freedesktop.PowerManagement" in names:
+                    proxy = bus.get_object("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement")
+                    if dbus.Interface(proxy, "org.freedesktop.PowerManagement").CanShutDown():
+                        self.logout_cb = self.logout_gnome_session_manager
+            except dbus.DBusException, e:
+                print e.message
+        
+        if self.logout_cb is None:
+            self.logout_cb = self.logout_shell_command
+            self.setup_context_menu()
+        
+        applet.connect("button-press-event", self.button_press_event_cb)
+    
+    def button_press_event_cb(self, widget, event):
+        if event.button == 1:
+            self.logout_cb()
+    
+    def setup_context_menu(self):
+        pref_dialog = self.applet.dialog.new("preferences")
+        pref_dialog.connect("response", self.pref_dialog_response_cb)
+        
+        self.setup_dialog_settings(pref_dialog.vbox)
+    
+    def setup_dialog_settings(self, vbox):
+        if "logout_command" not in self.applet.settings:
+            self.applet.settings["logout_command"] = "gnome-session-save --kill"
+        self.logout_command = self.applet.settings["logout_command"]
+        
+        # TODO replace the entry by a combobox that has the values: GNOME, KDE, ..., custom, etc.
+        self.entry_logout = gtk.Entry()
+        self.entry_logout.set_text(self.logout_command)
+        
+        """ Wrap the entry in a vbox that has a non-zero border width
+        to align the entry with the close button """
+        extra_vbox = gtk.VBox()
+        extra_vbox.set_border_width(5)
+        extra_vbox.add(self.entry_logout)
+        
+        vbox.add(extra_vbox)
+    
+    def pref_dialog_response_cb(self, widget, response):
+        self.applet.settings["logout_command"] = self.logout_command = self.entry_logout.get_text()
+    
+    def logout_gnome_session_manager(self):
+        proxy = dbus.SessionBus().get_object("org.gnome.SessionManager", "/org/gnome/SessionManager")
+        dbus.Interface(proxy, "org.gnome.SessionManager").Shutdown()
+    
+    def logout_shell_command(self):
+        subprocess.Popen(self.logout_command, shell=True)
 
 
 if __name__ == "__main__":
-    awn.init (sys.argv[1:])
-    applet = App (awn.uid, awn.orient, awn.height)
-    awn.init_applet (applet)
-    applet.show_all ()
-    gtk.main ()
+    applet = AWNLib.initiate({"name": applet_name, "short": "quit",
+        "version": applet_version,
+        "description": applet_description,
+        "theme": applet_logo,
+        "author": "onox, Randal Barlow",
+        "copyright-year": 2008,
+        "authors": ["Randal Barlow <im.tehk at gmail.com>", "onox <denkpadje@gmail.com>"]},
+        ["settings-per-instance"])
+    QuitLogOutApplet(applet)
+    AWNLib.start(applet)

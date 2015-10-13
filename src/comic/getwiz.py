@@ -36,10 +36,10 @@ from datetime import datetime, timedelta
 if len(sys.argv) > 1:
     number_of_days = int(sys.argv[1])
 
-pattern = re.compile('wizardofid\\d+\\.gif')
-pattern2 = re.compile('wizardofid\\d+\\.jpg')
-temp1 = 'http://www.comics.com/creators/wizardofid/archive/wizardofid-%s.html'
-temp2 = 'http://www.comics.com/creators/wizardofid/archive/images/%s'
+pattern = re.compile('str_strip[0-9/]+\\.full\\.gif')
+pattern2 = re.compile('str_strip[0-9/]+\\.full\\.jpg')
+temp1 = 'http://comics.com/wizard_of_id/%s/'
+temp2 = 'http://assets.comics.com/dyn/%s'
 
 date = datetime.today()
 one_day = timedelta(1)

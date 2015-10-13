@@ -33,8 +33,9 @@
 #define GKEY_ICON_FULL "applet_icon_full"
 #define GKEY_GUI_TYPE "gui_type"
 
-#define STACKS_APPLET "/usr/lib/awn/applets/stacks.desktop"
+#define STACKS_APPLET PREFIX "/lib/awn/applets/stacks.desktop"
 #define STACKS_APPLET_LOCAL "/usr/local/lib/awn/applets/stacks.desktop"
+#define STACKS_APPLET_SHARE PREFIX "/share/avant-window-navigator/applets/stacks.desktop"
 
 typedef struct {
   AwnApplet *applet;
@@ -107,6 +108,7 @@ trasher_initialization(GtkWidget *widget, gpointer user_data)
 AwnApplet*
 awn_applet_factory_initp ( gchar* uid, gint orient, gint height )
 {
+  gnome_vfs_init ();
   // Create a new applet and set a reference to the new Trasher
   AwnApplet *applet = awn_applet_new( uid, orient, height );
   Trasher *app = g_new0(Trasher, 1);
@@ -120,10 +122,12 @@ awn_applet_factory_initp ( gchar* uid, gint orient, gint height )
     desktop_path = STACKS_APPLET;
   }else if(gnome_vfs_uri_exists(gnome_vfs_uri_new(STACKS_APPLET_LOCAL))){
     desktop_path = STACKS_APPLET_LOCAL;
+  }else if(gnome_vfs_uri_exists(gnome_vfs_uri_new(STACKS_APPLET_SHARE))){
+    desktop_path = STACKS_APPLET_SHARE;
   }else{
     g_print("!! Stacks Trasher Error: dependency on Stacks Applet not met:\n \
              !! Could not find stacks.desktop file at:\n \
-             !! %s or %s\n", STACKS_APPLET, STACKS_APPLET_LOCAL);
+             !! %s or %s\n", STACKS_APPLET, STACKS_APPLET_LOCAL, STACKS_APPLET_SHARE);
   }
 
   // Create a box that will hold the stacks applets

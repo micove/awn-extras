@@ -65,7 +65,8 @@ endif
 affinity_la_LIBADD =		\
 	$(AWN_LIBS)		\
 	$(AFFINITY_LIBS)	\
+	$(top_builddir)/src/libawn-extras/libawn-extras.la	\
 	$(NULL)
 affinity_la_LDFLAGS = $(APPLET_LINKER_FLAGS)
 
-EXTRA_DIST=po/Makefile.in.in
+EXTRA_DIST += po/Makefile.in.in

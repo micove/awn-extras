@@ -1,6 +1,7 @@
 dist_mediacontrol_DATA = 				\
 		COPYING 	\
 		README		\
-		rhythmbox.svg 
+		media-control.svg	\
+		noArtIcon.png
 
-mediacontroldir = $(libdir)/awn/applets/media-control/icons
+mediacontroldir = $(datadir)/avant-window-navigator/applets/media-control/icons

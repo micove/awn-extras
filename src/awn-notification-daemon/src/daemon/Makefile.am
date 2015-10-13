@@ -12,12 +12,15 @@ awnnotificationdaemon_la_SOURCES =	\
 	daemon.h			\
 	engines.c			\
 	engines.h			\
+	sound.c				\
+	sound.h				\
 	stack.c				\
 	stack.h				\
 	$(NULL)
 awnnotificationdaemon_la_LIBADD =	\
 	$(AWN_LIBS)			\
 	$(NOTIFICATION_DAEMON_LIBS)	\
+	$(top_builddir)/src/libawn-extras/libawn-extras.la	\
 	$(NULL)
 awnnotificationdaemon_la_LDFLAGS = $(APPLET_LINKER_FLAGS)
 
@@ -30,4 +33,4 @@ notificationdaemon-dbus-glue.h: notificationdaemon.xml
 DISTCLEANFILES = \
 	notificationdaemon-dbus-glue.h
 
-EXTRA_DIST=notificationdaemon.xml
+EXTRA_DIST += notificationdaemon.xml

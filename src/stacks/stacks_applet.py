@@ -187,7 +187,7 @@ class StacksApplet (awn.AppletSimple):
         else:
             self.gui = stacks_gui_dialog.StacksGuiDialog(self)
             self.gui_type = STACKS_GUI_DIALOG
-        
+
         self.gconf_client.set_int(
                 self.gconf_path + "/gui_type", self.gui_type )
 
@@ -207,25 +207,26 @@ class StacksApplet (awn.AppletSimple):
     # On mouseclick on applet ->
     # * hide the dialog and show the context menu on button 3
     # * open the backend on button 2
-    # * show/hide the dialog on button 1 (if backend not empty) 
+    # * show/hide the dialog on button 1 (if backend not empty)
     def applet_button_cb(self, widget, event):
         if event.button == 3:
             # right click
             self.emit("stacks-gui-hide")
             # create popup menu
-            popup_menu = gtk.Menu()
+            popup_menu = self.create_default_menu()
             # get list of backend specified menu items
+	    popup_menu.prepend(gtk.SeparatorMenuItem())
+	    pref_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_PREFERENCES)
+            popup_menu.prepend(pref_item)
+
             items = self.backend.get_menu_items()
             if items:
                 for i in items:
-                  popup_menu.append(i)
-                popup_menu.append(gtk.SeparatorMenuItem())
+		    popup_menu.prepend(i)
             #gui_item = gtk.CheckMenuItem(label=_("Use experimental gui"))
             #gui_item.set_active(self.gui_type > STACKS_GUI_DIALOG)
             #gui_item.connect_object("toggled", self.applet_menu_gui_cb, self)
             #popup_menu.append(gui_item)
-            pref_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_PREFERENCES)
-            popup_menu.append(pref_item)
             about_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_ABOUT)
             popup_menu.append(about_item)
             pref_item.connect_object("activate",self.applet_menu_pref_cb,self)
@@ -239,10 +240,11 @@ class StacksApplet (awn.AppletSimple):
             # left click
             if not self.backend.is_empty():
                 self.emit("stacks-gui-toggle")
+            self.title.hide(self)
 
 
     def applet_drag_leave_cb(self, widget, context, time):
-        awn.awn_effect_stop(self.effects, "hover")
+        self.effects.stop("launching")
         if self.drag_timer:
             gobject.source_remove(self.drag_timer)
         self.drag_timer = None;
@@ -250,7 +252,7 @@ class StacksApplet (awn.AppletSimple):
 
 
     def applet_drag_motion_cb(self, widget, context, x, y, time):
-        awn.awn_effect_start(self.effects, "hover")
+        self.effects.start("launching")
         if self.drag_timer:
             gobject.source_remove(self.drag_timer)
         self.drag_timer = gobject.timeout_add (self.drag_open_timeout, self.show_gui )
@@ -351,7 +353,7 @@ class StacksApplet (awn.AppletSimple):
 			self.applet_set_icon(pixbuf)
         else:
         	print "ERROR in STACK: invalid iter!?  (stacks_applet.py)"
-        	
+
 
 
     def backend_item_removed_cb(self, widget, iter):
@@ -363,9 +365,7 @@ class StacksApplet (awn.AppletSimple):
         self.applet_set_icon(pixbuf)
 
     def backend_attention_cb(self, widget, backend_type):
-        awn.awn_effect_start(self.effects, "attention")
-        time.sleep(1.0)
-        awn.awn_effect_stop(self.effects, "attention")
+        self.effects.start_ex("attention", 0, 0, 1)
 
     def backend_get_config(self):
         self.config = get_config_from_gconf(self.gconf_client, self.gconf_path, self.uid)

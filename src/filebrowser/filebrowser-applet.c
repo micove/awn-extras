@@ -416,11 +416,13 @@ AwnApplet *awn_applet_factory_initp(
     gint orient,
     gint height ) {
 
+    gnome_vfs_init ();
+
 	GtkWidget *awn_applet = awn_applet_simple_new( uid, orient, height );
     FileBrowserApplet *applet = g_object_new( FILEBROWSER_TYPE_APPLET, NULL );
 	applet->awn_applet = awn_applet;
 
-    filebrowser_gconf_init( AWN_APPLET( awn_applet ) );
+    filebrowser_gconf_init( AWN_APPLET( awn_applet ), uid );
     filebrowser_applet_set_icon( applet, NULL );
 
     applet->filebrowser = filebrowser_dialog_new( applet );

@@ -1,4 +1,11 @@
 NULL =
+if HAVE_VALA
+if MAINTAINER_MODE
+VALA_TEST = vala-test
+endif
+VALA_APPLETS = $(VALA_TEST) taskmand simple-launcher standalone-launcher Taskmand-applet 
+endif
+
 GCONF_APPLETS =
 
 if WITH_GCONF
@@ -9,53 +16,76 @@ GCONF_APPLETS +=		\
 	cairo-menu-classic	\
 	calendar		\
 	filebrowser		\
-	main-menu		\
 	plugger			\
 	stacks			\
-	trash			\
 	trasher			\
 	$(NULL)
 endif
 GCONF_APPLETS +=		\
-	arss			\
 	awn-notification-daemon	\
-	awnterm			\
-	comic			\
-	digitalClock		\
-	file-browser-launcher	\
-	lastfm			\
 	media-control		\
-	media-icon-back		\
-	media-icon-next		\
-	media-icon-play		\
 	mount-applet		\
-	quit-applet		\
-	switcher		\
-	weather			\
 	$(NULL)
 endif
 if WITH_GNOME
 GCONF_APPLETS +=	\
+	digg		\
+	main-menu	\
 	MiMenu		\
-	pandora			\
+	pandora		\
+	rtm		\
+	trash		\
 	$(NULL)
 endif
+if WITH_WEBKIT
+WEBKIT_APPLETS = \
+	webapplet	\
+	$(NULL)
+endif
+if MAINTAINER_MODE
+PYTHON_TEST = python-test
+WOBBLYZINI = wobblyzini
+endif
 
+# please keep alphabetized (except for libawn-extras)
 SUBDIRS =			\
 	libawn-extras		\
 	affinity		\
+	animal-farm		\
+	arss			\
+	awn-meebo		\
+	awnterm			\
 	battery-applet		\
+	cairo-clock		\
+	comic			\
+	comics			\
+	cpufreq			\
+	DesktopManager		\
+	digitalClock		\
+	file-browser-launcher	\
+	lastfm			\
 	mail			\
+	media-icon-back		\
+	media-icon-next		\
+	media-icon-play		\
+	media-player		\
 	notification-area	\
 	places			\
-	PyClock			\
-	python-test		\
+	pynot				\
+	$(PYTHON_TEST)		\
+	quit-applet		\
 	separator		\
 	shiny-switcher		\
 	showdesktop		\
+	switcher		\
+	thinkhdaps			\
+	to-do				\
+	tomboy-applet		\
 	tsclient-applet		\
 	volume-control		\
-	wobblyzini		\
+	weather			\
+	$(WOBBLYZINI)		\
 	$(GCONF_APPLETS)	\
 	$(VALA_APPLETS)		\
+	$(WEBKIT_APPLETS)	\
 	$(NULL)

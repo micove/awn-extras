@@ -271,6 +271,7 @@ class StacksGuiCurved(gtk.Window):
         self.connect('focus-out-event', self.dialog_focus_out)
         self.connect('expose-event', self.draw_dialog)
         self.connect('leave-notify-event', self.focus_out)
+        self.connect_after('realize', self.set_background)
         
         self.hbox = gtk.HBox(False, 0)
         self.add(self.hbox)
@@ -343,7 +344,7 @@ class StacksGuiCurved(gtk.Window):
 
     def stack_drag_leave(self, widget, context, time):
     	#print "drag leave on stack", time
-    	awn.awn_effect_stop(self.applet.effects, "hover")
+    	self.applet.effects.stop("launching")
     	self._stacks_gui_request_hide()
     	return True
     	
@@ -386,7 +387,7 @@ class StacksGuiCurved(gtk.Window):
 
         	
 
-        awn.awn_effect_stop(self.applet.effects, "hover")
+        self.applet.effects.stop("launching")
         
         return False
 
@@ -522,6 +523,14 @@ class StacksGuiCurved(gtk.Window):
     def focus_out(self, widget, event):
     	
     	self.queue_draw()
+
+    def set_background(self, widget, user_data = None):
+        pixmap = gtk.gdk.Pixmap(widget.window, 1, 1)
+        cr = pixmap.cairo_create()
+        cr.set_operator(cairo.OPERATOR_CLEAR)
+        cr.paint()
+        del cr
+        widget.window.set_back_pixmap(pixmap, False)
 
     def mouse_moved(self, widget, event = None, x = None, y = None, time = None):
     	if not self.just_dragged:

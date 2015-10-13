@@ -6,7 +6,7 @@ m4_define(pycairo_required_version,      1.0.2) dnl or 1.1.7
 m4_define(pygtk_required_version,        2.10.0)
 
 
-AC_INIT(awn-extras-applets, 0.2.6, [])
+AC_INIT(awn-extras-applets, 0.3.1, [])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR(src)
 AM_CONFIG_HEADER(config.h)
@@ -16,14 +16,6 @@ AC_ISC_POSIX
 AC_PROG_CC
 AC_STDC_HEADERS
 AC_PROG_LIBTOOL
-
-dnl ==============================================
-dnl gconf stuff
-dnl ==============================================
-AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
-if test x"$GCONFTOOL" = xno; then
-  AC_MSG_ERROR([gconftool-2 executable not found in your path - should be installed with GConf])
-fi
 
 dnl ==============================================
 dnl translation support
@@ -49,6 +41,8 @@ AC_PYTHON_DEVEL()
 PKG_CHECK_MODULES(PYCAIRO, pycairo >= pycairo_required_version)
 PYGTK_CODEGEN_DEFINES="-DHAVE_PYCAIRO $PYGTK_CODEGEN_DEFINES";
 
+PKG_CHECK_EXISTS([libwnck-1.0 >= 2.21.99.9], [AC_DEFINE(HAVE_LIBWNCK_222, 1, [Have libwnck 2.22.x])])
+
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= pygtk_required_version)
 AC_PATH_PROG(PYGTK_CODEGEN, pygtk-codegen-2.0, no)
 if test "x$PYGTK_CODEGEN" = "xno"; then
@@ -72,16 +66,18 @@ dnl
 
 AC_ARG_WITH([gconf], AS_HELP_STRING([--without-gconf],[Disable building/installing applets that need GConf]),,[with_gconf=yes])
 AC_ARG_WITH([gnome], AS_HELP_STRING([--without-gnome],[Disable building/installing applets that require Gnome-specific libraries]),,[with_gnome=yes])
+AC_ARG_WITH([webkit], AS_HELP_STRING([--with-webkit],[Enable building/installing applets that require webkitgtk]),,[with_webkit=no])
 AM_CONDITIONAL(WITH_GCONF, test "$with_gconf" != "no")
 AM_CONDITIONAL(WITH_GNOME, test "$with_gnome" != "no")
+AM_CONDITIONAL(WITH_WEBKIT, test "$with_webkit" != "no")
 
 # all
-PKG_CHECK_MODULES(AWN, [awn])
+PKG_CHECK_MODULES(AWN, [awn >= 0.3.1])
 #trash
 PKG_CHECK_MODULES(LIBGLADE, [libglade-2.0])
 # awn-notification-daemon, shiny-switcher, standalone-launcher, switcher, taskmand
 PKG_CHECK_MODULES(LIBWNCK, [libwnck-1.0])
-# affinity, shiny-switcher
+# affinity, awn-notification-daemon, shiny-switcher, trash
 PKG_CHECK_MODULES(LIBX11, [x11])
 PKG_CHECK_MODULES(COMPOSITE, [xcomposite])
 PKG_CHECK_MODULES(XRENDER, [xrender])
@@ -90,13 +86,15 @@ PKG_CHECK_MODULES(LIBSEXY, [libsexy])
 PKG_CHECK_MODULES(LIBNOTIFY, [libnotify])
 # standalone-launcher, taskmand, taskmand-applet
 PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1])
+# awn-terminal
+PKG_CHECK_MODULES(VTE, [vte])
 
 if test "$with_gconf" != "no" -o "$with_gnome" != "no"; then
 # filebrowser
 PKG_CHECK_MODULES(GNOMEUI, [libgnomeui-2.0])
 # filebrowser
 PKG_CHECK_MODULES(GNOME_DESKTOP, [gnome-desktop-2.0])
-# filebrowser, cairo-menu
+# filebrowser, cairo-menu, trash, trasher
 PKG_CHECK_MODULES(GNOME_VFS, [gnome-vfs-2.0])
 # clock
 PKG_CHECK_MODULES(RSVG, [librsvg-2.0])
@@ -106,10 +104,45 @@ PKG_CHECK_MODULES(GNOME_MENU, [libgnome-menu])
 PKG_CHECK_MODULES(GTOP, [libgtop-2.0])
 fi
 
-if test "$with_gconf" != "no"; then
-# awn-terminal
-PKG_CHECK_MODULES(VTE, [vte])
+webkit_module=no
+if test "$with_webkit" != "no"; then
+# webapplet
+PKG_CHECK_EXISTS([webkit-1.0],[webkit_module="webkit-1.0"],
+    [PKG_CHECK_EXISTS([WebKitGtk],[
+        webkit_module="WebKitGtk"
+        AC_DEFINE([HAVE_OLD_WEBKITGTK],[1],[Define if the installed WebKit uses the old pkgconfig file and header structure.])
+        ],[AC_MSG_ERROR([Could not find packages webkit-1.0 or WebKitGtk.  Either one is required for webkit support to be enabled.])])])
+PKG_CHECK_MODULES(WEBKIT, [$webkit_module])
+AC_SUBST(WEBKIT_CFLAGS)
+AC_SUBST(WEBKIT_LIBS)
 fi
+
+#awn-notification-daemon
+AC_ARG_ENABLE(sound,
+    AS_HELP_STRING([--enable-sound=auto|gstreamer|no],[Sound support for awn-notification-daemon (default=auto)])
+)
+
+if test x$enable_sound != xno -a x$enable_sound != xgstreamer; then
+	enable_sound=auto
+fi
+
+if test x$enable_sound != xno; then
+	gstreampkg="gstreamer-0.10"
+
+	if test x$enable_sound = xauto; then
+		PKG_CHECK_MODULES(GSTREAMER, $gstreampkg,
+		                  [enable_sound=gstreamer], [enable_sound=no])
+	else
+		PKG_CHECK_MODULES(GSTREAMER, $gstreampkg, [enable_sound=gstreamer])
+	fi
+
+	if test x$enable_sound = xgstreamer; then
+		AC_DEFINE([HAVE_GSTREAMER], 1, [Defined if Gstreamer is detected])
+    else
+        gstreampkg=
+	fi
+fi
+
 
 # affinity
 affinity_pkgs="x11"
@@ -138,8 +171,9 @@ PKG_CHECK_MODULES(AFFINITY, [$affinity_pkgs])
 if test "$with_gconf" != "no" -o "$with_gnome" != "no"; then
 PKG_CHECK_MODULES(FILEBROWSER, [gnome-desktop-2.0 gnome-vfs-2.0 libgnomeui-2.0])
 PKG_CHECK_MODULES(CAIRO_MENU_GNOME, [gnome-vfs-2.0 libgnome-menu libnotify libsexy])
+PKG_CHECK_MODULES(TRASH, [gnome-vfs-2.0 libglade-2.0 x11])
 fi
-PKG_CHECK_MODULES(NOTIFICATION_DAEMON, [libnotify libsexy libwnck-1.0])
+PKG_CHECK_MODULES(NOTIFICATION_DAEMON, [$gstreampkg libnotify libsexy libwnck-1.0 x11])
 PKG_CHECK_MODULES(SHINY_SWITCHER, [libwnck-1.0 x11 xcomposite xrender])
 PKG_CHECK_MODULES(STANDALONE_LAUNCHER, [dbus-glib-1 libwnck-1.0])
 PKG_CHECK_MODULES(TASKMAND, [dbus-glib-1 libwnck-1.0])
@@ -156,6 +190,8 @@ AC_ARG_ENABLE(pymod_checks,
 if test x${enable_pymod_checks} = xyes; then
     # volume-control
     AM_CHECK_PYMOD(alsaaudio,,,AC_MSG_ERROR([python module alsaaudio required (python-alsaaudio)]))
+    # battery-applet
+    AM_CHECK_PYMOD(pynotify,,,AC_MSG_ERROR([python module pynotify required (python-notify)]))
     # arss, mail
     AM_CHECK_PYMOD(feedparser,,,AC_MSG_ERROR([python module feedparser required (python-feedparser)]))
     if test "$with_gnome" != "no"; then
@@ -185,21 +221,17 @@ dnl
 AWN_BINDIR=`$PKG_CONFIG --variable=exec_prefix awn`/bin
 AC_SUBST(AWN_BINDIR)
 
-AC_CHECK_LIB([awn], [awn_vfs_init], [have_desktop_agnostic=yes], [have_desktop_agnostic=no], [$AWN_LIBS])
-if test "$have_desktop_agnostic" = "yes"; then
-    config_backend=`$PKG_CONFIG --variable=config_backend awn`
-    AC_DEFINE(USE_AWN_DESKTOP_AGNOSTIC, 1, [Use the APIs that originated in the desktop-agnostic branch of Awn.])
-    dnl
-    dnl Check for Vala support.
-    dnl
-    AWN_VAPIDIR=`$PKG_CONFIG --variable=vapidir awn`
-    if test -n "$AWN_VAPIDIR" -a -f "$AWN_VAPIDIR/awn.vapi"; then
-        VALA_PROG_VALAC(0.1.6)
-        AC_SUBST(AWN_VAPIDIR)
-    fi
+config_backend=`$PKG_CONFIG --variable=config_backend awn`
+dnl
+dnl Check for Vala support.
+dnl
+AWN_VAPIDIR=`$PKG_CONFIG --variable=vapidir awn`
+if test -n "$AWN_VAPIDIR" -a -f "$AWN_VAPIDIR/awn.vapi"; then
+    VALA_PROG_VALAC(0.3.4)
+    AC_PATH_PROG(VAPIGEN, vapigen, vapigen, [])
+    AC_SUBST(AWN_VAPIDIR)
 fi
-AM_CONDITIONAL(DESKTOP_AGNOSTIC, test "$have_desktop_agnostic" = "yes")
-AM_CONDITIONAL(GCONF_SCHEMAS, test "$have_desktop_agnostic" = "no" -o "$config_backend" = "GConf")
+AM_CONDITIONAL(GCONF_SCHEMAS, test "$config_backend" = "GConf")
 AM_CONDITIONAL(HAVE_VALA, test -n "$AWN_VAPIDIR" -a -n "$VALAC")
 AM_CONDITIONAL(LIBAWN_USE_GNOME, test -n "`echo $AWN_CFLAGS | grep LIBAWN_USE_GNOME`")
 
@@ -227,9 +259,8 @@ AS_AC_EXPAND(LIBDIR, $libdir)
 AS_AC_EXPAND(DATADIR, $datadir)
 AS_AC_EXPAND(LIBEXECDIR, $libexecdir)
 
-DBUS_SERVICES_DIR="/usr/share/dbus-1/services"
+DBUS_SERVICES_DIR=`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`
 AC_SUBST(DBUS_SERVICES_DIR)
-
 
 icondir="$datarootdir/avant-window-navigator/applets/icons"
 AC_SUBST(icondir)
@@ -243,6 +274,13 @@ AC_SUBST(GCC_FLAGS)
 dnl ==============================================
 dnl GConf
 dnl ==============================================
+if test "$config_backend" = "GConf" -o "$with_gconf" != "no"; then
+AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
+  if test x"$GCONFTOOL" = xno; then
+    AC_MSG_ERROR([gconftool-2 executable not found in your path - should be installed with GConf])
+  fi
+fi
+
 AM_GCONF_SOURCE_2
 
 dnl Please keep in alphabetical order
@@ -262,9 +300,13 @@ src/affinity/data/48x48/Makefile
 src/affinity/data/scalable/Makefile
 src/affinity/data/actions/Makefile
 src/affinity/po/Makefile.in
+src/animal-farm/Makefile
+src/animal-farm/icons/Makefile
 src/arss/Makefile
-src/arss/arss.desktop.in
-src/arss/Core/Makefile
+src/arss/icons/Makefile
+src/awn-meebo/Makefile
+src/awn-meebo/icons/Makefile
+src/awn-meebo/profile/Makefile
 src/awn-notification-daemon/Makefile
 src/awn-notification-daemon/data/Makefile
 src/awn-notification-daemon/po/Makefile.in
@@ -275,15 +317,22 @@ src/awnsystemmonitor/Makefile
 src/awnsystemmonitor/awnsystemmonitor.desktop.in
 src/awnterm/Makefile
 src/awnterm/awnterm.desktop.in
-src/battery-applet/battery-applet.desktop.in
 src/battery-applet/Makefile
-src/battery-applet/icons/Makefile
+src/battery-applet/themes/Makefile
+src/battery-applet/themes/gpm/Makefile
+src/battery-applet/themes/oxygen/Makefile
+src/clock/Makefile
+src/clock/clock.desktop.in
+src/cairo-clock/Makefile
+src/cairo-clock/themes/Makefile
+src/cairo-clock/themes/gnome/Makefile
+src/cairo-clock/themes/onox/Makefile
+src/cairo-clock/themes/tango/Makefile
 src/cairo-menu-classic/Makefile
 src/cairo-menu-classic/cairo_main_menu_classic.desktop.in
 src/cairo-menu/Makefile
 src/cairo-menu/cairo_main_menu.desktop.in
 src/calendar/Makefile
-src/calendar/calendar.desktop.in
 src/calendar/google/Makefile
 src/calendar/google/atom/Makefile
 src/calendar/google/gdata/Makefile
@@ -293,90 +342,109 @@ src/calendar/google/gdata/calendar/Makefile
 src/calendar/google/gdata/docs/Makefile
 src/calendar/google/gdata/spreadsheet/Makefile
 src/calendar/images/Makefile
+src/calendar/icalendar/Makefile
+src/calendar/dateutil/Makefile
+src/calendar/dateutil/zoneinfo/Makefile
 src/comic/Makefile
-src/comic/comic.desktop.in
-src/comic/images/Makefile
+src/comic/icons/Makefile
+src/comics/Makefile
+src/comics/feeds/Makefile
+src/comics/glade/Makefile
+src/comics/locale/Makefile
+src/comics/icons/Makefile
+src/comics/locale/sv_SE/Makefile
+src/comics/locale/sv_SE/LC_MESSAGES/Makefile
+src/cpufreq/Makefile
+src/cpufreq/images/Makefile
+src/DesktopManager/Makefile
+src/digg/Makefile
+src/digg/icons/Makefile
+src/digg/profile/Makefile
+src/digg/profile/Cache/Makefile
 src/digitalClock/Makefile
-src/digitalClock/digitalClock.desktop.in
 src/file-browser-launcher/Makefile
-src/file-browser-launcher/file-browser-launcher.desktop.in
+src/file-browser-launcher/icons/Makefile
 src/filebrowser/Makefile
 src/filebrowser/filebrowser.desktop.in
 src/lastfm/Makefile
 src/lastfm/icons/Makefile
-src/lastfm/lastfm.desktop.in
 src/libawn-extras/Makefile
+src/libawn-extras/awn-extras.pc
 src/libawn-extras/bindings/Makefile
 src/libawn-extras/bindings/python/Makefile
+src/libawn-extras/bindings/vala/Makefile
 src/mail/Makefile
 src/mail/Themes/Makefile
 src/mail/Themes/Tango/Makefile
 src/mail/Themes/Reserved/Makefile
 src/mail/Themes/GMail/Makefile
-src/mail/mail.desktop.in
+src/mail/locale/Makefile
+src/mail/locale/ru/Makefile
+src/mail/locale/ru/LC_MESSAGES/Makefile
 src/main-menu/Makefile
 src/main-menu/main-menu.desktop.in
 src/media-control/Makefile
 src/media-control/icons/Makefile
-src/media-control/media-control.desktop.in
 src/media-icon-back/Makefile
 src/media-icon-back/icons/Makefile
-src/media-icon-back/media-icon-back.desktop.in
 src/media-icon-next/Makefile
 src/media-icon-next/icons/Makefile
-src/media-icon-next/media-icon-next.desktop.in
 src/media-icon-play/Makefile
 src/media-icon-play/icons/Makefile
-src/media-icon-play/media-icon-play.desktop.in
+src/media-player/Makefile
+src/media-player/icons/Makefile
 src/mount-applet/Makefile
 src/mount-applet/icons/Makefile
-src/mount-applet/mount-applet.desktop.in
 src/MiMenu/Makefile
 src/MiMenu/icons/Makefile
-src/MiMenu/mimenu.desktop.in
 src/notification-area/Makefile
 src/notification-area/notification-area.desktop.in
 src/pandora/Makefile
-src/pandora/awn-pandora.desktop.in
+src/pandora/icons/Makefile
 src/places/Makefile
 src/places/places.desktop.in
 src/plugger/Makefile
 src/plugger/plugger.desktop.in
-src/PyClock/Makefile
-src/PyClock/PyClock.desktop.in
-src/PyClock/Themes/Makefile
-src/PyClock/Themes/Plain-Clock/Makefile
-src/PyClock/Themes/SBB/Makefile
-src/PyClock/Themes/Tango/Makefile
+src/pynot/Makefile
 src/python-test/Makefile
-src/python-test/python-test.desktop.in
 src/quit-applet/Makefile
 src/quit-applet/icons/Makefile
-src/quit-applet/quit-applet.desktop.in
+src/rtm/Makefile
+src/rtm/icons/Makefile
 src/separator/Makefile
 src/separator/separator.desktop.in
 src/shiny-switcher/Makefile
 src/shiny-switcher/shinyswitcher.desktop.in
+src/simple-launcher/Makefile
+src/simple-launcher/simple-launcher.desktop.in
 src/showdesktop/Makefile
-src/showdesktop/showdesktop.desktop.in
 src/stacks/Makefile
 src/stacks/icons/Makefile
-src/stacks/stacks.desktop.in
+src/standalone-launcher/Makefile
+src/standalone-launcher/standalone-launcher.desktop.in
 src/switcher/Makefile
 src/switcher/switcher.desktop.in
+src/taskmand/Makefile
+src/taskmand/data/Makefile
+src/Taskmand-applet/Makefile
+src/Taskmand-applet/Taskmand-applet.desktop.in
+src/thinkhdaps/Makefile
+src/thinkhdaps/images/Makefile
+src/to-do/Makefile
+src/tomboy-applet/Makefile
+src/tomboy-applet/icons/Makefile
 src/trash/Makefile
 src/trash/trash.desktop.in
 src/trasher/Makefile
 src/trasher/trasher.desktop.in
 src/tsclient-applet/Makefile
 src/tsclient-applet/icons/Makefile
-src/tsclient-applet/tsclient-app.desktop.in
+src/vala-test/Makefile
+src/vala-test/vala-test.desktop.in
 src/volume-control/Makefile
-src/volume-control/Themes/Makefile
-src/volume-control/Themes/Black/Makefile
-src/volume-control/Themes/Tango/Makefile
-src/volume-control/Themes/Minimal/Makefile
-src/volume-control/volume-control.desktop.in
+src/volume-control/themes/Makefile
+src/volume-control/themes/Black/Makefile
+src/volume-control/themes/Minimal/Makefile
 src/weather/Makefile
 src/weather/images/Makefile
 src/weather/locale/Makefile
@@ -390,7 +458,8 @@ src/weather/locale/nn/Makefile
 src/weather/locale/nn/LC_MESSAGES/Makefile
 src/weather/locale/pt/Makefile
 src/weather/locale/pt/LC_MESSAGES/Makefile
-src/weather/weather.desktop.in
+src/webapplet/Makefile
+src/webapplet/webapplet.desktop.in
 src/wobblyzini/Makefile
 src/wobblyzini/wobblyzini.desktop.in
 src/wobblyzini/icons/Makefile
@@ -407,4 +476,6 @@ echo ""
 echo "    Configuration Backend:   $config_backend"
 echo ""
 echo "             Vala Support:   $HAVE_VALA"
+echo ""
+echo "           WebKit Support:   $webkit_module"
 echo ""

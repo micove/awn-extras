@@ -1,7 +1,7 @@
-# !/usr/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2007 Randal Barlow
+# Copyright (c) 2007 Randal Barlow <im.tehk at gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,21 +17,24 @@
 # License along with this library; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
+
 import sys, os
-import gobject
+import subprocess
+import string
+
 import pygtk
 import gtk
 from gtk import gdk
+
 import awn
 import menus
-import string
 import pathfinder
 import keyboard
 
 class App (awn.AppletSimple):
     """
     """
-    def __init__ (self, uid, orient, height):   
+    def __init__ (self, uid, orient, height):
         """
         Creating the applets core
         """
@@ -43,25 +46,17 @@ class App (awn.AppletSimple):
             self.screen_hieght = int(screen_hieght * 0.5)
         if screen_hieght <= 700:
             self.screen_hieght = int(screen_hieght * 0.55)
-        theme = gtk.IconTheme()
         location =  __file__
         self.location = location.replace('mimenu.py','')
-        self.location_icon = self.location + '/icons/icon.svg'    
+        self.location_icon = self.location + '/icons/icon.svg'
         awn.AppletSimple.__init__ (self, uid, orient, height)
         self.height = height
-        self.theme = gtk.icon_theme_get_default()
-        try:icon = self.theme.load_icon ("gnome-main-menu", height, 0)
-        except:
-            icon = gdk.pixbuf_new_from_file (self.location_icon)
-            print 'noicon'
-        if height != icon.get_height():
-            icon = icon.scale_simple(height,height,gtk.gdk.INTERP_BILINEAR)
-        self.set_icon (icon)
+        self.set_awn_icon('MiMenu', 'gnome-main-menu')
         self.title = awn.awn_title_get_default ()
         self.resultToolTip = "Main Menu Applet"
-        self.dialog = awn.AppletDialog (self)         
+        self.dialog = awn.AppletDialog (self)
         self.theme = gtk.icon_theme_get_default()
-
+        self.popup_menu = self.create_default_menu()
         render = gtk.CellRendererPixbuf()
         cell1 = gtk.CellRendererText()
         cell2 = gtk.CellRendererText()
@@ -80,7 +75,7 @@ class App (awn.AppletSimple):
         tree1.connect('cursor_changed', self.treeclick,
                       tree1,self.objlist1,False)
         tree1.set_model(model)
-        
+
         render = gtk.CellRendererPixbuf()
         cell1 = gtk.CellRendererText()
         cell2 = gtk.CellRendererText()
@@ -98,7 +93,6 @@ class App (awn.AppletSimple):
         tree2.set_model(model)
         tree2.connect("button-press-event", keyboard.tree2faux,
                       self.treeclick,tree2,self.objlist2)
-        #
         entry = gtk.Entry()
         entry.set_size_request(-1,28)
         search_button = gtk.Button(stock="gtk-find")
@@ -131,40 +125,43 @@ class App (awn.AppletSimple):
         self.entry = entry
         self.tree1 = tree1
         self.tree2 = tree2
-    
+
     def search(self,widget):
         test = pathfinder.exists(self.entry.get_text())
         if test[0] == True and test[1] != None:
-            os.system(test[1]+' &')
-        else:gobject.spawn_async(["tracker-search-tool", self.entry.get_text()], 
-                                 flags=gobject.SPAWN_SEARCH_PATH)   
-    #############
-    # Applet standard methods    
-    #############
-    def button_press(self, widget, event):
-        if self.dialog.flags() & gtk.VISIBLE:
-            self.dialog.hide()
-            self.title.hide(self)
+            subprocess.Popen([test[1]], shell=False)
         else:
-            self.tree1.set_cursor((self.objlist1.__len__()-1,0),None,False)
-            self.dialog.show_all()
-            self.title.hide(self)
-            if "placesmodel" in self.__dict__:pass
-            else:self.placesmodel,self.objlist3 = menus.get_places(self.theme)
-            self.tree2.set_model(self.placesmodel)
-            self.tree1.grab_focus()
+            subprocess.Popen(["tracker-search-tool", self.entry.get_text()],
+                             shell=False)
+
+    def button_press(self, widget, event):
+        if event.button == 1:
+            if self.dialog.flags() & gtk.VISIBLE:
+                self.dialog.hide()
+                self.title.hide(self)
+            else:
+                self.tree1.set_cursor((self.objlist1.__len__()-1,0),None,False)
+                self.dialog.show_all()
+                self.title.hide(self)
+                if "placesmodel" in self.__dict__:pass
+                else:self.placesmodel,self.objlist3 = menus.get_places(self.theme)
+                self.tree2.set_model(self.placesmodel)
+                self.tree1.grab_focus()
+        elif event.button == 3:
+            self.popup_menu.popup(None, None, None, event.button, event.time)
+
     def dialog_focus_out(self, widget, event):
         self.dialog.hide()
+
     def enter_notify(self, widget, event):
         self.title.show(self, self.resultToolTip)
+
     def leave_notify(self, widget, event):
         self.title.hide(self)
-    #############
-    # Dirty
-    #############
+
     def treeclick(self,widget,tree,obj,toggle,t2act=False):
         """
-        this method is activated when tree1 is clicked. 
+        this method is activated when tree1 is clicked.
         It fills tree2 with a model from the selected tree1 row
         """
         selection = tree.get_selection()
@@ -174,30 +171,33 @@ class App (awn.AppletSimple):
             selection.select_path(0)
         model, iter = selection.get_selected()
         try:name = model.get_value(iter,1)
-        except:name=None        
+        except:name=None
         if name != None:
             try:
-                if toggle == True:obj = self.objlist2
+                if toggle == True:
+                    obj = self.objlist2
                 if obj[name][0] == 1:
                     command = obj[name][1]
                     if '%' in command:command = command[:command.index('%')]
-                    os.system(command+' &')
+                    subprocess.Popen([command], shell=True)
                     self.dialog.hide()
                 if obj[name][0] == 2:
                     lst,self.objlist2 = menus.get_menus(obj[name][1])
                     model = menus.set_model(self.tree1,lst,self.theme,
                                             self.location_icon)
                     self.tree2.set_cursor_on_cell((0,0), focus_column=None,
-                                                  focus_cell=None, 
+                                                  focus_cell=None,
                                                   start_editing=False)
                     self.tree2.set_model(model)
                     self.tree2.set_cursor_on_cell((0,0), focus_column=None,
-                                                  focus_cell=None, 
+                                                  focus_cell=None,
                                                   start_editing=False)
             except KeyError:
                 if self.objlist3[name][0] == 0:
-                    gobject.spawn_async(["nautilus", self.objlist3[name][1]], 
-                                        flags=gobject.SPAWN_SEARCH_PATH)
+                    print self.objlist3[name][1].replace('file://','')
+                    subprocess.Popen(["xdg-open",
+                                      self.objlist3[name][1].replace('file://','')],
+                                     shell=False)
                     self.dialog.hide()
             try:
                 if obj[name][0] == 4:
