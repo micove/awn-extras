@@ -85,17 +85,18 @@ class OwaCal:
         splitted = htmlsplitter.split(tablehtml.group())
         result = []
         for token in splitted:
-            titles = re.compile("<TD TITLE=\"[0-9]")  #"
+            titles = re.compile("<TD TITLE=\"[0-9]")
             titlehtml = titles.match(token)
             textre = re.compile("\".*\"")
             if titlehtml != None:
                 text = textre.search(token)
-                result.append(["", text.group().replace("\"", "")])  #"
+                result.append(["", text.group().replace("\"", "")])
         if len(result) == 0:
             result.append([None, _("No appointments")])
         return result
 
     def open_integrated_calendar(self, when, url):
         dat = "&d=%02d&m=%02d&y=%04d" % (when[2], (when[1] + 1), when[0])
-        url = url + "/exchange/calendar/?Cmd=contents&view=daily" + dat
+        url = url + "/exchange/" + self.applet.username + \
+              "/calendar/?Cmd=contents&view=daily" + dat
         webbrowser.open_new_tab(url)

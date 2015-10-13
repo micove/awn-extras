@@ -18,7 +18,6 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-from os.path import exists, isdir
 from math import sqrt
 
 import cairo
@@ -33,11 +32,6 @@ from desktopagnostic import Color
 from desktopagnostic.config import GROUP_DEFAULT
 
 import awn
-
-try:
-    import gconf
-except ImportError:
-    gconf = False
 
 #Note: I am 99.7% sure I have the definitions of 'viewport' and 'workspace'
 #incorrect in this. For now, this only supports Compiz's way of having one
@@ -102,7 +96,7 @@ class Drawing(gtk.Table):
     def timeout_update(self):
         self.update_backgrounds()
         self.update()
-        gobject.timeout_add_seconds(2, self.timeout_update)
+        return True
 
     #Update
     def update(self):
@@ -296,6 +290,8 @@ class ViewportWidget(gtk.DrawingArea):
 
             #Move the viewport
             self.table.switch.move((self.row - 1, self.column - 1))
+
+            self.table.applet.hide_dialog()
 
     #The mouse cursor has entered this widget
     def enter_notify(self, widget, event):

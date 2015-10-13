@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding: utf-8
 #
-#   Copyright 2008-2009 Grega Podlesek <grega.podlesek@gmail.com>
+#   Copyright 2008-2010 Grega Podlesek <grega.podlesek@gmail.com>
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ from interfaces import hddtempsensors
 from interfaces import lmsensors
 from interfaces import nvidiasensors
 from interfaces import nvclocksensors
+from interfaces import i8ksensors
 
 from sensorvalues.tempvalue import TempValue
 from sensorvalues.rpmvalue import RPMValue
@@ -44,7 +45,7 @@ from sensorvalues.voltvalue import VoltValue
 from sensorvalues import units
 from sensoricon import SensorIcon
 
-applet_name = "Hardware Sensors"
+applet_name = _("Hardware Sensors")
 short_name = "hardware-sensors"
 applet_description = _("Applet to show the hardware sensors readouts")
 
@@ -57,7 +58,7 @@ ui_file = os.path.join(os.path.dirname(__file__), "hardware-sensors.ui")
 
 single_font_sizes = [11, 17, 22]
 double_font_sizes = [12, 16, 20]
-font_size_names = ["Small", "Medium", "Large"]
+font_size_names = [_("Small"), _("Medium"), _("Large")]
 
 class SensorsApplet:
     """
@@ -87,7 +88,7 @@ ACPI, HDDTemp, LM-Sensors, nvidia-settings or nvclock and restart the applet.")
             print subject + ".", message
 
             # Show massage with awn notify
-            self.applet.notify.send(subject=subject, body=message, icon=applet_logo)
+            self.applet.notification.send(subject=subject, body=message, icon=applet_logo)
             # Show "no sensors found" icon
             self.applet.icon.file(no_sensors_icon, size=applet.get_size())
             self.applet.tooltip.set(message)
@@ -133,6 +134,7 @@ ACPI, HDDTemp, LM-Sensors, nvidia-settings or nvclock and restart the applet.")
         self.sensors += lmsensors.get_sensors()
         self.sensors += nvidiasensors.get_sensors()
         self.sensors += nvclocksensors.get_sensors()
+        self.sensors += i8ksensors.get_sensors()
 
         # Check if any sensors were found
         if self.sensors == []:
@@ -604,7 +606,7 @@ ACPI, HDDTemp, LM-Sensors, nvidia-settings or nvclock and restart the applet.")
     # === Event handlers === #
     def alarm_cb(self, sensor, message):
         """Show alarm message with awn notify."""
-        self.applet.notify.send(subject=None, body=message, icon=applet_logo)
+        self.applet.notification.send(subject=None, body=message, icon=applet_logo)
 
     def height_changed_cb(self):
         """Update the applet's icon to reflect the new height."""
@@ -946,9 +948,7 @@ if __name__ == "__main__":
         "description": applet_description,
         "logo": applet_logo,
         "author": "Grega Podlesek",
-        "copyright-year": "2008 - 2009",
+        "copyright-year": "2008 - 2010",
         "authors": ["Grega Podlesek <grega.podlesek@gmail.com>"],
         "artists": ["Grega Podlesek <grega.podlesek@gmail.com>",
-                    "Zdravko Podlesek"],
-        "type": ["System"]},
-        ["settings-per-instance"])
+                    "Zdravko Podlesek"]})

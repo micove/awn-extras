@@ -31,6 +31,7 @@ awn.check_dependencies(globals(), 'xklavier')
 from xklavier import *
 from desktopagnostic.config import GROUP_DEFAULT as group
 from desktopagnostic.config import BIND_METHOD_FALLBACK as bind_fb
+from awn.extras import _
 
 # DEFINE applet class
 
@@ -40,32 +41,31 @@ class Dialect(awn.AppletSimple):
 # INITIALISE
 
     # PREFERENCES properties
-    left = gobject.property(type = int, default = 2)
-    middle = gobject.property(type = int, default = 1)
-    scroll = gobject.property(type = bool, default = False)
-    overlay = gobject.property(type = bool, default = True)
-    scale = gobject.property(type = float, default = 0.5)
-    opacity = gobject.property(type = float, default = 0.9)
-    toggle = gobject.property(type = int, default = 0)
+    left = gobject.property(type=int, default=2)
+    middle = gobject.property(type=int, default=1)
+    scroll = gobject.property(type=bool, default=False)
+    overlay = gobject.property(type=bool, default=True)
+    scale = gobject.property(type=float, default=0.5)
+    opacity = gobject.property(type=float, default=0.9)
+    toggle = gobject.property(type=int, default=0)
 
     # GLOBAL Variables
     layout = []
     variant = []
 
     # CONFIG variables
-    widgets = ['about', 'help', 'hpage', 'prefs', 'tlist', 'left', \
+    widgets = ['about', 'prefs', 'tlist', 'left', \
       'middle', 'scroll', 'stree', 'utree', 'slist', 'ulist', \
       'add', 'remove', 'overlay', 'scale', 'opacity', 'toggle']
     schema = {'left': 'active', 'middle': 'active', 'scroll': 'active', \
       'scale': 'value', 'opacity': 'value', 'overlay': 'active'}
-    ctitle = ['Preferences', 'Help', 'Separator', 'About']
-    cdata = [['gtk-preferences', 'prefs'], ['gtk-help', 'help'], \
-      None, ['gtk-about', 'about']]
+    ctitle = ['Preferences', 'About']
+    cdata = [['gtk-preferences', 'prefs'], ['gtk-about', 'about']]
     wheel = [gtk.gdk.SCROLL_DOWN, None, gtk.gdk.SCROLL_UP]
     watch = '/var/lib/xkb'
     ui = 'dialect.ui'
     theme_icon = 'input-keyboard'
-    app_name = 'Dialect Applet'
+    app_name = _('Dialect Applet')
 
     # INITIALISE applet
     def __init__(self, canonical, uid, panel_id):
@@ -119,7 +119,7 @@ class Dialect(awn.AppletSimple):
 
         # COMPLETE initialisation
         self.init = False
-        
+
         # Set timer to monitor HOTKEY changes
         gobject.timeout_add(500, self.external_config)
 
@@ -148,7 +148,7 @@ class Dialect(awn.AppletSimple):
         variants = self.server.get_variants()
         length = len(variants)
         if length != len(layouts):
-            for item in range(len(layouts)-length):
+            for item in range(len(layouts) - length):
                 variants.append('')
         return variants
 
@@ -159,7 +159,8 @@ class Dialect(awn.AppletSimple):
         index = -1
         if len(options) > 0:
             for item in options:
-                if len(item) == 0: continue
+                if len(item) == 0:
+                    continue
                 option, value = item.split(':')
                 if option == 'grp':
                     index = options.index(item)
@@ -175,7 +176,7 @@ class Dialect(awn.AppletSimple):
                 self.set_layout(self.engine.get_next_group())
             else:
                 self.set_layout(self.engine.get_prev_group())
-            self.engine.stop_listen()
+            self.engine.stop_listen(XKLL_TRACK_KEYBOARD_STATE)
 
     # Load GTK widgets
     def gtk_init(self):
@@ -193,6 +194,29 @@ class Dialect(awn.AppletSimple):
             self.gtk[item] = gtk.ImageMenuItem(str(item))
             self.gtk['umenu'].append(self.gtk[item])
             self.gtk[item].connect('activate', self.on_umenu, item)
+        # glade-3 does not support translation of the following elements or
+        # without markup, therefore coded here
+        layout_info = builder.get_object('layout_info')
+        layout_info.set_tooltip_markup(_('<b>User List:</b> The list of '
+            'layouts you commonly use. The maximum number of layouts is '
+            'restricted by the X11 xkb system (currently 4). Select an item '
+            'and click the remove button to delete from your user list. You '
+            'can order the list by drag and drop.\n'
+            '<b>System List:</b> The complete list of layouts and variants '
+            'available. Select an item and click the add button to include '
+            'in your user list.'))
+        label_small = builder.get_object('label_small')
+        label_small.set_markup('<i><small>%s</small></i>' % _('small'))
+        label_small = builder.get_object('label_large')
+        label_small.set_markup('<i><small>%s</small></i>' % _('large'))
+        label_small = builder.get_object('label_transparent')
+        label_small.set_markup('<i><small>%s</small></i>' % _('transparent'))
+        label_small = builder.get_object('label_opaque')
+        label_small.set_markup('<i><small>%s</small></i>' % _('opaque'))
+        sys_name_col = builder.get_object('sys_name_col')
+        sys_name_col.set_title(_('System List'))
+        user_name_col = builder.get_object('user_name_col')
+        user_name_col.set_title(_('User List'))
 
     # Create CONTEXT menu
     def context_init(self):
@@ -222,6 +246,7 @@ class Dialect(awn.AppletSimple):
             self.vlist = {}
             self.registry.foreach_layout_variant(layout, iter_variants)
             self.variants[layout] = self.vlist.copy()
+
         def iter_options(registry, item):
             option = item.get_name()
             desc = item.get_description()
@@ -306,8 +331,8 @@ class Dialect(awn.AppletSimple):
                     variant = ' - ' + \
                       self.variants[self.layout[item]][self.variant[item]]
                 self.gtk[item].set_label(layout + variant)
-                self.gtk[item].set_image(gtk.image_new_from_pixbuf\
-                  (self.load_icon(self.layout[item], gtk.ICON_SIZE_MENU)))
+                self.gtk[item].set_image(gtk.image_new_from_pixbuf(
+                     self.load_icon(self.layout[item], gtk.ICON_SIZE_MENU)))
                 self.gtk[item].show()
             else:
                 self.gtk[item].hide()
@@ -357,7 +382,7 @@ class Dialect(awn.AppletSimple):
     def get_layout(self, effect):
         self.engine.start_listen(XKLL_TRACK_KEYBOARD_STATE)
         layout = self.engine.get_current_state()['group']
-        self.engine.stop_listen()
+        self.engine.stop_listen(XKLL_TRACK_KEYBOARD_STATE)
         if layout != self.current:
             self.current = layout
             self.update_applet(self.layout[layout], self.variant[layout], effect)
@@ -455,8 +480,6 @@ class Dialect(awn.AppletSimple):
 
     # CONTEXT menu response
     def on_cmenu(self, obj, data):
-        if data == 'help':
-            self.gtk['hpage'].set_current_page(0)
         response = self.gtk[data].run()
         self.gtk[data].hide()
 
@@ -467,6 +490,7 @@ class Dialect(awn.AppletSimple):
     # OVERLAY flag option changed
     def on_overlay(self, obj):
         if not self.init:
+            self.overlay = not self.overlay
             self.update_applet(self.layout[self.current], \
               self.variant[self.current], False)
 
@@ -500,7 +524,7 @@ class Dialect(awn.AppletSimple):
                     self.on_order()
 
     # USER list order changed
-    def on_order(self, obj = None, data = None, iter = None):
+    def on_order(self, obj=None, data=None, iter=None):
         if not self.init:
             if not iter:
                 self.layout = []
@@ -525,9 +549,9 @@ class Dialect(awn.AppletSimple):
             self.current = -1
             self.set_umenu()
             self.get_layout(False)
-        
+
     # CLICKED on applet icon
-    def on_click(self, obj, event = None):
+    def on_click(self, obj, event=None):
         if not event:
             event = gtk.get_current_event()
         if event.button < 3:
@@ -536,12 +560,12 @@ class Dialect(awn.AppletSimple):
                 if event.button == 2:
                     button = self.middle
                 if button == 1:
-                    self.gtk['umenu'].popup(None, None, None, 0, event.time)
+                    self.popup_gtk_menu(self.gtk['umenu'], 0, event.time)
                     return True
                 elif button < 3:
                     self.change_group(button - 1)
         else:
-            self.cmenu.popup(None, None, None, 0, event.time)
+            self.popup_gtk_menu(self.cmenu, 0, event.time)
             return True
         return False
 

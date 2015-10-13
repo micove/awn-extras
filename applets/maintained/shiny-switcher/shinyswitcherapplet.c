@@ -23,6 +23,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <glib/gi18n-lib.h>
 
 G_DEFINE_TYPE (AwnShinySwitcher, awn_shiny_switcher, AWN_TYPE_APPLET)
 
@@ -104,6 +105,7 @@ struct _AwnShinySwitcherPrivate
   GdkScreen  *pScreen;
   GdkColormap  *rgb_cmap;
   GdkColormap  *rgba_cmap;
+  int rgba_cmap_depth;          /*rgba sometimes isn't*/
   DesktopAgnosticConfigClient *config;
   DesktopAgnosticConfigClient *dock_config;
 	AwnAlignment * align;
@@ -476,7 +478,7 @@ copy_pixmap(AwnShinySwitcher *shinyswitcher, GdkPixmap * src)
   {
     return NULL;
   }
-  copy = gdk_pixmap_new(src, w, h, 32);   /* FIXME */
+  copy = gdk_pixmap_new(src, w, h, priv->rgba_cmap_depth);   /* FIXME */
   gdk_draw_drawable(copy, priv->gdkgc, src, 0, 0, 0, 0, -1, -1);
   return copy;
 }
@@ -506,7 +508,7 @@ grab_wallpaper(AwnShinySwitcher *shinyswitcher)
 
   gdk_drawable_set_colormap(wallpaper, priv->rgb_cmap);
 
-  priv->wallpaper_inactive = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), 32);   /* FIXME */
+  priv->wallpaper_inactive = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), priv->rgba_cmap_depth);   /* FIXME */
   widget = gtk_image_new_from_pixmap(priv->wallpaper_inactive, NULL);
   gtk_widget_set_app_paintable(widget, TRUE);
   gdk_drawable_set_colormap(priv->wallpaper_inactive, priv->rgba_cmap);
@@ -525,7 +527,7 @@ grab_wallpaper(AwnShinySwitcher *shinyswitcher)
 
   gtk_widget_destroy(widget);
 
-  priv->wallpaper_active = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), 32);   /* FIXME */
+  priv->wallpaper_active = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), priv->rgba_cmap_depth);   /* FIXME */
   widget = gtk_image_new_from_pixmap(priv->wallpaper_active, NULL);
   gtk_widget_set_app_paintable(widget, TRUE);
   gdk_drawable_set_colormap(priv->wallpaper_active, priv->rgba_cmap);
@@ -557,7 +559,7 @@ set_background(AwnShinySwitcher *shinyswitcher)
   {
     cairo_t  *cr;
     GtkWidget  *widget;
-    priv->wallpaper_inactive = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), 32);   /* FIXME */
+    priv->wallpaper_inactive = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), priv->rgba_cmap_depth);   /* FIXME */
     gdk_drawable_set_colormap(priv->wallpaper_inactive, priv->rgba_cmap);
     widget = gtk_image_new_from_pixmap(priv->wallpaper_inactive, NULL);
     gtk_widget_set_app_paintable(widget, TRUE);
@@ -574,7 +576,7 @@ set_background(AwnShinySwitcher *shinyswitcher)
       cairo_destroy(cr);
     }
 
-    priv->wallpaper_active = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), 32);   /* FIXME */
+    priv->wallpaper_active = gdk_pixmap_new(NULL, priv->mini_work_width * vp_hscale(shinyswitcher), priv->mini_work_height * vp_vscale(shinyswitcher), priv->rgba_cmap_depth);   /* FIXME */
 
     gdk_drawable_set_colormap(priv->wallpaper_active, priv->rgba_cmap);
     widget = gtk_image_new_from_pixmap(priv->wallpaper_active, NULL);
@@ -638,7 +640,7 @@ _button_workspace(GtkWidget *widget, GdkEventButton *event, Workplace_info * ws)
       GtkWidget *item;
       menu = awn_applet_create_default_menu(AWN_APPLET(shinyswitcher));
       gtk_menu_set_screen(GTK_MENU(menu), NULL);
-      item = gtk_image_menu_item_new_with_label("Applet Preferences");
+      item = gtk_image_menu_item_new_with_label(_("Applet Preferences"));
       gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM(item), 
                                      gtk_image_new_from_stock (GTK_STOCK_PREFERENCES,GTK_ICON_SIZE_MENU));     
       
@@ -660,8 +662,7 @@ _button_workspace(GtkWidget *widget, GdkEventButton *event, Workplace_info * ws)
 
     if (menu)
     {
-      gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
-                     event->button, event->time);
+      awn_applet_popup_gtk_menu (AWN_APPLET(shinyswitcher), menu, event->button, event->time);
     }
   }
   return FALSE;
@@ -732,7 +733,7 @@ _button_win(GtkWidget *widget, GdkEventButton *event, Win_press_data * data)
       gtk_widget_show(item);
       gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
 
-      item = gtk_image_menu_item_new_with_label("Applet Preferences");
+      item = gtk_image_menu_item_new_with_label(_("Applet Preferences"));
       gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
                                     gtk_image_new_from_stock(GTK_STOCK_PREFERENCES,
                                                              GTK_ICON_SIZE_MENU));
@@ -769,7 +770,7 @@ _button_win(GtkWidget *widget, GdkEventButton *event, Win_press_data * data)
 
 
 static gboolean 
-_scroll_event(GtkWidget *widget, GdkEventMotion *event, AwnShinySwitcher *shinyswitcher)
+_scroll_event(GtkWidget *widget, GdkEventScroll *event, AwnShinySwitcher *shinyswitcher)
 {
   AwnShinySwitcherPrivate * priv = GET_PRIVATE (shinyswitcher);
   WnckWorkspace *cur_space = wnck_screen_get_active_workspace(priv->wnck_screen);
@@ -779,7 +780,7 @@ _scroll_event(GtkWidget *widget, GdkEventMotion *event, AwnShinySwitcher *shinys
   {
     if (event->type == GDK_SCROLL)
     {
-      WnckMotionDirection direction1, direction2;
+      WnckMotionDirection left, right, up, down;
 
       switch (priv->mousewheel)
       {
@@ -787,8 +788,10 @@ _scroll_event(GtkWidget *widget, GdkEventMotion *event, AwnShinySwitcher *shinys
         case 1:
 
         case 3:
-          direction1 =  WNCK_MOTION_LEFT;
-          direction2 =  WNCK_MOTION_RIGHT;
+          left =  WNCK_MOTION_LEFT;
+          right =  WNCK_MOTION_RIGHT;
+          up = WNCK_MOTION_UP;
+          down = WNCK_MOTION_DOWN;
           break;
 
         case 2:
@@ -796,22 +799,52 @@ _scroll_event(GtkWidget *widget, GdkEventMotion *event, AwnShinySwitcher *shinys
         case 4:
 
         default:
-          direction1 =  WNCK_MOTION_RIGHT;
-          direction2 =  WNCK_MOTION_LEFT;
-
+          left =  WNCK_MOTION_RIGHT;
+          right =  WNCK_MOTION_LEFT;
+          up = WNCK_MOTION_DOWN;
+          down = WNCK_MOTION_UP;
       }
 
-      if (event->state & GDK_SHIFT_MASK)
+      if ( (event->direction == GDK_SCROLL_UP) ||
+            (event->direction == GDK_SCROLL_LEFT) )
       {
-        new_space = wnck_workspace_get_neighbor(cur_space, WNCK_MOTION_RIGHT);
+        new_space = wnck_workspace_get_neighbor(cur_space, left);
+        if (new_space == NULL)
+        {
+          new_space = wnck_workspace_get_neighbor(cur_space, up);
+          if (new_space)
+          {
+            for (cur_space = new_space; cur_space; )
+            {
+              cur_space = wnck_workspace_get_neighbor(cur_space, right);
+              if (cur_space)
+              {
+                new_space = cur_space;
+              }
+            }
+          }
+        }
       }
       else
       {
-        new_space = wnck_workspace_get_neighbor(cur_space, WNCK_MOTION_LEFT);
-
+        new_space = wnck_workspace_get_neighbor(cur_space, right);
+        if (!new_space)
+        {
+          new_space = wnck_workspace_get_neighbor(cur_space, down);
+          if (new_space)
+          {
+            for (cur_space = new_space; cur_space; )
+            {
+              cur_space = wnck_workspace_get_neighbor(cur_space, left);
+              if (cur_space)
+              {
+                new_space = cur_space;
+              }
+            }
+          }
+        }
       }
     }
-
     if (new_space)
     {
       wnck_workspace_activate(new_space, event->time); /* FIXME */
@@ -840,7 +873,7 @@ create_containers(AwnShinySwitcher *shinyswitcher)
   GdkPixmap *border = gdk_pixmap_new(NULL,
                                      priv->width + priv->applet_border_width * 2,
                                      (priv->height + priv->applet_border_width * 2) * priv->applet_scale ,
-                                     32);   /* FIXME */
+                                     priv->rgba_cmap_depth);   /* FIXME */
   GtkWidget *border_widget = gtk_image_new_from_pixmap(border, NULL);
   gtk_widget_set_app_paintable(border_widget, TRUE);
   gdk_drawable_set_colormap(border, priv->rgba_cmap);
@@ -974,7 +1007,7 @@ prepare_to_render_workspace(AwnShinySwitcher *shinyswitcher, WnckWorkspace * spa
                      wnck_screen_get_width(priv->wnck_screen) ;
     viewports_rows = wnck_workspace_get_height(wnck_screen_get_active_workspace(priv->wnck_screen)) /
                      wnck_screen_get_height(priv->wnck_screen) ;
-    copy = gdk_pixmap_new(NULL, priv->mini_work_width, priv->mini_work_height, 32);
+    copy = gdk_pixmap_new(NULL, priv->mini_work_width, priv->mini_work_height, priv->rgba_cmap_depth);
     gdk_drawable_set_colormap(copy, priv->rgba_cmap);
 
     gdk_draw_rectangle(copy, priv->gdkgc, TRUE, 0, 0, priv->mini_work_width, priv->mini_work_height);
@@ -1942,7 +1975,7 @@ create_windows(AwnShinySwitcher *shinyswitcher)
           GtkWidget *item;
           menu = awn_applet_create_default_menu(AWN_APPLET(shinyswitcher));
           gtk_menu_set_screen(GTK_MENU(menu), NULL);
-          item = gtk_image_menu_item_new_with_label("Applet Preferences");
+          item = gtk_image_menu_item_new_with_label(_("Applet Preferences"));
           gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
                                         gtk_image_new_from_stock(GTK_STOCK_PREFERENCES,
                                                                  GTK_ICON_SIZE_MENU));
@@ -2009,7 +2042,7 @@ _window_opened(WnckScreen *screen, WnckWindow *window, AwnShinySwitcher *shinysw
     GtkWidget *item;
     menu = awn_applet_create_default_menu(AWN_APPLET(shinyswitcher));
     gtk_menu_set_screen(GTK_MENU(menu), NULL);
-    item = gtk_image_menu_item_new_with_label("Applet Preferences");
+    item = gtk_image_menu_item_new_with_label(_("Applet Preferences"));
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
                                   gtk_image_new_from_stock(GTK_STOCK_PREFERENCES,
                                                            GTK_ICON_SIZE_MENU));
@@ -2139,6 +2172,11 @@ _waited(AwnShinySwitcher *shinyswitcher)
   priv->gdkgc = gdk_gc_new(GTK_WIDGET(AWN_APPLET(shinyswitcher))->window);
   priv->rgba_cmap = gdk_screen_get_rgba_colormap(priv->pScreen);
   priv->rgb_cmap = gdk_screen_get_rgb_colormap(priv->pScreen);
+  if (!priv->rgba_cmap)
+  {
+    priv->rgba_cmap = priv->rgb_cmap;
+  }
+  priv->rgba_cmap_depth = gdk_visual_get_depth ( gdk_colormap_get_visual (priv->rgba_cmap));
   calc_dimensions(shinyswitcher);
   set_background(shinyswitcher);
   create_containers(shinyswitcher);
@@ -2426,6 +2464,8 @@ awn_shiny_switcher_class_init (AwnShinySwitcherClass *klass)
 static void
 awn_shiny_switcher_init (AwnShinySwitcher *self)
 {
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  textdomain (GETTEXT_PACKAGE);
 }
 
 AwnShinySwitcher*
@@ -2433,7 +2473,7 @@ awn_shiny_switcher_new (const gchar *name, const gchar *uid, gint panel_id)
 {
   return g_object_new (AWN_TYPE_SHINY_SWITCHER,
                        "canonical-name",name,
-                       "display-name","Shiny Switcher",
+                       "display-name",_("Shiny Switcher"),
                        "uid",uid,
                        "panel-id",panel_id,
                        NULL);

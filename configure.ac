@@ -1,6 +1,6 @@
 AC_PREREQ(2.53)
 
-AC_INIT(awn-extras, 0.4.0, [https://bugs.launchpad.net/awn-extras])
+AC_INIT(awn-extras, 0.4.1, [https://bugs.launchpad.net/awn-extras])
 AM_INIT_AUTOMAKE([-Wno-portability 1.8 tar-ustar])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(applets)
@@ -46,10 +46,12 @@ dnl
 
 AC_ARG_WITH([gconf], AS_HELP_STRING([--without-gconf],[Disable building/installing applets that need GConf]),,[with_gconf=yes])
 AC_ARG_WITH([gnome], AS_HELP_STRING([--without-gnome],[Disable building/installing applets that require Gnome-specific libraries]),,[with_gnome=yes])
+AC_ARG_WITH([indicator], AS_HELP_STRING([--with-indicator],[Enable building/installing applets that require libindicator]),,[with_indicator=no])
 AC_ARG_WITH([mozilla], AS_HELP_STRING([--with-mozilla],[Enable building/installing applets that require Gecko (Mozilla)]),,[with_mozilla=no])
 AC_ARG_WITH([webkit], AS_HELP_STRING([--with-webkit],[Enable building/installing applets that require webkitgtk]),,[with_webkit=no])
 AM_CONDITIONAL(WITH_GCONF, test "$with_gconf" != "no")
 AM_CONDITIONAL(WITH_GNOME, test "$with_gnome" != "no")
+AM_CONDITIONAL(ENABLE_INDICATOR, test "$with_indicator" != "no")
 AM_CONDITIONAL(WITH_MOZILLA, test "$with_mozilla" != "no")
 AM_CONDITIONAL(WITH_WEBKIT, test "$with_webkit" != "no")
 AM_CONDITIONAL(BUILD_WEBAPPLET, test "$with_mozilla" != "no" -o "$with_webkit" != "no")
@@ -58,6 +60,8 @@ AM_CONDITIONAL(BUILD_WEBAPPLET, test "$with_mozilla" != "no" -o "$with_webkit" !
 PKG_CHECK_MODULES(AWN, [awn >= 0.3.9])
 # awn-system-monitor, sysmon
 PKG_CHECK_MODULES(GTOP, [libgtop-2.0])
+# related
+PKG_CHECK_MODULES(ZEITGEIST, [zeitgeist-1.0 >= 0.2.2], [has_libzg=yes], [has_libzg=no])
 # awn-notification-daemon, shiny-switcher, standalone-launcher, taskmand
 PKG_CHECK_MODULES(LIBWNCK, [libwnck-1.0 >= 2.21.99.9])
 # awn-notification-daemon, shiny-switcher
@@ -85,24 +89,27 @@ fi
 # awn-terminal
 PKG_CHECK_MODULES(VTE, [vte])
 
-# awn-system-monitor, awn-notification-daemon, filebrowser, plugger, trasher
+# awn-system-monitor, awn-notification-daemon
 if test "$with_gconf" != "no"; then
   PKG_CHECK_MODULES(GCONF, [gconf-2.0])
   gconf=gconf-2.0
 fi
 
-#if test "$with_gconf" != "no" -a "$with_gnome" != "no"; then
-# filebrowser
-#PKG_CHECK_MODULES(GNOMEUI, [libgnomeui-2.0])
-# filebrowser
-#PKG_CHECK_MODULES(GNOME_DESKTOP, [gnome-desktop-2.0])
-# filebrowser, plugger, trasher
-#PKG_CHECK_MODULES(GNOME_VFS, [gnome-vfs-2.0])
-#fi
+if test "$with_indicator" != "no"; then
+# indicator-applet
+PKG_CHECK_MODULES(INDICATOR, [indicator >= 0.3])
+INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator`
+INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator`
+AC_SUBST(INDICATORDIR)
+AC_SUBST(INDICATORICONSDIR)
+fi
 
 if test "$with_gnome" != "no"; then
-# main-menu, cairo-menu
-PKG_CHECK_MODULES(GNOME_MENU, [libgnome-menu])
+# main-menu
+PKG_CHECK_MODULES(GNOME_MENU, [libgnome-menu], 
+		  AM_CONDITIONAL(GNOME_MENU,true),
+		  AM_CONDITIONAL(GNOME_MENU,false))
+
 fi
 
 # webapplet
@@ -163,17 +170,19 @@ if test x$enable_sound != xno; then
 fi
 
 # applet-specific libraries
-#if test "$with_gconf" != "no" -a "$with_gnome" != "no"; then
-#PKG_CHECK_MODULES(FILEBROWSER, [$gconf gnome-desktop-2.0 gnome-vfs-2.0 libgnomeui-2.0])
-#PKG_CHECK_MODULES(PLUGGER, [$gconf gnome-vfs-2.0])
-#PKG_CHECK_MODULES(TRASHER, [$gconf gnome-vfs-2.0])
-#fi
 if test "$with_gconf" != "no"; then
 PKG_CHECK_MODULES(AWN_SYSTEM_MONITOR, [$gconf libgtop-2.0])
 PKG_CHECK_MODULES(NOTIFICATION_DAEMON, [$gconf $gstreampkg libnotify $url_label_module libwnck-1.0 x11])
 fi
 if test "$with_gnome" != "no"; then
-PKG_CHECK_MODULES(CAIRO_MENU_GNOME, [libgnome-menu libnotify $icon_entry_module])
+PKG_CHECK_MODULES(CAIRO_MENU_GNOME3, 
+		  [libgnome-menu-3.0 libnotify $icon_entry_module],
+		  AM_CONDITIONAL(CAIRO_MENU_GNOME3,true),
+		  AM_CONDITIONAL(CAIRO_MENU_GNOME3,false))
+PKG_CHECK_MODULES(CAIRO_MENU_GNOME,
+		  [libgnome-menu libnotify $icon_entry_module],
+		  AM_CONDITIONAL(CAIRO_MENU_GNOME,true),
+		  AM_CONDITIONAL(CAIRO_MENU_GNOME,false))
 fi
 PKG_CHECK_MODULES(SHINY_SWITCHER, [libwnck-1.0 x11 xcomposite xrender])
 if test -n "$webapplet_modules"; then
@@ -189,16 +198,16 @@ AC_ARG_ENABLE(pymod_checks,
               enable_pymod_checks=yes)
 
 if test x${enable_pymod_checks} = xyes; then
-    # awnlib, battery, DesktopManager
+    # awnlib, battery
     AM_CHECK_PYMOD(pynotify,,,AC_MSG_ERROR([python module pynotify required (python-notify)]))
-    # arss, feeds, mail
+    # feeds, mail
     AM_CHECK_PYMOD(feedparser,,,AC_MSG_ERROR([python module feedparser required (python-feedparser)]))
     # cairo-clock
     AM_CHECK_PYMOD(rsvg,,,AC_MSG_ERROR([python module rsvg required (gnome-python-desktop)]))
     # media-player, volume-control
     AM_CHECK_PYMOD(gst,,,AC_MSG_ERROR([python module gstreamer required (python-gst0.10)]))
     if test "$with_gnome" != "no"; then
-    # MiMenu, YAMA
+    # YAMA
     AM_CHECK_PYMOD(gmenu,,,AC_MSG_ERROR([python module gmenu required]))
     fi
     if test "$with_gconf" != "no"; then
@@ -235,6 +244,7 @@ if test -n "$LDA_VAPIDIR" -a -n "$AWN_VAPIDIR" -a -f "$AWN_VAPIDIR/awn.vapi"; th
     fi
 fi
 AM_CONDITIONAL(HAVE_VALA, test "$has_vala" = "yes")
+AM_CONDITIONAL(HAVE_LIBZG, test "$has_libzg" = "yes")
 
 dnl
 dnl Check the D-BUS version.
@@ -269,6 +279,8 @@ AC_DEFINE_UNQUOTED(APPLETSDIR, "$APPLETSDIR",
 AC_SUBST(APPLETSDIR)
 AC_DEFINE_UNQUOTED(LOCALEDIR, "$LOCALEDIR", [Locale directory])
 AC_SUBST(LOCALEDIR)
+AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [Lib directory])
+AC_SUBST(LIBDIR)
 
 DBUS_SERVICES_DIR=`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`
 AC_SUBST(DBUS_SERVICES_DIR)
@@ -312,6 +324,7 @@ applets/maintained/cairo-menu/Makefile
 applets/maintained/cairo-menu/cairo-menu.desktop.in
 applets/maintained/calendar/Makefile
 applets/maintained/comics/Makefile
+applets/maintained/common-folder/Makefile
 applets/maintained/cpufreq/Makefile
 applets/maintained/dialect/Makefile
 applets/maintained/digital-clock/Makefile
@@ -321,6 +334,8 @@ applets/maintained/file-browser-launcher/Makefile
 applets/maintained/garbage/Makefile
 applets/maintained/garbage/garbage.desktop.in
 applets/maintained/hardware-sensors/Makefile
+applets/maintained/indicator-applet/Makefile
+applets/maintained/indicator-applet/indicator-applet.desktop.in
 applets/maintained/mail/Makefile
 applets/maintained/media-control/Makefile
 applets/maintained/media-icons/Makefile
@@ -332,6 +347,8 @@ applets/maintained/notification-daemon/Makefile
 applets/maintained/notification-daemon/notification-daemon.desktop.in
 applets/maintained/places/Makefile
 applets/maintained/places/places.desktop.in
+applets/maintained/related/Makefile
+applets/maintained/related/related.desktop.in
 applets/maintained/python-test/Makefile
 applets/maintained/quit/Makefile
 applets/maintained/shiny-switcher/Makefile
@@ -358,7 +375,6 @@ applets/unmaintained/awnsystemmonitor/awnsystemmonitor.desktop.in
 applets/unmaintained/dropper/Makefile
 applets/unmaintained/main-menu/Makefile
 applets/unmaintained/main-menu/main-menu.desktop.in
-applets/unmaintained/MiMenu/Makefile
 applets/unmaintained/pandora/Makefile
 applets/unmaintained/stacks/Makefile
 po/Makefile.in

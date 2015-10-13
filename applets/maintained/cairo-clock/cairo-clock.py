@@ -20,14 +20,14 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 
-from awn.extras import awnlib, __version__
+from awn.extras import _, awnlib, __version__
 import cairo
 
 from analogclock import *
 import locations, weather
 
-applet_name = "Cairo Clock"
-applet_description = "Applet that displays an analog clock and supports additional clocks for different locations"
+applet_name = _("Cairo Clock")
+applet_description = _("Applet that displays an analog clock and supports additional clocks for different locations")
 
 # Logo of the applet, shown in the GTK About dialog
 applet_logo = os.path.join(os.path.dirname(__file__), "cairo-clock-logo.svg")
@@ -152,6 +152,8 @@ class CairoClockApplet:
         prefs = gtk.Builder()
         prefs.add_from_file(ui_file)
 
+        self.binder = self.applet.settings.get_binder(prefs)
+
         self.setup_general_preferences(prefs)
         self.setup_plugins_preferens(prefs)
 
@@ -161,7 +163,7 @@ class CairoClockApplet:
     def setup_general_preferences(self, prefs):
         container = gtk.VBox()
         prefs.get_object("vbox-general").reparent(container)
-        self.preferences_notebook.append_page(container, gtk.Label("General"))
+        self.preferences_notebook.append_page(container, gtk.Label(_("General")))
 
         refresh_title = lambda v: self.__clock_updater.update_title()
         refresh_clock = lambda v: self.__clock_updater.draw_clock_cb()
@@ -183,7 +185,6 @@ class CairoClockApplet:
         if self.applet.settings["theme"] not in self.themes:
             self.applet.settings["theme"] = default_theme
 
-        self.binder = self.applet.settings.get_binder(prefs)
         self.binder.bind("time-24-format", "radio-24-format", key_callback=refresh_title)
         self.binder.bind("time-date", "check-time-date", key_callback=refresh_title)
         self.binder.bind("time-seconds", "check-time-seconds", key_callback=refresh_title)
@@ -262,7 +263,7 @@ class ClockUpdater:
             format = hours + ":%M" + seconds + ampm
 
             if self.applet.settings["time-date"]:
-                format = "%a %b %d " + format + " %Y"
+                format = format + ", %A, %d %B %Y"
 
         self.applet.tooltip.set(time.strftime(format, local_time))
 

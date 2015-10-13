@@ -1,10 +1,10 @@
 #!/usr/bin/python
-import sys
+import os
+
 import gobject
 import gtk
 from gtk.glade import *
 from gtk import gdk
-import os
 from awn.extras import _
 from desktopagnostic.config import GROUP_DEFAULT
  
@@ -23,7 +23,6 @@ PREF_BROWSING = 64
 PREF_TITLE = 128
 PREF_ITEM_COUNT = 256
 
-
 # GUI TYPES
 STACKS_GUI_DIALOG=1
 STACKS_GUI_CURVED=2
@@ -36,8 +35,6 @@ BACKEND_SORT_BY_DATE = 2
 # SORT DIRECTION
 BACKEND_SORT_ASCENDING = 1
 BACKEND_SORT_DESCENDING = 2
-
-
 
 LAYOUT_PREFS =  PREF_APPLET_ICON + \
                 PREF_COMPOSITE_ICON + \
@@ -54,7 +51,9 @@ def _to_full_path(path):
     head, tail = os.path.split(__file__)
     return os.path.join(head, path)
 
+
 class StacksConfig(GladeWindow):
+
     glade_file = _to_full_path('stacks_preferences.glade')
     backend_type = BACKEND_TYPE_INVALID
     applet = None
@@ -106,8 +105,6 @@ class StacksConfig(GladeWindow):
         		self.widgets['folder_location_entry'].set_text(config['backend'].as_string())
         	else:
         		self.widgets['folder_location_entry'].set_text("file://" + os.path.expanduser("~"))
-        	
-            
 
         # PAGE 2
 
@@ -177,8 +174,6 @@ class StacksConfig(GladeWindow):
             self.widgets['title_entry'].set_text(
                     self.applet.backend.get_title())
 
-                    
-
         if (preferences & PREF_ITEM_COUNT) == 0:
             self.widgets['count_label'].set_sensitive(False)
             self.widgets['count_hbox'].set_sensitive(False)
@@ -225,21 +220,17 @@ class StacksConfig(GladeWindow):
         # get sort folders before files
         self.widgets['sort_folders_before_files'].set_active(config['sort_folders_before_files'])
         
-        
-       
     def on_folder_backend_button_toggled(self, *args):
     	folder_backend_mode = self.widgets['folder_backend_button'].get_active()
     	self.widgets['location_label'].set_sensitive(folder_backend_mode)
     	self.widgets['folder_location_entry'].set_sensitive(folder_backend_mode)
     	self.widgets['backendselect_button'].set_sensitive(folder_backend_mode)
-    	
 
     def on_backendselect_button_clicked(self, *args):
         filesel = gtk.FileChooserDialog(
                 _("Select backend destination:"),
                 None,
-                gtk.FILE_CHOOSER_ACTION_CREATE_FOLDER |
-                gtk.FILE_CHOOSER_ACTION_SAVE | gtk.FILE_CHOOSER_ACTION_OPEN,
+                gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
                 (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                 gtk.STOCK_APPLY, gtk.RESPONSE_OK),
                 None)
@@ -321,7 +312,6 @@ class StacksConfig(GladeWindow):
 				gui_type = STACKS_GUI_DIALOG
 
         	self.applet.set_gui(gui_type)   
-        			
 
     def on_ok_button_clicked(self, *args):
         # set backend (and type)
@@ -334,10 +324,10 @@ class StacksConfig(GladeWindow):
         		file_backend_prefix = "file://" + os.path.join(
         		os.path.expanduser("~"),
         			".config", "awn", "applets", "stacks")
-        		back_uri = VfsUri(file_backend_prefix).as_uri()
-        		backend_VfsUri = VfsUri(back_uri.append_path(self.applet.get_uid()))
+        		back_uri = VfsUri(file_backend_prefix)
+        		backend_VfsUri = VfsUri(back_uri.create_child(self.applet.get_uid()))
         		self.backend = backend_VfsUri.as_string()
-        		
+
         	elif self.widgets['folder_backend_button'].get_active():
         		folder_backend_mode = True
         		self.applet.client.set_int(GROUP_DEFAULT, "backend_type",
@@ -422,10 +412,10 @@ class StacksConfig(GladeWindow):
         self.window.destroy()
         
         self.applet.backend_get_config()
-        
 
     def set_current_page(self, page):
         self.widgets['main_notebook'].set_current_page(page)
+
 
 def get_config_dict(client, uid):
     # store config in dict
@@ -438,13 +428,15 @@ def get_config_dict(client, uid):
     _config_backend = client.get_string(GROUP_DEFAULT, "backend")
     try:
         # FIXME: needs lda fix!
+        if not _config_backend:
+            raise RuntimeError("No backend set!")
         config['backend'] = VfsUri(_config_backend)
     except:
         file_backend_prefix = "file://" + os.path.join(
                 os.path.expanduser("~"),
                 ".config", "awn", "applets", "stacks")
-        back_uri = VfsUri(file_backend_prefix).as_uri()
-        config['backend'] = VfsUri(back_uri.append_path(uid))
+        back_uri = VfsUri(file_backend_prefix)
+        config['backend'] = VfsUri(back_uri.create_child(uid))
 
     # get dimension
     _config_cols = client.get_int(GROUP_DEFAULT, "cols")
@@ -472,16 +464,10 @@ def get_config_dict(client, uid):
     config['fileops'] = _config_fileops
 
     # get composite icon
-    if client.get_bool(GROUP_DEFAULT, "composite_icon"):
-        config['composite_icon'] = True
-    else:
-        config['composite_icon'] = False
+    config['composite_icon'] = client.get_bool(GROUP_DEFAULT, "composite_icon")
 
     # get browsing
-    if client.get_bool(GROUP_DEFAULT, "browsing"):
-        config['browsing'] = True
-    else:
-        config['browsing'] = False
+    config['browsing'] = client.get_bool(GROUP_DEFAULT, "browsing")
 
     config['close_on_focusout'] = client.get_bool(GROUP_DEFAULT, "close_on_focusout")
 
@@ -497,14 +483,10 @@ def get_config_dict(client, uid):
     config['icon_full'] = _config_icon_full
 
     # get item count
-    if client.get_bool(GROUP_DEFAULT, "item_count"):
-        config['item_count'] = True
-    else:
-        config['item_count'] = False
-        
-    
+    config['item_count'] = client.get_bool(GROUP_DEFAULT, "item_count")
+
     config['gui_type'] = client.get_int(GROUP_DEFAULT, "gui_type")
-    	
+
     config['sort_methode'] = client.get_int(GROUP_DEFAULT, "sort_method")
 
     config['sort_folders_before_files'] = \
@@ -513,4 +495,3 @@ def get_config_dict(client, uid):
     config['sort_direction'] = client.get_int(GROUP_DEFAULT, "sort_direction")
     
     return config
-

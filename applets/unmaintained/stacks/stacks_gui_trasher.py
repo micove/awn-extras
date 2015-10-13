@@ -17,23 +17,11 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import sys
-import os
 import gtk
-from gtk import gdk
-import gobject
-import pango
-import awn
-import cairo
-import gnome.ui
-import gnomedesktop
-import time
 
 from stacks_backend import *
 from stacks_backend_file import *
 from stacks_backend_folder import *
-from stacks_backend_plugger import *
-from stacks_backend_trasher import *
 from stacks_config import StacksConfig
 from stacks_launcher import LaunchManager
 from stacks_icons import IconFactory

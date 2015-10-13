@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright (c) 2007 Randal Barlow
 #
 # This library is free software; you can redistribute it and/or
@@ -18,22 +17,15 @@
 # Boston, MA 02111-1307, USA.
 
 import sys
-import os
+
 import gtk
 from gtk import gdk
 import gobject
-import pango
 import awn
-import cairo
-import gnome.ui
-import gnomedesktop
-import time
 
 from stacks_backend import *
 from stacks_backend_file import *
 from stacks_backend_folder import *
-from stacks_backend_plugger import *
-from stacks_backend_trasher import *
 from stacks_config import *
 from stacks_launcher import LaunchManager
 from stacks_icons import IconFactory
@@ -193,7 +185,7 @@ class StacksApplet (awn.AppletSimple):
             pref_item.connect_object("activate",self.applet_menu_pref_cb,self)
             about_item.connect_object("activate",self.applet_menu_about_cb,self)
             popup_menu.show_all()
-            popup_menu.popup(None, None, None, event.button, event.time)
+            self.popup_gtk_menu (popup_menu, event.button, event.time)
         elif event.button == 2:
             # middle click
             self.backend.open()
@@ -346,12 +338,6 @@ class StacksApplet (awn.AppletSimple):
         if _config_backend_type == BACKEND_TYPE_FOLDER:
             self.backend = FolderBackend(self,
                     self.config['backend'], self.config['icon_size'])
-        elif _config_backend_type == BACKEND_TYPE_PLUGGER:
-            self.backend = PluggerBackend(self,
-                    self.config['backend'], self.config['icon_size'])
-        elif _config_backend_type == BACKEND_TYPE_TRASHER:
-            self.backend = TrashBackend(self,
-                    self.config['backend'], self.config['icon_size'])
         else:   # BACKEND_TYPE_FILE:
             self.backend = FileBackend(self,
                     self.config['backend'], self.config['icon_size'])
@@ -364,10 +350,7 @@ class StacksApplet (awn.AppletSimple):
         self.applet_set_icon(None)
 
 if __name__ == "__main__":
-    print sys.argv[1:]
     awn.init (sys.argv[1:])
-    # might needed to request passwords from user
-    gnome.ui.authentication_manager_init()
     applet = StacksApplet (awn.uid, awn.panel_id)
     awn.embed_applet (applet)
     applet.show_all()

@@ -34,6 +34,7 @@
 #endif
 
 
+static GtkWidget * clear_recent_dialog = NULL;
 static GtkWidget * _get_recent_menu (GtkWidget * menu);
 
 void
@@ -110,6 +111,103 @@ get_desktop_entry (gchar * desktop_file)
     return NULL;
   }
   return entry;
+}
+
+
+typedef struct {
+	GdkScreen       *screen;
+	GMountOperation *mount_op;
+} MountData;
+
+/*
+ * Open volume, if mounting was successful, else show error message
+ */
+static void 
+_mount_result (GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+  MountData *mount_data = user_data;
+  GError *error = NULL;
+
+  if (g_volume_mount_finish (G_VOLUME (source_object), res, &error))
+  {
+    GMount *mount;
+    GFile *root;
+    gchar *uri;
+    gchar *cmd;
+
+    mount = g_volume_get_mount (G_VOLUME (source_object));
+    root = g_mount_get_root (mount);
+    uri = g_file_get_uri (root);
+    cmd = g_strdup_printf("%s %s", XDG_OPEN, uri);
+    
+    _exec (NULL, cmd);
+	
+    g_object_unref (mount);
+    g_object_unref (root);
+    g_free (cmd);
+    g_free (uri);
+  }
+  else
+  {
+    /* Don't show error message, if a helper program has already interacted
+       with the user. */
+    if (error->code != G_IO_ERROR_FAILED_HANDLED)
+    {
+      GtkWidget *dialog;
+      gchar *name;
+      gchar *primary_text;
+    
+      name = g_volume_get_name (G_VOLUME (source_object));
+      primary_text = g_strdup_printf (_("Unable to mount %s"), name);
+    
+      dialog = gtk_message_dialog_new (NULL, /* parent */
+	                                   GTK_DIALOG_MODAL,     
+	                                   GTK_MESSAGE_ERROR,
+	                                   GTK_BUTTONS_CLOSE,
+	                                   "%s", primary_text);
+    
+      gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog),
+                                                "%s", error->message);
+
+
+      gtk_window_set_screen (GTK_WINDOW (dialog), mount_data->screen);
+
+      gtk_widget_show_all (dialog);
+
+      g_signal_connect_swapped (G_OBJECT (dialog), "response",
+                                G_CALLBACK (gtk_widget_destroy),
+                                G_OBJECT (dialog));
+
+      g_free (name);
+      g_free (primary_text);
+    }
+    g_error_free (error);
+  }
+
+  g_object_unref (mount_data->mount_op);
+  g_slice_free (MountData, mount_data);
+}
+
+/*
+ Mount a volume.
+ Function and callback based on gnome-panel 2.30 (panel-menu-items.c)
+ Copyright (C) 2005 Vincent Untz <vincent@vuntz.net>
+ Licence: GPL v2 or later
+ */
+void
+_mount (GtkWidget *widget, GVolume *volume)
+{
+  MountData *mount_data;
+
+  mount_data = g_slice_new (MountData);
+  mount_data->screen = gtk_widget_get_screen (widget);
+  mount_data->mount_op = gtk_mount_operation_new (NULL);
+
+  gtk_mount_operation_set_screen (GTK_MOUNT_OPERATION (mount_data->mount_op),
+                                  mount_data->screen);
+
+  g_volume_mount (volume, G_MOUNT_MOUNT_NONE, mount_data->mount_op, NULL,
+                  _mount_result, mount_data);
 }
 
 void
@@ -270,11 +368,86 @@ _remove_get_recent ( gpointer data,   GObject *where_the_object_was)
 }
 
 static void
-_purge_recent (GtkMenuItem *menuitem, GtkRecentManager *recent)
+_clear_dialog_response (GtkWidget *widget,
+		               int response,
+		               GtkRecentManager *recent)
 {
-  g_message ("%s: Purged %d items from Recent Documents",__func__,
-             gtk_recent_manager_purge_items (recent,NULL));
+  if (response == GTK_RESPONSE_ACCEPT)
+  {
+    gtk_recent_manager_purge_items (recent, NULL);
+  }
   
+  gtk_widget_destroy (widget);
+}
+
+/*
+ Let the user confirm before clearing the Recent Documents List.
+ Taken from gnome-panel 2.30 (panel-recent.c)
+ Copyright (C) 2002 James Willcox <jwillcox@gnome.org>
+ Licence: GPL v2 or later
+ */
+static void
+_recent_documents_clear (GtkMenuItem      *menuitem,
+                         GtkRecentManager *manager)
+{
+  gpointer tmp;
+
+  if (clear_recent_dialog != NULL)
+  {
+    gtk_window_set_screen (GTK_WINDOW (clear_recent_dialog),
+                           gtk_widget_get_screen (GTK_WIDGET (menuitem)));
+    gtk_window_present (GTK_WINDOW (clear_recent_dialog));
+    return;
+  }
+
+  clear_recent_dialog = gtk_message_dialog_new (NULL,
+                                                0 /* flags */,
+                                                GTK_MESSAGE_WARNING,
+                                                GTK_BUTTONS_NONE,
+                                                _("Clear the Recent Documents list?"));
+  gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (clear_recent_dialog),
+                             /* Translators: This is taken from gnome-panel, when deleting the Recent Documents List.
+                              * Please use the same translation. */
+                             _("If you clear the Recent Documents list, you clear the following:\n"
+                             "\342\200\242 All items from the Places \342\206\222 Recent Documents menu item.\n"
+                             "\342\200\242 All items from the recent documents list in all applications."));
+
+  gtk_dialog_add_buttons (GTK_DIALOG (clear_recent_dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                          GTK_STOCK_CLEAR, GTK_RESPONSE_ACCEPT,
+                          NULL);
+
+  gtk_container_set_border_width (GTK_CONTAINER (clear_recent_dialog), 6);
+
+  gtk_window_set_title (GTK_WINDOW (clear_recent_dialog),
+                        _("Clear Recent Documents"));
+
+  gtk_dialog_set_default_response (GTK_DIALOG (clear_recent_dialog), GTK_RESPONSE_ACCEPT);
+  gtk_window_set_skip_taskbar_hint (GTK_WINDOW (clear_recent_dialog), FALSE);
+
+  gtk_window_set_icon_name (GTK_WINDOW (clear_recent_dialog), "gnome-main-menu");
+  
+  g_signal_connect (clear_recent_dialog, "response",
+                    G_CALLBACK (_clear_dialog_response), manager);
+
+  g_signal_connect (clear_recent_dialog, "destroy",
+                    G_CALLBACK (gtk_widget_destroyed),
+                    &clear_recent_dialog);
+
+  tmp = &clear_recent_dialog;
+  g_object_add_weak_pointer (G_OBJECT (clear_recent_dialog), tmp);
+
+  gtk_window_set_screen (GTK_WINDOW (clear_recent_dialog),
+                    gtk_widget_get_screen (GTK_WIDGET (menuitem)));
+  gtk_widget_show (clear_recent_dialog);
+}
+
+static void
+_recent_manager_changed (GtkRecentManager *recent, GtkWidget *parent)
+{
+  int size;
+  g_object_get (recent, "size", &size, NULL);
+  gtk_widget_set_sensitive (parent, size > 0);
 }
 
 /*
@@ -315,6 +488,21 @@ _get_recent_menu (GtkWidget * menu)
         pbuf = gtk_recent_info_get_icon (iter->data,height);
         if (pbuf)
         {
+          if ( gdk_pixbuf_get_height (pbuf) != height)
+          {
+            GdkPixbuf * new_buf = gdk_pixbuf_scale_simple (pbuf,
+                                                           width,
+                                                           height,
+                                                           GDK_INTERP_BILINEAR);
+            if (new_buf)
+            {
+              g_object_unref (pbuf);
+              pbuf = new_buf;
+            }
+          }
+        }
+        if (pbuf)
+        {
           image = gtk_image_new_from_pixbuf (pbuf);
           g_object_unref (pbuf);
         }
@@ -331,8 +519,7 @@ _get_recent_menu (GtkWidget * menu)
                                                          &count,
                                                          &time_))
         {
-          gchar * exec = g_strdup_printf ("%s %s",app_exec,
-                                          gtk_recent_info_get_uri (iter->data));
+          gchar * exec = g_strdup (app_exec);
           g_signal_connect(G_OBJECT(menu_item), "activate", G_CALLBACK(_exec), exec);
           g_object_weak_ref (G_OBJECT(menu_item),(GWeakNotify) g_free,exec);          
         }
@@ -347,7 +534,7 @@ _get_recent_menu (GtkWidget * menu)
   {
     gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item),image);          
   }
-  g_signal_connect(G_OBJECT(menu_item), "activate", G_CALLBACK(_purge_recent),recent);
+  g_signal_connect(G_OBJECT(menu_item), "activate", G_CALLBACK(_recent_documents_clear),recent);
   gtk_menu_shell_append(GTK_MENU_SHELL(menu),menu_item);  
   
   g_list_foreach (recent_list, (GFunc)gtk_recent_info_unref,NULL);
@@ -362,11 +549,33 @@ _get_recent_menu (GtkWidget * menu)
  Returns a new recent menu widget every time it is called
  */
 GtkWidget * 
-get_recent_menu (void)
+get_recent_menu (GtkWidget *parent)
 {
   guint id;
   GtkRecentManager *recent = gtk_recent_manager_get_default ();
   
+  if (parent)  /* else: recent is an aux icon */
+  {
+    /*
+     If there are no Recent Items, make menu insensitive.
+     This, including the callback, is taken from gnome-panel 2.30 (panel-recent.c)
+     Copyright (C) 2002 James Willcox <jwillcox@gnome.org>
+     Licence: GPL v2 or later
+     */
+
+    int size;
+    g_signal_connect_object (recent, "changed",
+                             G_CALLBACK (_recent_manager_changed),
+                             parent, 0);
+
+    size = 0;
+    g_object_get (recent, "size", &size, NULL);
+    gtk_widget_set_sensitive (parent, size > 0);
+  
+  /* end of panel-recent.c code */
+  }
+
+
   GtkWidget *menu = cairo_menu_new();
   g_signal_handlers_disconnect_by_func (recent,G_CALLBACK(_get_recent_menu),menu);  
   _get_recent_menu (menu);

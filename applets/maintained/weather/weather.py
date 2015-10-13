@@ -4,7 +4,7 @@
 #   Mike (mosburger) Desjardins <desjardinsmike@gmail.com>
 #     Please do not email the above person for support. The 
 #     email address is only there for license/copyright purposes.
-# Copyright (C) 2009  onox <denkpadje@gmail.com>
+# Copyright (C) 2009 - 2010  onox <denkpadje@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -38,8 +38,8 @@ from awn import OverlayText, OverlayThrobber, OverlayThemedIcon
 import cairo
 import glib
 
-applet_name = "Weather"
-applet_description = "Applet to display current weather and forecast"
+applet_name = _("Weather")
+applet_description = _("Applet to display current weather and forecast")
 
 # Applet's themed icon, also shown in the GTK About dialog
 applet_logo = "weather-few-clouds"
@@ -56,10 +56,10 @@ socket.setdefaulttimeout(socket_timeout)
 
 ui_file = os.path.join(os.path.dirname(__file__), "weather.ui")
 
-temperature_units = ["Celcius", "Fahrenheit"]
+temperature_units = [_("Celsius"), _("Fahrenheit")]
 font_sizes = (15.0, 18.0, 23.0)
 
-system_theme_name = "System theme"
+system_theme_name = _("System theme")
 
 theme_dir = "/usr/share/icons"
 
@@ -68,7 +68,7 @@ icon_states = ["twc-logo", "weather-clear", "weather-few-clouds", "weather-overc
 "weather-snow", "weather-fog", "weather-storm", "weather-severe-alert",
 "weather-clear-night", "weather-few-clouds-night"]
 
-network_error_message = "Could not retrieve weather data. You may be experiencing connectivity issues."
+network_error_message = _("Could not retrieve weather data. You may be experiencing connectivity issues.")
 
 import forecast
 
@@ -96,48 +96,48 @@ class OverlayStateMachine:
 
 class BaseState:
 
-    def __init__(self, handler, throbber, disconnect):
-        self.handler = handler
+    def __init__(self, machine, throbber, disconnect):
+        self.machine = machine
 
-        self.handler.throbber_overlay.props.active = throbber
-        self.handler.disconnect_overlay.props.active = disconnect
+        self.machine.throbber_overlay.props.active = throbber
+        self.machine.disconnect_overlay.props.active = disconnect
 
     def evaluate(self):
         disconnected = any(disconnect_counter.values())
         busy = any(throbber_counter.values())
 
         if busy and disconnected:
-            self.handler.set_next(RefreshAndErrorState)
+            self.machine.set_next(RefreshAndErrorState)
         elif busy and not disconnected:
-            self.handler.set_next(RefreshState)
+            self.machine.set_next(RefreshState)
         elif not busy and disconnected:
-            self.handler.set_next(ErrorState)
+            self.machine.set_next(ErrorState)
         else:
-            self.handler.set_next(IdleState)
+            self.machine.set_next(IdleState)
 
 
 class IdleState(BaseState):
 
-    def __init__(self, handler):
-        BaseState.__init__(self, handler, False, False)
+    def __init__(self, machine):
+        BaseState.__init__(self, machine, False, False)
 
 
 class RefreshState(BaseState):
 
-    def __init__(self, handler):
-        BaseState.__init__(self, handler, True, False)
+    def __init__(self, machine):
+        BaseState.__init__(self, machine, True, False)
 
 
 class ErrorState(BaseState):
 
-    def __init__(self, handler):
-        BaseState.__init__(self, handler, False, True)
+    def __init__(self, machine):
+        BaseState.__init__(self, machine, False, True)
 
 
 class RefreshAndErrorState(BaseState):
 
-    def __init__(self, handler):
-        BaseState.__init__(self, handler, True, False)
+    def __init__(self, machine):
+        BaseState.__init__(self, machine, True, False)
 
 
 def with_overlays(func):
@@ -147,23 +147,23 @@ def with_overlays(func):
     """
     throbber_counter[func] = False
     disconnect_counter[func] = False
-    def activate_throbber(show):
-        throbber_counter[func] = show
+    def display_throbber(do_show):
+        throbber_counter[func] = do_show
         overlay_fsm.evaluate()
-    def active_icon(error):
-        disconnect_counter[func] = error
+    def display_disconnected(is_error):
+        disconnect_counter[func] = is_error
         overlay_fsm.evaluate()
     def bound_func(obj, *args, **kwargs):
-        activate_throbber(True)
+        display_throbber(True)
         try:
             result = func(obj, *args, **kwargs)
-            active_icon(False)
+            display_disconnected(False)
             return result
         except:
-            active_icon(True)
+            display_disconnected(True)
             raise
         finally:
-            activate_throbber(False)
+            display_throbber(False)
     return bound_func
 
 
@@ -198,13 +198,11 @@ class WeatherApplet:
     def __init__(self, applet):
         self.applet = applet
 
-        self.cached_conditions = None
-        self.map_vbox = None
-        self.image_map = None
-        self.map_pixbuf = None
+        self.weather_fail = [False, False, False]
+        self.reset_weather_data()
 
         self.network_handler = self.NetworkHandler()
-        self.notification = applet.notify.create_notification("Network error in Weather", network_error_message, "dialog-warning", 20)
+        self.notification = applet.notification.create(_("Network error in Weather"), network_error_message, "dialog-warning", 20)
 
         self.setup_context_menu()
 
@@ -231,6 +229,11 @@ class WeatherApplet:
 
         global overlay_fsm
         overlay_fsm = OverlayStateMachine(disconnect_overlay, throbber_overlay)
+        
+        def show_map(widget):
+            if self.map_dialog is None:
+                self.fetch_weather_map(show=True)
+        applet.connect("middle-clicked", show_map)
 
         # Set up the timer which will refresh the conditions, forecast, and weather map
         applet.timing.register(self.activate_refresh_cb, update_interval * 60)
@@ -240,9 +243,29 @@ class WeatherApplet:
         if type(e) is NetworkException:
             print "Error in Weather:", e
             self.notification.show()
+
+            if all(self.weather_fail):
+                # Clean up weather map
+                if self.map_dialog is not None:
+                    self.applet.dialog.unregister("secondary")
+                self.reset_weather_data()
+
+                # Clean up forecast dialog
+                self.forecaster.finalize_dialog()
+
+                # Clean up conditions (icon)
+                self.__temp_overlay.props.active = False
+                self.set_icon()
+                self.applet.tooltip.set("%s %s..."%(_("Fetching conditions for"), self.applet.settings['location']))
         else:
             self.applet.errors.set_error_icon_and_click_to_restart()
             self.applet.errors.general(e, traceback=tb, callback=gtk.main_quit)
+
+    def reset_weather_data(self):
+        self.cached_conditions = None
+        self.map_dialog = None
+        self.map_vbox = None
+        self.map_pixbuf = None
 
     def setup_context_menu(self):
         """Add "refresh" to the context menu and setup the preferences.
@@ -251,15 +274,19 @@ class WeatherApplet:
         menu = self.applet.dialog.menu
         menu_index = len(menu) - 1
 
-        map_item = gtk.MenuItem(_("Show _Map"))
-        map_item.connect("activate", self.activate_map_cb)
-        menu.insert(map_item, menu_index)
+        self.map_item = gtk.MenuItem(_("Show _Map"))
+        self.map_item.connect("activate", self.activate_map_cb)
+        self.map_item.show_all()
+        menu.insert(self.map_item, menu_index)
 
         refresh_item = gtk.ImageMenuItem(stock_id=gtk.STOCK_REFRESH)
-        refresh_item.connect("activate", self.activate_refresh_cb)
+        refresh_item.connect("activate", self.activate_refresh_cb, True)
+        refresh_item.show_all()
         menu.insert(refresh_item, menu_index + 1)
 
-        menu.insert(gtk.SeparatorMenuItem(), menu_index + 2)
+        separator_item = gtk.SeparatorMenuItem()
+        separator_item.show_all()
+        menu.insert(separator_item, menu_index + 2)
 
         prefs = gtk.Builder()
         prefs.add_from_file(ui_file)
@@ -391,9 +418,12 @@ class WeatherApplet:
         self.search_window.hide()
 
     def activate_map_cb(self, widget):
-        self.map_dialog.show_all()
+        if self.map_dialog is not None:
+            self.applet.dialog.toggle("secondary", "show")
+        else:
+            self.fetch_weather_map(show=True)
 
-    def activate_refresh_cb(self, widget=None, map=True):
+    def activate_refresh_cb(self, widget=None, map=False):
         """Refresh the icon, forecast, and map data. Called by the
         "Refresh" option in the context menu.
 
@@ -432,6 +462,7 @@ class WeatherApplet:
 
         """
         def cb(conditions):
+            self.weather_fail[0] = False
             if conditions != self.cached_conditions:
                 self.cached_conditions = conditions
                 self.refresh_icon()
@@ -442,6 +473,7 @@ class WeatherApplet:
                 print "Reattempt (%d retries remaining) in %d seconds" % (retries, delay_seconds)
                 self.applet.timing.delay(lambda: self.refresh_conditions(retries - 1), delay_seconds)
             else:
+                self.weather_fail[0] = True
                 self.network_error_cb(e, tb)
         self.network_handler.get_conditions(self.applet.settings['location_code'], callback=cb, error=error_cb)
 
@@ -459,11 +491,14 @@ class WeatherApplet:
             self.applet.tooltip.set(title)
             self.set_icon(self.cached_conditions["CODE"])
 
-    def fetch_forecast(self, cb, retries=3):
+    def fetch_forecast(self, forecast_cb, retries=3):
         """Use weather.com's XML service to download the latest 5-day
         forecast.
 
         """
+        def cb(forecast):
+            self.weather_fail[1] = False
+            forecast_cb(forecast)
         def error_cb(e, tb):
             if type(e) is NetworkException and retries > 0:
                 print "Warning in Weather:", e
@@ -471,16 +506,20 @@ class WeatherApplet:
                 print "Reattempt (%d retries remaining) in %d seconds" % (retries, delay_seconds)
                 self.applet.timing.delay(lambda: self.fetch_forecast(cb, retries - 1), delay_seconds)
             else:
+                self.weather_fail[1] = True
                 self.network_error_cb(e, tb)
         self.network_handler.get_forecast(self.applet.settings['location_code'], callback=cb, error=error_cb)
 
-    def fetch_weather_map(self, retries=3):
+    def fetch_weather_map(self, retries=3, show=False):
         """Download the latest weather map from weather.com, storing it
         as a pixbuf, and create a dialog with the new map.
 
         """
         def cb(pixbuf):
+            self.weather_fail[2] = False
             self.set_map_pixbuf(pixbuf)
+            if show:
+                self.applet.dialog.toggle("secondary", "show")
         def error_cb(e, tb):
             if type(e) is NetworkException and retries > 0:
                 print "Warning in Weather:", e
@@ -488,6 +527,7 @@ class WeatherApplet:
                 print "Reattempt (%d retries remaining) in %d seconds" % (retries, delay_seconds)
                 self.applet.timing.delay(lambda: self.fetch_weather_map(retries - 1), delay_seconds)
             else:
+                self.weather_fail[2] = True
                 self.network_error_cb(e, tb)
         self.network_handler.get_weather_map(self.applet.settings['location_code'], callback=cb, error=error_cb)
 
@@ -499,7 +539,7 @@ class WeatherApplet:
         """
         if pixbuf is None:
             return
-        if self.map_vbox is None:
+        if self.map_dialog is None or self.map_vbox is None:
             self.map_dialog = self.applet.dialog.new("secondary", title=self.applet.settings['location'])
             self.map_vbox = gtk.VBox()
             self.map_dialog.add(self.map_vbox)
@@ -512,7 +552,7 @@ class WeatherApplet:
 
         map_size = pixbuf.get_width(), pixbuf.get_height()
 
-        # resize if necessary as defined by map_maxwidth
+        # Resize if necessary as defined by map_maxwidth
         ratio = float(self.applet.settings['map_maxwidth']) / map_size[0]
         if ratio < 1:
             width, height = [int(ratio * dim) for dim in map_size]
@@ -527,14 +567,17 @@ class WeatherApplet:
         except ValueError:
             return "N/A"
 
-        if "Fahrenheit" == unit:
+        if _("Fahrenheit") == unit:
             converted_value = value
-        elif "Celcius" == unit:
+        elif _("Celsius") == unit:
             converted_value = 5.0 * (value - 32.0) / 9.0
         return str(int(round(converted_value)))
 
     def get_temperature_unit(self):
-        return temperature_units[self.applet.settings["temperature-unit"]][0]
+    	if temperature_units[self.applet.settings["temperature-unit"]] == _("Celsius"):
+    	    return "C"
+    	else:
+    	    return "F"
 
     def get_icon_name(self, hint, theme):
         if hint == "twc":
@@ -548,7 +591,7 @@ class WeatherApplet:
             return "weather-few-clouds"
         elif hint in (26, ):
             return "weather-overcast"
-        elif hint in (5, 6, 7, 8, 9, 10, 11, 12, 45):
+        elif hint in (5, 6, 7, 8, 9, 10, 11, 12, 39, 45):
             # Special conditional for the extreme weather in moonbeam's Ottawa
             if theme == "moonbeam" and hint in (5, 6, 7):
                 return "weather-snow-and-rain"
@@ -559,7 +602,7 @@ class WeatherApplet:
             return "weather-snow"
         elif hint in (19, 20, 21, 22):
             return "weather-fog"
-        elif hint in (4, 35, 37, 38, 39, 47):
+        elif hint in (4, 35, 37, 38, 47):
             return "weather-storm"
         elif hint in (0, 1, 2, 3):
             return "weather-severe-alert"
@@ -570,7 +613,7 @@ class WeatherApplet:
 
     class NetworkHandler(ThreadQueue):
 
-        __ws_key = "&prod=xoap&par=1048871467&key=12daac2f3a67cb39&link=xoap"
+        __ws_key = "&prod=xoap&par=1287722164&key=e11ec82daa20d876"
 
         def dict_from_xml(self, rootNode, keys, paths):
             """Given an XML node, iterate over keys and paths, grabbing the
@@ -590,7 +633,7 @@ class WeatherApplet:
         @async_method
         @network_exception
         def get_locations(self, text):
-            url = "http://xoap.weather.com/search/search?where=" + urllib2.quote(text)
+            url = "http://xml.weather.com/search/search?where=" + urllib2.quote(text)
             with closing(urllib2.urlopen(url)) as usock:
                 with unlink_xml(usock) as xmldoc:
                     locations_list = []
@@ -604,7 +647,7 @@ class WeatherApplet:
         @with_overlays
         @network_exception
         def get_conditions(self, location_code):
-            url = "http://xoap.weather.com/weather/local/" + location_code + "?cc=*" + self.__ws_key
+            url = "http://xml.weather.com/weather/local/" + location_code + "?cc=*" + self.__ws_key
             with closing(urllib2.urlopen(url)) as usock:
                 with unlink_xml(usock) as xmldoc:
                     names = ['CITY', 'SUNRISE', 'SUNSET', 'DESCRIPTION', 'CODE', 'TEMP', 'FEELSLIKE', 'BAR', 'BARDESC', 'WINDSPEED', 'WINDGUST', 'WINDDIR', 'HUMIDITY', 'MOONPHASE']
@@ -615,11 +658,12 @@ class WeatherApplet:
                         raise NetworkException("Couldn't parse conditions: %s" % e)
 
         @async_method
+        @with_overlays
         @network_exception
         def get_weather_map(self, location_code):
             map_url = "http://www.weather.com/outlook/travel/businesstraveler/map/%s" % location_code
             with closing(urllib2.urlopen(map_url)) as usock:
-                mapExp = """<IMG NAME="mapImg" SRC="([^\"]+)" WIDTH=([0-9]+) HEIGHT=([0-9]+) BORDER"""
+                mapExp = """<img name="mapImg" src="([^\"]+)" width="([0-9]+)" height="([0-9]+)" border"""
                 result = re.findall(mapExp, usock.read())
                 if not result or len(result) != 1:
                     raise NetworkException("Couldn't parse weather map")
@@ -635,7 +679,7 @@ class WeatherApplet:
         @with_overlays
         @network_exception
         def get_forecast(self, location_code):
-            url = "http://xoap.weather.com/weather/local/" + location_code + "?dayf=5" + self.__ws_key
+            url = "http://xml.weather.com/weather/local/" + location_code + "?dayf=5" + self.__ws_key
             with closing(urllib2.urlopen(url)) as usock:
                 with unlink_xml(usock) as xmldoc:
                     try:
@@ -664,6 +708,4 @@ if __name__ == "__main__":
         "copyright-year": "2007 - 2009",
         "theme": applet_logo,
         "authors": ["Mike Desjardins", "Mike Rooney", "Isaac J.", "onox <denkpadje@gmail.com>"],
-        "artists": ["Wojciech Grzanka", "Mike Desjardins"],
-        "type": ["Network", "Weather"]},
-        ["settings-per-instance"])
+        "artists": ["Wojciech Grzanka", "Mike Desjardins"]})

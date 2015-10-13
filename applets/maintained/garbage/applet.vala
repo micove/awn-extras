@@ -41,6 +41,9 @@ public class GarbageApplet : AppletSimple
   private OverlayThrobber? throbber_overlay;
   private OverlayProgress? progress_overlay;
   private bool highlighted;
+  private const string[] authors = {
+    "Mark Lee <avant-wn@lazymalevolence.com>"
+  };
 
   public bool show_count { get; set; }
   public bool confirm_empty { get; set; }
@@ -66,9 +69,9 @@ public class GarbageApplet : AppletSimple
 
   public GarbageApplet (string canonical_name, string uid, int panel_id)
   {
-    this.canonical_name = canonical_name;
-    this.uid = uid;
-    this.panel_id = panel_id;
+    GLib.Object (canonical_name: canonical_name,
+                 uid: uid,
+                 panel_id: panel_id);
     (this.get_icon () as Awn.ThemedIcon).set ("drag-and-drop", false);
     this.config = Awn.Config.get_default_for_applet (this);
     try
@@ -152,6 +155,8 @@ public class GarbageApplet : AppletSimple
         // moonbeam says get_icon generally returns Awn.ThemedIcon
         overlayable = this.get_icon () as Overlayable;
         this.text_overlay = new OverlayText ();
+        this.text_overlay.font_sizing = 17;
+        this.text_overlay.gravity = Gdk.Gravity.SOUTH;
         overlayable.add_overlay (this.text_overlay);
       }
 
@@ -171,8 +176,8 @@ public class GarbageApplet : AppletSimple
     }
     // set the title as well
     // $display_name: $count item(s)
-    plural = Gettext.ngettext ("%s: %u item", "%s: %u items", file_count);
-    this.set_tooltip_text (plural.printf (this.display_name, file_count));
+    plural = Gettext.ngettext ("%u item", "%u items", file_count);
+    this.set_tooltip_text (plural.printf (file_count));
   }
   private void
   on_clicked ()
@@ -203,6 +208,7 @@ public class GarbageApplet : AppletSimple
     {
       ImageMenuItem prefs_item;
       Widget about_item;
+      SeparatorMenuItem sep_item;
 
       this.menu = this.create_default_menu () as Menu;
       this.empty_menu_item =
@@ -211,19 +217,25 @@ public class GarbageApplet : AppletSimple
       this.empty_menu_item.set_sensitive (this.trash.file_count > 0);
       this.empty_menu_item.show ();
       this.menu.append (this.empty_menu_item);
+
+      sep_item = new Gtk.SeparatorMenuItem();
+      sep_item.show();
+      this.menu.append (sep_item);
+
       prefs_item = new ImageMenuItem.from_stock (STOCK_PREFERENCES, null);
       prefs_item.activate.connect (this.on_menu_prefs_activate);
       prefs_item.show ();
       this.menu.append (prefs_item);
-      about_item = this.create_about_item_simple ("Copyright © 2009 Mark Lee <avant-wn@lazymalevolence.com>",
-                                                  AppletLicense.GPLV2,
-                                                  Build.VERSION);
-      about_item.show ();
+
+      about_item = this.create_about_item ("Copyright © 2009 Mark Lee",
+                                           AppletLicense.GPLV2, Build.VERSION,
+                                           Gettext._ ("A lightweight, cross-desktop trash applet"),
+                                           null, null, "user-trash", null, authors, null, null);
       this.menu.append (about_item as MenuItem);
     }
     ctx_menu = (Menu)this.menu;
     ctx_menu.set_screen (null);
-    ctx_menu.popup (null, null, null, evt.button, evt.time);
+    this.get_icon ().popup_gtk_menu (ctx_menu, evt.button, evt.time);
   }
   private void
   on_menu_empty_activate ()

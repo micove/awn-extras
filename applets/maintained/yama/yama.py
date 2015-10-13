@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright (C) 2009  onox <denkpadje@gmail.com>
+# Copyright (C) 2009 - 2010  onox <denkpadje@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,10 +24,11 @@ from threading import Lock
 from urllib import unquote
 
 import pygtk
-pygtk.require('2.0')
+pygtk.require("2.0")
 import gtk
 
-from awn.extras import awnlib, __version__
+from awn.extras import _, awnlib, __version__
+from desktopagnostic import fdo, vfs
 
 try:
     import dbus
@@ -39,28 +40,31 @@ except ImportError:
 import gio
 import glib
 import gmenu
-from xdg import BaseDirectory, DesktopEntry
 
-applet_name = "YAMA"
-applet_description = "Main menu with places and recent documents"
+# TODO Remove the check and the else as soon as Ubuntu Moaning Monkey is not supported anymore
+if awnlib.is_required_version(glib.pyglib_version, (2, 26, 0)):
+    xdg_data_dirs = [glib.get_user_data_dir()] + list(glib.get_system_data_dirs())
+else:
+    xdg_data_dirs = [os.path.expanduser("~/.local/share")]
+    if "XDG_DATA_DIRS" in os.environ:
+        xdg_data_dirs += os.environ["XDG_DATA_DIRS"].split(":")
+
+applet_name = _("YAMA")
+applet_description = _("Main menu with places and recent documents")
 
 # Applet's themed icon, also shown in the GTK About dialog
 applet_logo = "start-here"
-
-file_manager_apps = ("nautilus", "thunar", "xdg-open")
 
 menu_editor_apps = ("alacarte", "gmenu-simple-editor")
 
 # Describes the pattern used to try to decode URLs
 url_pattern = re.compile("^[a-z]+://(?:[^@]+@)?([^/]+)/(.*)$")
 
-# Pattern to extract the part of the path that doesn't end with %<a-Z>
-exec_pattern = re.compile("^(.*?)\s+\%[a-zA-Z]$")
-
-user_dir_pattern = re.compile("^XDG_([A-Z]+)_DIR=\"(.+)\"$")
-
 # Delay in seconds before starting rebuilding the menu
 menu_rebuild_delay = 2
+
+# Size of icon in menu items
+item_icon_size = 24
 
 
 class YamaApplet:
@@ -118,18 +122,20 @@ class YamaApplet:
 
         """ Applications """
         tree = gmenu.lookup_tree("applications.menu")
-        self.append_directory(tree.root, self.menu, item_list=self.applications_items)
         tree.add_monitor(self.menu_changed_cb, self.applications_items)
+        if tree.root is not None:
+            self.append_directory(tree.root, self.menu, item_list=self.applications_items)
 
-        self.menu.append(gtk.SeparatorMenuItem())
+            self.menu.append(gtk.SeparatorMenuItem())
 
         """ Places """
         self.create_places_submenu(self.menu)
 
         """ System """
         tree = gmenu.lookup_tree("settings.menu")
-        self.append_directory(tree.root, self.menu, item_list=self.settings_items)
         tree.add_monitor(self.menu_changed_cb, self.settings_items)
+        if tree.root is not None:
+            self.append_directory(tree.root, self.menu, item_list=self.settings_items)
 
         """ Session actions """
         if dbus is not None:
@@ -151,52 +157,38 @@ class YamaApplet:
             menu.append(separator)
 
         if can_lock_screen:
-            lock_item = self.append_menu_item(menu, "Lock Screen", "system-lock-screen", "Protect your computer from unauthorized use")
+            def dummy_cb(*args):
+                pass
+
+            def error_cb(e):
+                # NoReply exception may occur even while the screensaver did lock the screen
+                if e.get_dbus_name() != "org.freedesktop.DBus.Error.NoReply":
+                    raise e
+
+            lock_item = self.append_menu_item(menu, _("Lock Screen"), "system-lock-screen", _("Protect your computer from unauthorized use"))
             def lock_screen_cb(widget):
-                try:
-                    ss_proxy = self.session_bus.get_object("org.gnome.ScreenSaver", "/")
-                    dbus.Interface(ss_proxy, "org.gnome.ScreenSaver").Lock()
-                except dbus.DBusException, e:
-                    # NoReply exception may occur even while the screensaver did lock the screen
-                    if e.get_dbus_name() != "org.freedesktop.DBus.Error.NoReply":
-                        raise
+                ss_proxy = self.session_bus.get_object("org.gnome.ScreenSaver", "/")
+                ss_iface = dbus.Interface(ss_proxy, "org.gnome.ScreenSaver")
+                ss_iface.Lock(reply_handler=dummy_cb, error_handler=error_cb)
             lock_item.connect("activate", lock_screen_cb)
             self.session_items.append(lock_item)
 
         if can_manage_session:
             sm_proxy = self.session_bus.get_object("org.gnome.SessionManager", "/org/gnome/SessionManager")
-            sm_if = dbus.Interface(sm_proxy, "org.gnome.SessionManager")
+            sm_iface = dbus.Interface(sm_proxy, "org.gnome.SessionManager")
 
             user_name = commands.getoutput("whoami")
-            logout_item = self.append_menu_item(menu, "Log Out %s..." % user_name, "system-log-out", "Log out %s of this session to log in as a different user" % user_name)
-            logout_item.connect("activate", lambda w: sm_if.Logout(0))
+            # Translators: %s is a user name.
+            logout_item = self.append_menu_item(menu, _("Log Out %s...") % user_name, "system-log-out", _("Log out %s of this session to log in as a different user") % user_name)
+            logout_item.connect("activate", lambda w: sm_iface.Logout(0, reply_handler=dummy_cb, error_handler=error_cb))
             self.session_items.append(logout_item)
 
-            shutdown_item = self.append_menu_item(menu, "Shut Down...", "system-shutdown", "Shut down the system")
-            shutdown_item.connect("activate", lambda w: sm_if.Shutdown())
+            shutdown_item = self.append_menu_item(menu, _("Shut Down..."), "system-shutdown", _("Shut down the system"))
+            shutdown_item.connect("activate", lambda w: sm_iface.Shutdown(reply_handler=dummy_cb, error_handler=error_cb))
             self.session_items.append(shutdown_item)
 
     def clicked_cb(self, widget):
-        def get_position(menu):
-            icon_x, icon_y = self.applet.get_icon().window.get_origin()
-
-            menu_size = self.menu.size_request()
-            # Make sure the bottom of the menu doesn't get below the bottom of the screen
-            icon_y = min(icon_y, self.menu.get_screen().get_height() - menu_size[1])
-
-            padding = 6
-            orientation = self.applet.get_pos_type()
-            if orientation == gtk.POS_BOTTOM:
-                icon_y = self.menu.get_screen().get_height() - self.applet.get_size() - self.applet.props.offset - menu_size[1] - padding
-            elif orientation == gtk.POS_TOP:
-                icon_y = self.applet.get_size() + self.applet.props.offset + padding
-            elif orientation == gtk.POS_RIGHT:
-                icon_x = self.menu.get_screen().get_width() - self.applet.get_size() - self.applet.props.offset - menu_size[0] - padding
-            elif orientation == gtk.POS_LEFT:
-                icon_x = self.applet.get_size() + self.applet.props.offset + padding
-
-            return (icon_x, icon_y, False)
-        self.menu.popup(None, None, get_position, 0, 0)
+        self.applet.popup_gtk_menu (self.menu, 0, gtk.get_current_event_time())
 
     def setup_context_menu(self):
         """Add "Edit Menus" to the context menu.
@@ -205,11 +197,14 @@ class YamaApplet:
         menu = self.applet.dialog.menu
         menu_index = len(menu) - 1
 
-        edit_menus_item = gtk.MenuItem("_Edit Menus")
+        edit_menus_item = gtk.MenuItem(_("_Edit Menus"))
         edit_menus_item.connect("activate", self.show_menu_editor_cb)
+        edit_menus_item.show_all()
         menu.insert(edit_menus_item, menu_index)
 
-        menu.insert(gtk.SeparatorMenuItem(), menu_index + 1)
+        separator_item = gtk.SeparatorMenuItem()
+        separator_item.show_all()
+        menu.insert(separator_item, menu_index + 1)
 
     def show_menu_editor_cb(self, widget):
         for command in menu_editor_apps:
@@ -222,15 +217,16 @@ class YamaApplet:
 
     def menu_changed_cb(self, menu_tree, menu_items):
         def refresh_menu(tree, items):
-            with self.__rebuild_lock:
-                # Delete old items
-                for i in xrange(len(items)):
-                    items.pop().destroy()
-
-                index = len(self.applications_items) + 2 if items is self.settings_items else 0  # + 2 = separator + Places
-                self.append_directory(tree.root, self.menu, index=index, item_list=items)
-                # Refresh menu to re-initialize the widget
-                self.menu.show_all()
+            if tree.root is not None:
+                with self.__rebuild_lock:
+                    # Delete old items
+                    for i in xrange(len(items)):
+                        items.pop().destroy()
+    
+                    index = len(self.applications_items) + 2 if items is self.settings_items else 0  # + 2 = separator + Places
+                    self.append_directory(tree.root, self.menu, index=index, item_list=items)
+                    # Refresh menu to re-initialize the widget
+                    self.menu.show_all()
             return False
         with self.__schedule_lock:
             file = menu_tree.menu_file
@@ -246,33 +242,45 @@ class YamaApplet:
             self.menu.foreach(gtk.Widget.destroy)
             self.build_menu()
 
-    def start_subprocess_cb(self, widget, command, use_shell):
-        try:
-            subprocess.Popen(command, shell=use_shell)
-        except OSError:
-            pass
-
     def open_folder_cb(self, widget, path):
-        for command in file_manager_apps:
+        self.open_uri(path)
+
+    def open_uri(self, uri):
+        file = vfs.File.for_uri(uri)
+
+        if file is not None:
             try:
-                subprocess.Popen([command, path])
-                return
-            except OSError:
-                pass
-        raise RuntimeError("No file manager found (%s) for %s" % (", ".join(file_manager_apps), path))
+                file.launch()
+            except glib.GError, e:
+                if file.is_native():
+                    print "Error while launching: %s" % e
+                else:
+                    def mount_result(gio_file2, result):
+                        try:
+                            if gio_file2.mount_enclosing_volume_finish(result):
+                                file.launch()
+                        except glib.GError, e:
+                            print "Error while launching remote location: %s" % e
+                    gio_file = gio.File(file.props.uri)
+                    gio_file.mount_enclosing_volume(gtk.MountOperation(), mount_result)
 
     def create_places_submenu(self, parent_menu):
-        item = self.append_menu_item(parent_menu, "Places", "folder", None)
+        item = self.append_menu_item(parent_menu, _("Places"), "folder", None)
 
         menu = gtk.Menu()
         item.set_submenu(menu)
 
         user_path = os.path.expanduser("~/")
 
-        home_item = self.append_menu_item(menu, "Home Folder", "user-home", "Open your personal folder")
-        home_item.connect("activate", self.open_folder_cb, user_path)
-        desktop_item = self.append_menu_item(menu, "Desktop", "user-desktop", "Open the contents of your desktop in a folder")
-        desktop_item.connect("activate", self.open_folder_cb, os.path.join(user_path, "Desktop"))
+        home_item = self.append_menu_item(menu, _("Home Folder"), "user-home", _("Open your personal folder"))
+        home_item.connect("activate", self.open_folder_cb, "file://%s" % user_path)
+
+        # Add Desktop
+        desktop_path = glib.get_user_special_dir(glib.USER_DIRECTORY_DESKTOP)
+        if desktop_path != user_path:
+            label = glib.filename_display_basename(desktop_path)
+            desktop_item = self.append_menu_item(menu, label, "user-desktop", _("Open the contents of your desktop in a folder"))
+            desktop_item.connect("activate", self.open_folder_cb, "file://%s" % desktop_path)
 
         """ Bookmarks """
         self.places_menu = menu
@@ -314,7 +322,7 @@ class YamaApplet:
         self.__mounts_index = len(self.places_menu) - len(self.volume_items) - len(self.bookmarks_items)
         self.mount_items = []
         self.append_mounts()
-        # TODO if added is False and no mounts, then their are two separators
+        # TODO if added is False and no mounts, then there are two separators
 
         # Connect signals after having initialized volumes and mounts
         for signal in ("volume-added", "volume-changed", "volume-removed", "mount-added", "mount-changed", "mount-removed"):
@@ -322,8 +330,8 @@ class YamaApplet:
 
         ncs_exists = os.path.exists(commands.getoutput("which nautilus-connect-server"))
         if ncs_exists:
-            connect_item = self.append_menu_item(menu, "Connect to Server...", "applications-internet", "Connect to a remote computer or shared disk")
-            connect_item.connect("activate", self.start_subprocess_cb, "nautilus-connect-server", False)
+            connect_item = self.append_menu_item(menu, _("Connect to Server..."), "applications-internet", _("Connect to a remote computer or shared disk"))
+            connect_item.connect("activate", lambda w: subprocess.Popen("nautilus-connect-server"))
         added |= ncs_exists
 
         if added:
@@ -338,7 +346,7 @@ class YamaApplet:
         recent_manager = gtk.recent_manager_get_default()
 
         chooser_menu = gtk.RecentChooserMenu(recent_manager)
-        recent_item = self.append_menu_item(menu, "Recent Documents", "document-open-recent", None)
+        recent_item = self.append_menu_item(menu, _("Recent Documents"), "document-open-recent", None)
         recent_item.set_submenu(chooser_menu)
 
         def set_sensitivity_recent_menu(widget=None):
@@ -347,12 +355,12 @@ class YamaApplet:
         set_sensitivity_recent_menu()
 
         def open_recent_document(widget):
-            self.start_subprocess_cb(None, "xdg-open %s" % widget.get_current_uri(), True)
+            self.open_uri(widget.get_current_uri())
         chooser_menu.connect("item-activated", open_recent_document)
 
         chooser_menu.append(gtk.SeparatorMenuItem())
 
-        item = self.append_menu_item(chooser_menu, "Clear Recent Documents", "gtk-clear", "Clear all items from the recent documents list")
+        item = self.append_menu_item(chooser_menu, _("Clear Recent Documents"), "gtk-clear", _("Clear all items from the recent documents list"))
         clear_dialog = self.ClearRecentDocumentsDialog(self.applet, recent_manager.purge_items)
         def purge_items_cb(widget):
             clear_dialog.show_all()
@@ -365,46 +373,49 @@ class YamaApplet:
             item.destroy()
         self.bookmarks_items = []
 
-        # Prepare dictionary with paths mapped to their xdg folder icon name
-        user_dirs = {}
-        user_dirs_file = os.path.expanduser("~/.config/user-dirs.dirs")
-        if os.path.exists(user_dirs_file):
-            with open(user_dirs_file) as f:
-                for i in f:
-                    match = user_dir_pattern.match(i)
-                    if match is not None:
-                        path = "file://" + match.group(2).replace("$HOME", os.environ["HOME"])
-                        user_dirs[path] = "folder-" + match.group(1).lower()
-
         index = 2
         bookmarks_file = os.path.expanduser("~/.gtk-bookmarks")
         if os.path.isfile(bookmarks_file):
             with open(bookmarks_file) as f:
                 for url_name in (i.rstrip().split(" ", 1) for i in f):
-                    if len(url_name) == 1:
-                        match = url_pattern.match(url_name[0])
-                        if match is not None:
-                            url_name.append("/%s on %s" % (match.group(2), match.group(1)))
-                        else:
-                            basename = glib.filename_display_basename(url_name[0])
-                            url_name.append(unquote(str(basename)))
-                    url, name = (url_name[0], url_name[1])
+                    item = self.get_url_name_item(*url_name)
+                    if item is not None:
+                        self.places_menu.insert(item, index)
+                        index += 1
+                        self.bookmarks_items.append(item)
 
-                    if url.startswith("file://"):
-                        if url in user_dirs:
-                            icon = self.get_first_existing_icon([user_dirs[url], "folder"])
-                        else:
-                            icon = "folder"
-                        display_url = url[7:]
-                    else:
-                        icon = "folder-remote"
-                        display_url = url
+    def get_url_name_item(self, uri, name=None):
+        if not uri:
+            return
 
-                    item = self.create_menu_item(name, icon, "Open '%s'" % display_url)
-                    self.places_menu.insert(item, index)
-                    item.connect("activate", self.open_folder_cb, url)
-                    index += 1
-                    self.bookmarks_items.append(item)
+        file = vfs.File.for_uri(uri)
+
+        if file.is_native():
+            if not file.exists():
+                return
+
+            icon = self.get_first_existing_icon(file.get_icon_names())
+            display_uri = uri[7:]
+        else:
+            icon = "folder-remote"
+            display_uri = uri
+        display_uri = unquote(display_uri)
+
+        if name is None:
+            match = url_pattern.match(uri)
+            if match is not None:
+                name = "/%s on %s" % (match.group(2), match.group(1))
+            else:
+                if file.is_native():
+                    filename = os.path.abspath(file.props.path)
+                    name = glib.filename_display_basename(filename)
+                else:
+                    name = uri
+                name = unquote(str(name))
+
+        item = self.create_menu_item(name, icon, _("Open '%s'") % display_uri)
+        item.connect("activate", self.open_folder_cb, uri)
+        return item
 
     def refresh_volumes_mounts_cb(self, monitor, volume_mount):
         with self.__rebuild_lock:
@@ -415,7 +426,7 @@ class YamaApplet:
             self.places_menu.show_all()
 
     def get_icon_name(self, icon):
-        if gio.pygio_version >= (2, 17, 0) and isinstance(icon, gio.EmblemedIcon):
+        if isinstance(icon, gio.EmblemedIcon):
             icon = icon.get_icon()
 
         if isinstance(icon, gio.ThemedIcon):
@@ -424,7 +435,8 @@ class YamaApplet:
             return icon.get_file().get_path()
 
     def get_first_existing_icon(self, icons):
-        return filter(self.icon_theme.has_icon, icons)[0]
+        existing_icons = filter(self.icon_theme.has_icon, icons)
+        return existing_icons[0] if len(existing_icons) > 0 else "image-missing"
 
     def append_volumes(self):
         # Delete old items
@@ -442,7 +454,7 @@ class YamaApplet:
                 tooltip = name
             else:
                 icon_name = self.get_icon_name(volume.get_icon())
-                tooltip = "Mount %s" % name
+                tooltip = _("Mount %s") % name
 
             item = self.create_menu_item(name, icon_name, tooltip)
             self.places_menu.insert(item, index)
@@ -450,15 +462,19 @@ class YamaApplet:
             self.volume_items.append(item)
 
             if mount is not None:
-                url = mount.get_root().get_uri()
-                item.connect("activate", self.open_folder_cb, url)
+                uri = mount.get_root().get_uri()
+                item.connect("activate", self.open_folder_cb, uri)
             else:
                 def mount_volume(widget, vol):
                     def mount_result(vol2, result):
-                        if volume.mount_finish(result):
-                            url = volume.get_mount().get_root().get_uri()
-                            self.open_folder_cb(None, url)
-                    volume.mount(gio.MountOperation(), mount_result)
+                        try:
+                            if vol2.mount_finish(result):
+                                uri = vol2.get_mount().get_root().get_uri()
+                                self.open_uri(uri)
+                        except glib.GError, e:
+                            error_dialog = self.UnableToMountErrorDialog(self.applet, vol2.get_name(), e)
+                            error_dialog.show_all()
+                    vol.mount(gio.MountOperation(), mount_result)
                 item.connect("activate", mount_volume, volume)
 
     def append_mounts(self):
@@ -478,13 +494,12 @@ class YamaApplet:
                 index += 1
                 self.mount_items.append(item)
 
-                url = mount.get_root().get_uri()
-                item.connect("activate", self.open_folder_cb, url)
+                uri = mount.get_root().get_uri()
+                item.connect("activate", self.open_folder_cb, uri)
 
     def create_menu_item(self, label, icon_name, comment):
         item = gtk.ImageMenuItem(label)
-        if gtk.gtk_version >= (2, 16, 0):
-            item.props.always_show_image = True
+        item.props.always_show_image = True
         icon_pixbuf = self.get_pixbuf_icon(icon_name)
         item.set_image(gtk.image_new_from_pixbuf(icon_pixbuf))
         if comment is not None:
@@ -497,28 +512,44 @@ class YamaApplet:
         return item
 
     def launch_app(self, widget, desktop_path):
-        if os.path.exists(desktop_path):
-            path = DesktopEntry.DesktopEntry(desktop_path).getExec()
+        file = vfs.File.for_path(desktop_path)
 
-            # Strip last part of path if it contains %<a-Z>
-            match = exec_pattern.match(path)
-            if match is not None:
-                path = match.group(1)
+        if file is not None and file.exists():
+            entry = fdo.DesktopEntry.for_file(file)
 
-            self.start_subprocess_cb(None, path, True)
+            if entry.key_exists("Exec"):
+                try:
+                    entry.launch(0, None)
+                except glib.GError, e:
+                    print "Error when launching: %s" % e
+        else:
+            print "File not found (%s)" % desktop_path
 
     def append_directory(self, tree, menu, index=None, item_list=None):
         for node in tree.contents:
-            if not isinstance(node, gmenu.Entry) and not isinstance(node, gmenu.Directory):
-                continue
-            # Don't set comment yet because we don't want it for submenu's
-            item = self.create_menu_item(node.name, node.icon, None)
+            is_entry = isinstance(node, gmenu.Entry)
+            is_separator = isinstance(node, gmenu.Separator)
+            is_directory = isinstance(node, gmenu.Directory)
 
-            menu.append(item) if index is None else menu.insert(item, index)
+            if not is_entry and not is_directory and not is_separator:
+                continue
+
+            if is_separator:
+                item = gtk.SeparatorMenuItem()
+            else:
+                # Don't set comment yet because we don't want it for submenu's
+                item = self.create_menu_item(node.name, node.icon, None)
+
+            if index is None:
+                menu.append(item)
+            else:
+                menu.insert(item, index)
+                index += 1
+
             if item_list is not None:
                 item_list.append(item)
 
-            if isinstance(node, gmenu.Entry):
+            if is_entry:
                 item.set_tooltip_text(node.comment)
                 item.connect("activate", self.launch_app, node.desktop_file_path)
 
@@ -527,23 +558,24 @@ class YamaApplet:
                 if node.icon is not None:
                     item.drag_source_set_icon_name(node.icon)
                 item.connect("drag-data-get", self.drag_item_cb, node.desktop_file_path)
-            else:
+            elif is_directory:
                 sub_menu = gtk.Menu()
                 item.set_submenu(sub_menu)
                 self.append_directory(node, sub_menu)
-            if index is not None:
-                index += 1
 
     def drag_item_cb(self, widget, context, selection_data, info, time, path):
         selection_data.set_uris(["file://" + path])
 
     def append_awn_desktop(self, menu, desktop_name):
-        for dir in BaseDirectory.xdg_data_dirs:
+        for dir in xdg_data_dirs:
             path = os.path.join(dir, "applications", desktop_name + ".desktop")
-            if os.path.isfile(path):
-                desktop_entry = DesktopEntry.DesktopEntry(path)
-                item = self.append_menu_item(menu, desktop_entry.getName(), desktop_entry.getIcon(), desktop_entry.getComment())
-                item.connect("activate", self.launch_app, desktop_entry.getFileName())
+            file = vfs.File.for_path(path)
+
+            if file is not None and file.exists():
+                entry = fdo.DesktopEntry.for_file(file)
+
+                item = self.append_menu_item(menu, entry.get_localestring("Name"), entry.get_icon(), entry.get_localestring("Comment"))
+                item.connect("activate", self.launch_app, file.props.path)
                 return True
         return False
 
@@ -554,7 +586,7 @@ class YamaApplet:
         if os.path.isabs(icon_value):
             if os.path.isfile(icon_value):
                 try:
-                    return gtk.gdk.pixbuf_new_from_file_at_size(icon_value, 24, 24)
+                    return gtk.gdk.pixbuf_new_from_file_at_size(icon_value, item_icon_size, item_icon_size)
                 except glib.GError:
                     return None
             icon_name = os.path.basename(icon_value)
@@ -565,36 +597,46 @@ class YamaApplet:
             icon_name = icon_name[:-4]
         try:
             self.icon_theme.handler_block_by_func(self.theme_changed_cb)
-            return self.icon_theme.load_icon(icon_name, 24, gtk.ICON_LOOKUP_FORCE_SIZE)
+            return self.icon_theme.load_icon(icon_name, item_icon_size, gtk.ICON_LOOKUP_FORCE_SIZE)
         except:
-            for dir in BaseDirectory.xdg_data_dirs:
+            for dir in xdg_data_dirs:
                 for i in ("pixmaps", "icons"):
                     path = os.path.join(dir, i, icon_value)
                     if os.path.isfile(path):
-                        return gtk.gdk.pixbuf_new_from_file_at_size(path, 24, 24)
+                        return gtk.gdk.pixbuf_new_from_file_at_size(path, item_icon_size, item_icon_size)
         finally:
             self.icon_theme.handler_unblock_by_func(self.theme_changed_cb)
 
     class ClearRecentDocumentsDialog(awnlib.Dialogs.BaseDialog, gtk.MessageDialog):
 
         def __init__(self, parent, clear_cb):
-            gtk.MessageDialog.__init__(self, type=gtk.MESSAGE_WARNING, message_format="Clear the Recent Documents list?", buttons=gtk.BUTTONS_CANCEL)
+            gtk.MessageDialog.__init__(self, type=gtk.MESSAGE_WARNING, message_format=_("Clear the Recent Documents list?"), buttons=gtk.BUTTONS_CANCEL)
             awnlib.Dialogs.BaseDialog.__init__(self, parent)
 
             self.set_skip_taskbar_hint(False)
 
-            self.set_title("Clear Recent Documents")
-            self.format_secondary_markup("Clearing the Recent Documents list will clear the following:\n\
+            self.set_title(_("Clear Recent Documents"))
+            self.format_secondary_markup(_("Clearing the Recent Documents list will clear the following:\n\
 * All items from the Places > Recent Documents menu item.\n\
-* All items from the recent documents list in all applications.")
+* All items from the recent documents list in all applications."))
 
-            clear_button = gtk.Button("C_lear")
+            clear_button = gtk.Button(stock=gtk.STOCK_CLEAR)
             clear_button.set_image(gtk.image_new_from_stock(gtk.STOCK_CLEAR, gtk.ICON_SIZE_MENU))
             def clear_and_hide(widget):
                 self.response(gtk.RESPONSE_CANCEL)
                 clear_cb()
             clear_button.connect("clicked", clear_and_hide)
             self.action_area.add(clear_button)
+
+    class UnableToMountErrorDialog(awnlib.Dialogs.BaseDialog, gtk.MessageDialog):
+
+        def __init__(self, parent, volume_name, error):
+            gtk.MessageDialog.__init__(self, type=gtk.MESSAGE_ERROR, message_format=_("Unable to mount %s") % volume_name, buttons=gtk.BUTTONS_OK)
+            awnlib.Dialogs.BaseDialog.__init__(self, parent)
+
+            self.set_skip_taskbar_hint(True)
+
+            self.format_secondary_markup(str(error))
 
 
 if __name__ == "__main__":
@@ -604,6 +646,6 @@ if __name__ == "__main__":
         "description": applet_description,
         "theme": applet_logo,
         "author": "onox",
-        "copyright-year": 2009,
+        "copyright-year": "2009 - 2010",
         "authors": ["onox <denkpadje@gmail.com>"]},
         ["no-tooltip"])

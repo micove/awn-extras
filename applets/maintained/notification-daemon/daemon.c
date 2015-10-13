@@ -49,6 +49,10 @@
 #include <glib/gprintf.h>
 
 #include <libnotify/notify.h>
+#ifndef NOTIFY_CHECK_VERSION
+#define NOTIFY_CHECK_VERSION(x,y,z) 0
+#endif
+
 
 #include <glib/gprintf.h>
 
@@ -1487,7 +1491,13 @@ gboolean send_message(gchar *body)
   if (fork() == 0)
   {
     notify_init("notify-send");
-    notify = notify_notification_new(summary, body, icon_str, NULL);
+    notify = notify_notification_new(summary, body, icon_str
+#if NOTIFY_CHECK_VERSION (0, 7, 0)
+
+#else
+		, NULL
+#endif
+);
     notify_notification_set_category(notify, type);
     notify_notification_set_urgency(notify, urgency);
     notify_notification_set_timeout(notify, expire_timeout);
@@ -1748,7 +1758,10 @@ AwnApplet* awn_applet_factory_initp(const gchar *name,
 
   g_log_set_always_fatal(G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
-  sound_init();
+/*  
+   //Disabling sound until gstreamer init crash can be fixed.
+   sound_init();
+   */
 
   conf_client = awn_config_get_default_for_applet(AWN_APPLET(applet), NULL);
 

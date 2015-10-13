@@ -20,6 +20,7 @@ Email: awn-bwm@curetheitch.com
 '''
 
 from awn.extras import _
+
 import gobject
 import gtk
 
@@ -29,13 +30,43 @@ class Preferences:
     def __init__(self, applet, parent):
         self.applet = applet
         self.parent = parent
+        self.preferences_dialog = self.applet.dialog.new('preferences')
+        self.preferences_dialog.connect('show', self.show_event_cb)
+
+    def create_display_parameter_list(self):
+        cell_box = self.create_treeview()
+        store = cell_box.liststore
+        ddps = 'device_display_parameters'
+        prefs = self.parent.applet.settings[ddps]
+        for device_pref in prefs:
+            dpv = device_pref.split('|')
+            iface = dpv[0]
+            sum_include = dpv[1]
+            muti_include = dpv[2]
+            current_iter = store.append([iface, sum_include,
+                muti_include, '', '', '#ff0000', '#ffff00'])
+        ifaces = self.parent.netstats.ifaces
+        for iface in sorted(self.parent.netstats.ifaces):
+            if not _('Multi Interface') in iface \
+            and not _('Sum Interface') in iface and \
+            not iface in prefs.__str__():
+                sum_include = True if ifaces[iface]['sum_include'] \
+                    else False
+                multi_include = True if ifaces[iface]['multi_include'] \
+                    else False
+                current_iter = store.append([iface, sum_include,
+                    multi_include, '', '', '#ff0000', '#ffff00'])
+        for child in self.prefs_ui.get_object('scrolledwindow1').get_children():
+            self.prefs_ui.get_object('scrolledwindow1').remove(child)
+            del child
+        self.prefs_ui.get_object('scrolledwindow1').add_with_viewport(cell_box)
+        cell_box.show_all()
 
     def setup(self):
         prefs_ui = gtk.Builder()
+        self.prefs_ui = prefs_ui
         prefs_ui.add_from_file(self.parent.UI_FILE)
-        preferences_vbox = self.applet.dialog.new('preferences').vbox
-        cell_box = self.create_treeview()
-        store = cell_box.liststore
+        preferences_vbox = self.preferences_dialog.vbox
         scaleThresholdSBtn = prefs_ui.get_object('scaleThresholdSBtn')
         thresholdLabel = prefs_ui.get_object('label-scaleThreshold')
         scaleThresholdSBtn.set_value(
@@ -88,21 +119,81 @@ class Preferences:
         labelNoneRadiobutton.connect('toggled', self.labelRadio_cb, 0)
         labelSumRadiobutton.connect('toggled', self.labelRadio_cb, 1)
         labelBothRadiobutton.connect('toggled', self.labelRadio_cb, 2)
-        for iface in sorted(self.parent.netstats.ifaces):
-            if not 'Multi Interface' in iface \
-            and not 'Sum Interface' in iface:
-                if self.parent.netstats.ifaces[iface]['sum_include'] == True:
-                    sum_include = 1
-                else:
-                    sum_include = 0
-                if self.parent.netstats.ifaces[iface]['multi_include'] == True:
-                    muti_include = 1
-                else:
-                    muti_include = 0
-                current_iter = store.append([iface, sum_include,
-                    muti_include, '', '', '#ff0000', '#ffff00'])
-        prefs_ui.get_object('scrolledwindow1').add_with_viewport(cell_box)
+        displayGraphbutton = prefs_ui.get_object('appletGraphCheckbutton')
+        displayGraphbutton.set_active(self.applet.settings['display_graph'])
+        displayGraphbutton.connect('toggled', self.displayGraphbutton_cb)
+        widthSpinButton = prefs_ui.get_object('appletWidthSpinButton')
+        widthSpinButton.set_value(
+            float(self.applet.settings['applet_width']))
+
+        def adjust_applet_width(adj):
+            self.applet.settings['applet_width'] = adj.get_value()
+        widthSpinButton.connect('value-changed', adjust_applet_width)
+        # Applet Font Size
+        fontSizeSpinButton = prefs_ui.get_object('appletFontSizeSpinButton')
+        fontSizeSpinButton.set_value(
+            float(self.applet.settings['applet_font_size']))
+
+        def adjust_applet_font(adj):
+            self.applet.settings['applet_font_size'] = adj.get_value()
+        fontSizeSpinButton.connect('value-changed', adjust_applet_font)
+        # Applet Traffic Scale
+        appletTrafficScaleSB = prefs_ui.get_object('appletTrafficScaleSpinButton')
+        appletTrafficScaleSB.set_value(
+            self.applet.settings['applet_traffic_scale'])
+
+        def adjust_applet_traffic_scale(adj):
+            self.applet.settings['applet_traffic_scale'] = adj.get_value()
+        appletTrafficScaleSB.connect('value-changed', adjust_applet_traffic_scale)
+        # Applet Signal Scale
+        appletSignalScaleSB = prefs_ui.get_object('appletSignalScaleSpinButton')
+        appletSignalScaleSB.set_value(
+            self.applet.settings['applet_signal_scale'])
+
+        def adjust_applet_signal_scale(adj):
+            self.applet.settings['applet_signal_scale'] = adj.get_value()
+        appletSignalScaleSB.connect('value-changed', adjust_applet_signal_scale)
+        # Dialog Traffic Scale
+        dialogTrafficScaleSB = prefs_ui.get_object('dialogTrafficScaleSpinButton')
+        dialogTrafficScaleSB.set_value(
+            self.applet.settings['dialog_traffic_scale'])
+
+        def adjust_dialog_traffic_scale(adj):
+            self.applet.settings['dialog_traffic_scale'] = adj.get_value()
+        dialogTrafficScaleSB.connect('value-changed', adjust_dialog_traffic_scale)
+        # Dialog Signal Scale
+        dialogSignalScaleSB = prefs_ui.get_object('dialogSignalScaleSpinButton')
+        dialogSignalScaleSB.set_value(
+            self.applet.settings['dialog_signal_scale'])
+
+        def adjust_dialog_signal_scale(adj):
+            self.applet.settings['dialog_signal_scale'] = adj.get_value()
+        dialogSignalScaleSB.connect('value-changed', adjust_dialog_signal_scale)
+        # Applet Size Override
+        appletSizeSB = prefs_ui.get_object('appletSizeSpinButton')
+        appletSizeSB.set_value(
+            self.applet.settings['applet_size_override'])
+
+        def adjust_applet_size_override(adj):
+            self.applet.settings['applet_size_override'] = adj.get_value()
+            self.applet.props.size = self.parent.original_size + adj.get_value()
+        appletSizeSB.connect('value-changed', adjust_applet_size_override)
+        # Applet Offset
+        appletOffsetSB = prefs_ui.get_object('appletOffsetSpinButton')
+        appletOffsetSB.set_value(
+            self.applet.settings['applet_offset'])
+
+        def adjust_applet_offset(adj):
+            self.applet.settings['applet_offset'] = adj.get_value()
+            self.applet.props.offset = self.parent.original_applet_offset + \
+                adj.get_value()
+        appletOffsetSB.connect('value-changed', adjust_applet_offset)
+
         prefs_ui.get_object('dialog-notebook').reparent(preferences_vbox)
+
+    def displayGraphbutton_cb(self, widget):
+        self.parent.display_graph = widget.get_active()
+        self.applet.settings['display_graph'] = self.parent.display_graph
 
     def graphZeroToggle_cb(self, widget):
         self.parent.graph_zero = 0 if widget.get_active() else 1
@@ -123,6 +214,8 @@ class Preferences:
         treeview.set_enable_search(True)
         treeview.position = 0
         rows = gtk.VBox(False, 3)
+        if hasattr(self, 'liststore'):
+            del self.liststore
         self.liststore = liststore
         listcols = gtk.HBox(False, 0)
         prows = gtk.VBox(False, 0)
@@ -193,10 +286,13 @@ class Preferences:
 
     def devlist_cell_func(self, column, cell, model, iter):
         ''' Changes the cell color to match the preferece or selected value '''
-        device = self.liststore.get_value(iter, 0)
-        column_title = column.get_title().lower().split(' ')[0]
-        cell.set_property('cell-background',
-            self.get_color(device, column_title))
+        try:
+            device = self.liststore.get_value(iter, 0)
+            column_title = column.get_title().lower().split(' ')[0]
+            cell.set_property('cell-background',
+                self.get_color(device, column_title))
+        except:
+            pass
 
     def bgCheckbutton_cb(self, widget):
         self.applet.settings['background'] = widget.get_active()
@@ -246,8 +342,9 @@ class Preferences:
         response = colorseldlg.run()
         if response == gtk.RESPONSE_OK:
             self.color_choice = colorseldlg.colorsel.get_current_color()
-            self.parent.netstats.ifaces[model[path][0]]['%s_color' \
-                % prop.lower()] = self.color_choice.to_string()
+            if model[path][0] in self.parent.netstats.ifaces:
+                self.parent.netstats.ifaces[model[path][0]]['%s_color' \
+                    % prop.lower()] = self.color_choice.to_string()
             prefs = self.applet.settings['device_display_parameters']
             if not prefs:
                 prefs = ['%s|True|True|None|None' % (model[path][0])]
@@ -278,3 +375,6 @@ class Preferences:
                 dpv[col_number] = str(parameter)
                 prefs[i] = '|'.join(dpv)
         self.applet.settings['device_display_parameters'] = prefs
+
+    def show_event_cb(self, *args):
+        self.create_display_parameter_list()

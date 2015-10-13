@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # stacks_gui_curved  version 0.2
 # Copyright (c) 2007 SilentStorm aka Wim Wauters
 # based on stacks_gui_dialog.py by Randal Barlow
@@ -21,71 +20,17 @@
 
 detected_errors = None
 
-try:
- 	import sys
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + detected_errors + " * Error importing sys \n"
-try:
-	import os
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing os \n"
-try:
-	import gtk
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing gtk \n"
-try:
-	from gtk import gdk
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing gdk \n"
-try:
-	import gobject
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing gobject \n"
-try:
-	import pango
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing pango \n"
-try:
-	import awn
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing awn \n"
-try:
-	import cairo
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing cairo \n"
-try:
-	import gnome.ui
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing gnome.ui \n"
-try:
-	import gnomedesktop
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing gnomedesktop \n"
-try:
-	import time
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing time \n"
-try:
-	import math
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing math \n"	
-try:
-	import pangocairo
-except ImportError:
-	if not detected_errors: detected_errors = ""
-	detected_errors = detected_errors + " * Error importing pangocairo \n"	
+import math
+import os
+
+import gtk
+from gtk import gdk
+import gobject
+
+import awn
+import cairo
+import pango
+import pangocairo
 
 from awn.extras import _
 from desktopagnostic import Color
@@ -93,8 +38,6 @@ from desktopagnostic import Color
 from stacks_backend import *
 from stacks_backend_file import *
 from stacks_backend_folder import *
-from stacks_backend_plugger import *
-from stacks_backend_trasher import *
 from stacks_config import StacksConfig
 from stacks_launcher import LaunchManager
 from stacks_icons import IconFactory
@@ -277,15 +220,13 @@ class StacksGuiCurved(gtk.Window):
         self.tooltip_image = gtk.Image()
         
         self.tooltip_label = gtk.Label("")
-        
+
         hbox = gtk.HBox(False, 0)
-        
+
         hbox.pack_start(self.tooltip_image, False, False, 5)  
         hbox.pack_start(self.tooltip_label, False, False, 10)  
         self.tooltip_window.add(hbox)
-        
-        
-        
+
         self.evb.add_events(gtk.gdk.BUTTON_PRESS_MASK |
                         gtk.gdk.BUTTON_RELEASE_MASK |
                         gtk.gdk.POINTER_MOTION_MASK |
@@ -296,7 +237,7 @@ class StacksGuiCurved(gtk.Window):
                         gtk.gdk.DRAG_STATUS |
                         gtk.gdk.DROP_START |
                         gtk.gdk.DROP_FINISHED)
-            
+
         self.evb.connect('button-release-event', self.button_release)
         self.evb.connect('motion-notify-event', self.mouse_moved)
         self.evb.connect('leave-notify-event', self.focus_out)
@@ -332,7 +273,7 @@ class StacksGuiCurved(gtk.Window):
     	if self.active_button <> None:
         	target_uri = self.stack_items[self.active_button-1].vfs_uri
         	mimetype = self.stack_items[self.active_button-1].mime_type
-        	
+
         	if mimetype == "x-directory/normal":
         		
         		vfs_uris = []
@@ -341,31 +282,20 @@ class StacksGuiCurved(gtk.Window):
         				vfs_uris.append(VfsUri(uri))
         			except TypeError:
         				pass   
-        		if context.action == gtk.gdk.ACTION_LINK:
-        			options = gnomevfs.XFER_LINK_ITEMS
-        		elif context.action == gtk.gdk.ACTION_MOVE:
-        			options = gnomevfs.XFER_REMOVESOURCE
-        		elif context.action == gtk.gdk.ACTION_COPY:
-        			options = gnomevfs.XFER_DEFAULT
-        		else:
-        			return False
-        			
+
         		src_lst = []
         		dst_lst = []
         		vfs_uri_lst = []
         		for vfs_uri in vfs_uris:
-        			dst_uri = target_uri.as_uri().append_path(vfs_uri.as_uri().short_name)
+        			dst_uri = target_uri.create_child(vfs_uri.as_uri())
         			src_lst.append(vfs_uri.as_uri())
         			dst_lst.append(dst_uri)
-        			
-        		GUITransfer(src_lst, dst_lst, options)
+
+        		GUITransfer(src_lst, dst_lst, context.action)
         		return True
 
-
-        	
-
         self.applet.effects.stop(awn.EFFECT_LAUNCHING)
-        
+ 
         return False
 
 
@@ -583,6 +513,7 @@ class StacksGuiCurved(gtk.Window):
 
     def _destroy_cb(self, widget):
         for id in self.signal_ids: self.applet.disconnect(id)
+        del self.signal_ids[:]
 
     def _stacks_gui_request_hide(self, widget = None):
     	if self.hide_timer == None:
@@ -640,12 +571,7 @@ class StacksGuiCurved(gtk.Window):
     def item_activated_cb(self, widget, user_data):
         uri, mimetype = user_data
         if uri.as_string().endswith(".desktop"):
-            item = gnomedesktop.item_new_from_uri(
-                    uri.as_string(), gnomedesktop.LOAD_ONLY_IF_EXISTS)
-            if item:
-                command = item.get_string(gnomedesktop.KEY_EXEC)
-                #LaunchManager().launch_command(command, uri.as_string())
-                LaunchManager().launch_dot_desktop(uri.as_string())
+            LaunchManager().launch_dot_desktop(uri.as_string())
         else:
             LaunchManager().launch_uri(uri.as_string(), mimetype)
         self._stacks_gui_hide_cb()
@@ -1392,7 +1318,7 @@ class CurvedStacksConfig(GladeWindow):
     	
     	#save configuration
     	#save label configuration
-    	client.set_int(GROUP_CURVED, "label_length", self.widgets['label_length_box'].get_value())
+    	client.set_int(GROUP_CURVED, "label_length", int(round(self.widgets['label_length_box'].get_value())))
     	saveColor(client, "label_text_color",self.widgets['label_text_color'].get_color(),self.widgets['label_text_color'].get_alpha())
     	saveColor(client, "label_text_hover_color",self.widgets['label_text_hover_color'].get_color(),self.widgets['label_text_hover_color'].get_alpha())
     	saveColor(client, "label_background_color",self.widgets['label_background_color'].get_color(),self.widgets['label_background_color'].get_alpha())
@@ -1403,9 +1329,9 @@ class CurvedStacksConfig(GladeWindow):
     	client.set_string(GROUP_CURVED, "label_font",self.widgets['font_selector'].get_font_name())
     
         #save layout configuration
-        client.set_int(GROUP_CURVED, "layout_radius",self.widgets['layout_radius'].get_value())
-        client.set_int(GROUP_CURVED, "layout_interval",self.widgets['layout_interval'].get_value())
-        client.set_int(GROUP_CURVED, "layout_direction",self.widgets['layout_direction'].get_active())
+        client.set_int(GROUP_CURVED, "layout_radius", int(round(self.widgets['layout_radius'].get_value())))
+        client.set_int(GROUP_CURVED, "layout_interval", int(round(self.widgets['layout_interval'].get_value())))
+        client.set_int(GROUP_CURVED, "layout_direction", int(round(self.widgets['layout_direction'].get_active())))
         #save tooltip configuration
         client.set_bool(GROUP_CURVED, "tooltips_enabled",self.widgets['tooltips_enabled_checkButton'].get_active())
     	saveColor(client, "tooltip_bg_color1",self.widgets['tooltip_bg_color1'].get_color(),self.widgets['tooltip_bg_color1'].get_alpha())

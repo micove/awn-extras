@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # Copyright (c) 2007 Timon ter Braak
 #
 # This library is free software; you can redistribute it and/or
@@ -18,10 +17,14 @@
 # Boston, MA 02111-1307, USA.
 
 import os
-import gnome.ui
-import gnomevfs
+import gio
 import gtk
-import urllib
+
+try:
+    import gnome.ui
+except ImportError:
+    pass
+
 
 # Borrowed Thumbnailer from "gimmie"
 class Thumbnailer:
@@ -33,7 +36,6 @@ class Thumbnailer:
         self.cached_timestamp = None
         self.cached_size = None
 
-
     def get_icon(self, icon_size, timestamp = 0):
         if not self.cached_icon or \
                 icon_size != self.cached_size or \
@@ -44,13 +46,15 @@ class Thumbnailer:
             self.cached_timestamp = timestamp
         return self.cached_icon
 
-
     def _lookup_or_make_thumb(self, icon_size, timestamp):
-        icon_theme = gtk.icon_theme_get_default()
-        thumb_factory = gnome.ui.ThumbnailFactory("normal")
-        icon_name, icon_type = \
-                gnome.ui.icon_lookup(icon_theme, thumb_factory, self.uri, self.mimetype, 0)
+        icon_name = None
+
+        # FIXME replace gnome.ui usage by something else
         try:
+            icon_theme = gtk.icon_theme_get_default()
+            thumb_factory = gnome.ui.ThumbnailFactory("normal")
+            icon_name, icon_type = \
+                gnome.ui.icon_lookup(icon_theme, thumb_factory, self.uri, self.mimetype, 0)
             if icon_type == gnome.ui.ICON_LOOKUP_RESULT_FLAGS_THUMBNAIL or \
                     thumb_factory.has_valid_failed_thumbnail(self.uri, timestamp):
                 # Use existing thumbnail
@@ -68,11 +72,10 @@ class Thumbnailer:
         except:
             pass
 
+        if icon_name is None:
+            icon_name = "image-missing"
         # Fallback to mime-type icon on failure
-        thumb = IconFactory().load_icon(icon_name, icon_size)
-        
-        return thumb
-
+        return IconFactory().load_icon(icon_name, icon_size)
 
     def _is_local_uri(self, uri):
         # NOTE: gnomevfs.URI.is_local seems to hang for some URIs (e.g. ssh
@@ -110,7 +113,6 @@ class IconFactory:
                 pass
         return None
 
-
     def load_icon_from_data_dirs(self, icon_value, icon_size = None):
         data_dirs = None
         if os.environ.has_key("XDG_DATA_DIRS"):
@@ -131,7 +133,6 @@ class IconFactory:
 
         return None
 
-
     def scale_to_bounded(self, icon, size):
         if icon:
             if icon.get_height() > size:
@@ -143,13 +144,12 @@ class IconFactory:
                     icon = _icon
             if icon.get_width() > size:
                 _icon = icon.scale_simple(
-                        size,
-                        size * icon.get_height() / icon.get_width(),
+                        int(round(size)),
+                        int(round(size * icon.get_height() / icon.get_width())),
                         gtk.gdk.INTERP_BILINEAR)
                 if _icon is not None:
                     icon = _icon
         return icon
-
 
     def load_icon(self, icon_value, icon_size, force_size = True):
         assert icon_value, "No icon to load!"
@@ -184,7 +184,7 @@ class IconFactory:
         icon = None
         icon_theme = gtk.icon_theme_get_default()
         info = icon_theme.lookup_icon(icon_name, icon_size, gtk.ICON_LOOKUP_USE_BUILTIN)
-        
+
         if info:
             if icon_name.startswith("gtk-"):
                 # NOTE: IconInfo/IconTheme.load_icon leaks a ref to the icon, so
@@ -201,9 +201,7 @@ class IconFactory:
             return self.scale_to_bounded(icon, icon_size)
         return icon
 
-
-    def load_image(self, icon_value, icon_size, force_size = True):
-    	
+    def load_image(self, icon_value, icon_size, force_size=True):
         pixbuf = self.load_icon(icon_value, icon_size, force_size)
         img = gtk.Image()
         img.set_from_pixbuf(pixbuf)

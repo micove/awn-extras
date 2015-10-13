@@ -23,8 +23,7 @@
 
 #include <string.h>
 
-#include <glib/gmacros.h>
-#include <glib/gerror.h>
+#include <glib.h>
 #include <glib/gi18n.h>
 #include <gtk/gtk.h>
 #include <libdesktop-agnostic/fdo.h>
@@ -296,7 +295,7 @@ populate (Menu *app)
   gtk_box_pack_start (GTK_BOX (vbox), table, TRUE, TRUE, 0);
 
   apps = gmenu_tree_directory_get_contents (app->root);
-  if (app->root == GMENU_TREE_DIRECTORY(gmenu_tree_get_root_directory ((GMenuTree*)app->apps)))
+  if (app->root == GMENU_TREE_DIRECTORY(gmenu_tree_get_root_directory ((GMenuTree*)app->apps)) && app->settings)
   {
     list = g_slist_copy (apps);
     sets = g_slist_copy (gmenu_tree_directory_get_contents (app->settings));
@@ -371,8 +370,7 @@ on_icon_clicked (GtkWidget *eb,
   }
   else if (event->button == 3)
   {
-    gtk_menu_popup(GTK_MENU(app->menu), NULL, NULL, NULL, NULL,event->button, 
-                   event->time);
+    awn_applet_popup_gtk_menu (AWN_APPLET (eb), app->menu, event->button, event->time);
   }
   return TRUE;
 }
@@ -424,7 +422,7 @@ awn_applet_factory_initp (const gchar *name, const gchar *uid, gint panel_id)
   if (!app->settings)
   {
     g_warning ("Unable to find settings.menu");
-    return FALSE;
+    //return FALSE;
   }
   app->tree =  (GMenuTree*)app->apps;
 
@@ -447,7 +445,7 @@ awn_applet_factory_initp (const gchar *name, const gchar *uid, gint panel_id)
                     G_CALLBACK (on_icon_clicked), (gpointer)app);
   
   awn_applet_simple_set_icon_name( AWN_APPLET_SIMPLE(app->applet),
-                                    "gnome-main-menu")  ;
+                                    "start-here")  ;
 
   awn_applet_simple_set_tooltip_text(AWN_APPLET_SIMPLE(app->applet),
                                      _("Main Menu"));

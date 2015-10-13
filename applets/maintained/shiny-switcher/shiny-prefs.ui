@@ -94,7 +94,6 @@
     </data>
   </object>
   <object class="GtkDialog" id="dialog1">
-    <property name="width_request">375</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Shiny Switcher Preferences</property>
     <property name="resizable">False</property>
@@ -212,6 +211,7 @@
                                 <property name="use_underline">True</property>
                                 <property name="active">True</property>
                                 <property name="draw_indicator">True</property>
+                                <property name="group">customBackgroundRadio</property>
                                 <signal name="toggled" handler="grabWallpaperRadio_toggled_cb"/>
                               </object>
                               <packing>
@@ -230,7 +230,6 @@
                                     <property name="receives_default">False</property>
                                     <property name="use_underline">True</property>
                                     <property name="draw_indicator">True</property>
-                                    <property name="group">grabWallpaperRadio</property>
                                     <signal name="toggled" handler="customBackgroundRadio_toggled_cb"/>
                                   </object>
                                   <packing>

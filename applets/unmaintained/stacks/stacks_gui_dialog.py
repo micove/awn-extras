@@ -17,23 +17,15 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-import sys
-import os
 import gtk
 from gtk import gdk
 import gobject
 import pango
 import awn
-import cairo
-import gnome.ui
-import gnomedesktop
-import time
 
 from stacks_backend import *
 from stacks_backend_file import *
 from stacks_backend_folder import *
-from stacks_backend_plugger import *
-from stacks_backend_trasher import *
 from stacks_config import StacksConfig
 from stacks_launcher import LaunchManager
 from stacks_icons import IconFactory
@@ -87,6 +79,7 @@ class StacksGuiDialog:
         
     def _destroy_cb(self, widget):
         for id in self.signal_ids: self.applet.disconnect(id)
+        del self.signal_ids[:]
         if self.dialog: self.dialog.destroy()
 
     def _stacks_gui_hide_cb(self, widget = None):
@@ -142,12 +135,7 @@ class StacksGuiDialog:
     def item_activated_cb(self, widget, user_data):
         uri, mimetype = user_data
         if uri.as_string().endswith(".desktop"):
-            item = gnomedesktop.item_new_from_uri(
-                    uri.as_string(), gnomedesktop.LOAD_ONLY_IF_EXISTS)
-            if item:
-                command = item.get_string(gnomedesktop.KEY_EXEC)
-                #LaunchManager().launch_command(command, uri.as_string())
-                LaunchManager().launch_dot_desktop(uri.as_string())
+            LaunchManager().launch_dot_desktop(uri.as_string())
         else:
             LaunchManager().launch_uri(uri.as_string(), mimetype)
         self._stacks_gui_hide_cb(widget)
@@ -161,45 +149,34 @@ class StacksGuiDialog:
         self.just_dragged = True
 
     def button_drag_motion(self, widget, context, x, y, time):
-    	
     	return True
 
     def button_drag_leave(self, widget, context, time):
-        self.applet.effects.stop("launching")
+        self.applet.effects.stop(awn.EFFECT_LAUNCHING)
     	return
 
     def button_drag_drop(self, widget, context, x, y,
                             selection, targetType, time, target_uri):
     	self._stacks_gui_hide_cb(widget)
-    	self.applet.effects.stop("launching")
+    	self.applet.effects.stop(awn.EFFECT_LAUNCHING)
     	vfs_uris = []
     	for uri in selection.data.split():
     		try:
     			vfs_uris.append(VfsUri(uri))
     		except TypeError:
-    			pass                            	
-    	
-    	if context.action == gtk.gdk.ACTION_LINK:
-    		options = gnomevfs.XFER_LINK_ITEMS
-    	elif context.action == gtk.gdk.ACTION_MOVE:
-    		options = gnomevfs.XFER_REMOVESOURCE
-    	elif context.action == gtk.gdk.ACTION_COPY:
-    		options = gnomevfs.XFER_DEFAULT
-    	else:
-    		return False
+    			pass
 
     	src_lst = []
     	dst_lst = []
     	vfs_uri_lst = []
     	for vfs_uri in vfs_uris:
-    		dst_uri = target_uri.as_uri().append_path(vfs_uri.as_uri().short_name)
+    		dst_uri = target_uri.create_child(vfs_uri.as_uri())
     		src_lst.append(vfs_uri.as_uri())
     		dst_lst.append(dst_uri)
-    		
 
-    	GUITransfer(src_lst, dst_lst, options)
-    	
-    	
+
+    	GUITransfer(src_lst, dst_lst, context.action)
+
     	return True
 
     def item_clear_cb(self, widget, uri):

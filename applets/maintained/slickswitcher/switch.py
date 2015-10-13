@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010 sharkbaitbobby <sharkbaitbobby+awn@gmail.com>
 #
@@ -30,6 +29,8 @@ class Switch:
         #Get the screen
         self.screen = wnck.screen_get_default()
         self.screen.force_update()
+        self.active_workspace = self.screen.get_active_workspace()
+        print "active workspace:", self.active_workspace
 
         #Get screen width and height
         self.width = self.screen.get_width()
@@ -37,7 +38,7 @@ class Switch:
 
         #Connect to signals from Wnck
         self.screen.connect('active-window-changed', self.emitted)
-        self.screen.connect('active-workspace-changed', self.emitted)
+        self.screen.connect('active-workspace-changed', self.workspace_changed)
         self.screen.connect('window-manager-changed', self.emitted)
         self.screen.connect('window-stacking-changed', self.emitted)
         self.screen.connect('viewports-changed', self.emitted)
@@ -51,35 +52,48 @@ class Switch:
         for func in self.connected_functions:
             func()
 
+    def workspace_changed(self, *args):
+        self.active_workspace = self.screen.get_active_workspace()
+        if self.active_workspace == None: print "AAAAAAAAAAAAAA"
+        self.emitted()
+
     #Return the number of columns
     def get_num_columns(self, current_workspace=None):
         #Get the active workspace if necessary
         if current_workspace is None:
-            current_workspace = self.screen.get_active_workspace()
+            current_workspace = self.active_workspace
 
         #Get the workspace width
         workspace_width = current_workspace.get_width()
 
         #Return the number of columns
-        return workspace_width / self.width
+        num = workspace_width / self.width
+        if num <= 0:
+            return 1
+        else:
+            return num
 
     #Return the number of rows
     def get_num_rows(self, current_workspace=None):
         #Get the active workspace if necessary
         if current_workspace is None:
-            current_workspace = self.screen.get_active_workspace()
+            current_workspace = self.active_workspace
 
         #Get the workspace height
         workspace_height = current_workspace.get_height()
 
         #Return the number of columns
-        return workspace_height / self.height
+        num = workspace_height / self.height
+        if num <= 0:
+            return 1
+        else:
+            return num
 
     #Return the number of the current workspace
     def get_current_workspace_num(self, current_workspace=None):
         #Get the active workspace if necessary
         if current_workspace is None:
-            current_workspace = self.screen.get_active_workspace()
+            current_workspace = self.active_workspace
 
         if not current_workspace.is_virtual():
             return current_workspace.get_number() + 1
@@ -106,6 +120,9 @@ class Switch:
     def move(self, direction):
         #Get the current workspace
         current_workspace = self.screen.get_active_workspace()
+
+        if current_workspace is None:
+            return
 
         #Get the number of the current workspace
         current_workspace_num = self.get_current_workspace_num(current_workspace)

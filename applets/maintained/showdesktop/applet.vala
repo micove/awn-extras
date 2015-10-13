@@ -33,9 +33,9 @@ class ShowDesktop : AppletSimple
   {
     unowned Wnck.Screen screen;
 
-    this.canonical_name = canonical_name;
-    this.uid = uid;
-    this.panel_id = panel_id;
+    GLib.Object (canonical_name: canonical_name,
+                 uid: uid,
+                 panel_id: panel_id);
 
     this.display_name = Gettext._ ("Show Desktop");
     this.clicked.connect (this.on_clicked);
@@ -82,7 +82,7 @@ class ShowDesktop : AppletSimple
       this._menu.append (about_item as Gtk.MenuItem);
     }
     this._menu.set_screen (null);
-    this._menu.popup (null, null, null, event.button, event.time);
+    this.get_icon ().popup_gtk_menu (this._menu, event.button, event.time);
   }
 
   private void
