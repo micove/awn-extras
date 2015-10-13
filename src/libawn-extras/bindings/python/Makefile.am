@@ -4,16 +4,17 @@ NULL =
 pyawn_extrasdir = $(PYTHON_SITE_PKG)/awn/extras
 pyawn_extras_PYTHON =	\
 	__init__.py	\
-	AWNLib.py	\
+	awnlib.py	\
 	awnmediaplayers.py	\
 	detach.py
 
-AM_CFLAGS = \
+INCLUDES = \
 	$(PYTHON_CPPFLAGS) \
 	$(PYGTK_CFLAGS) \
 	$(PYCAIRO_CFLAGS) \
 	$(AWN_CFLAGS) \
 	-I$(top_builddir)/src \
+	-I$(top_srcdir)/src \
 	-DHAVE_PYCAIRO \
 	$(NULL)
 

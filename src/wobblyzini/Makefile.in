@@ -35,9 +35,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/wobblyzini.desktop.in.in \
-	$(top_srcdir)/Makefile.c-applet \
+DIST_COMMON = $(dist_wobblyzini_icons_DATA) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/wobblyzini.desktop.in.in \
+	$(top_srcdir)/Makefile.c-applet $(top_srcdir)/Makefile.common \
 	$(top_srcdir)/Makefile.desktop-files
 subdir = src/wobblyzini
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -56,7 +56,7 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(desktopdir)" \
-	"$(DESTDIR)$(icondir)"
+	"$(DESTDIR)$(wobblyzini_iconsdir)" "$(DESTDIR)$(icondir)"
 appletLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(applet_LTLIBRARIES)
 am__DEPENDENCIES_1 =
@@ -83,27 +83,17 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(wobblyzini_la_SOURCES)
 DIST_SOURCES = $(wobblyzini_la_SOURCES)
-RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
-	html-recursive info-recursive install-data-recursive \
-	install-dvi-recursive install-exec-recursive \
-	install-html-recursive install-info-recursive \
-	install-pdf-recursive install-ps-recursive install-recursive \
-	installcheck-recursive installdirs-recursive pdf-recursive \
-	ps-recursive uninstall-recursive
 desktopDATA_INSTALL = $(INSTALL_DATA)
+dist_wobblyzini_iconsDATA_INSTALL = $(INSTALL_DATA)
 iconDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(desktop_DATA) $(icon_DATA)
-RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
-  distclean-recursive maintainer-clean-recursive
+DATA = $(desktop_DATA) $(dist_wobblyzini_icons_DATA) $(icon_DATA)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
-AFFINITY_CFLAGS = @AFFINITY_CFLAGS@
-AFFINITY_LIBS = @AFFINITY_LIBS@
 ALL_LINGUAS = @ALL_LINGUAS@
 AMTAR = @AMTAR@
+APPLETSDIR = @APPLETSDIR@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -112,6 +102,8 @@ AWK = @AWK@
 AWN_BINDIR = @AWN_BINDIR@
 AWN_CFLAGS = @AWN_CFLAGS@
 AWN_LIBS = @AWN_LIBS@
+AWN_SYSTEM_MONITOR_CFLAGS = @AWN_SYSTEM_MONITOR_CFLAGS@
+AWN_SYSTEM_MONITOR_LIBS = @AWN_SYSTEM_MONITOR_LIBS@
 AWN_VAPIDIR = @AWN_VAPIDIR@
 CAIRO_MENU_GNOME_CFLAGS = @CAIRO_MENU_GNOME_CFLAGS@
 CAIRO_MENU_GNOME_LIBS = @CAIRO_MENU_GNOME_LIBS@
@@ -149,6 +141,8 @@ FILEBROWSER_CFLAGS = @FILEBROWSER_CFLAGS@
 FILEBROWSER_LIBS = @FILEBROWSER_LIBS@
 GCC_FLAGS = @GCC_FLAGS@
 GCONFTOOL = @GCONFTOOL@
+GCONF_CFLAGS = @GCONF_CFLAGS@
+GCONF_LIBS = @GCONF_LIBS@
 GCONF_SCHEMA_CONFIG_SOURCE = @GCONF_SCHEMA_CONFIG_SOURCE@
 GCONF_SCHEMA_FILE_DIR = @GCONF_SCHEMA_FILE_DIR@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
@@ -167,7 +161,6 @@ GSTREAMER_CFLAGS = @GSTREAMER_CFLAGS@
 GSTREAMER_LIBS = @GSTREAMER_LIBS@
 GTOP_CFLAGS = @GTOP_CFLAGS@
 GTOP_LIBS = @GTOP_LIBS@
-ICONDIR = @ICONDIR@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -235,6 +228,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PLUGGER_CFLAGS = @PLUGGER_CFLAGS@
+PLUGGER_LIBS = @PLUGGER_LIBS@
 POFILES = @POFILES@
 POSUB = @POSUB@
 PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
@@ -254,8 +249,6 @@ PYTHON_LDFLAGS = @PYTHON_LDFLAGS@
 PYTHON_SITE_PKG = @PYTHON_SITE_PKG@
 PYTHON_VERSION = @PYTHON_VERSION@
 RANLIB = @RANLIB@
-RSVG_CFLAGS = @RSVG_CFLAGS@
-RSVG_LIBS = @RSVG_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -269,6 +262,8 @@ TASKMAND_APPLET_CFLAGS = @TASKMAND_APPLET_CFLAGS@
 TASKMAND_APPLET_LIBS = @TASKMAND_APPLET_LIBS@
 TASKMAND_CFLAGS = @TASKMAND_CFLAGS@
 TASKMAND_LIBS = @TASKMAND_LIBS@
+TRASHER_CFLAGS = @TRASHER_CFLAGS@
+TRASHER_LIBS = @TRASHER_LIBS@
 TRASH_CFLAGS = @TRASH_CFLAGS@
 TRASH_LIBS = @TRASH_LIBS@
 USE_NLS = @USE_NLS@
@@ -312,7 +307,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-icondir = @icondir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -335,12 +329,15 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = icons
 APPLET_NAME = wobblyzini
 
 # vim: set ft=automake ts=8 sts=8 sw=8 :
 NULL = 
+applet_datadir = $(APPLETSDIR)/$(APPLET_NAME)
+
+# for now, assume that icons = SVG
 icon_DATA = $(APPLET_ICONS)
+icondir = $(datadir)/icons/hicolor/scalable/apps
 desktopdir = $(datadir)/avant-window-navigator/applets
 desktop_DATA = $(APPLET_NAME).desktop
 EXTRA_DIST = \
@@ -348,6 +345,8 @@ EXTRA_DIST = \
 	$(desktop_DATA).in
 
 CLEANFILES = $(desktop_DATA)
+
+# vim: set ft=automake ts=8 sts=8 sw=8 :
 AM_CFLAGS = \
 	-I$(srcdir)		\
 	-I$(top_srcdir)/src	\
@@ -369,11 +368,16 @@ wobblyzini_la_LIBADD = \
 	$(NULL)
 
 wobblyzini_la_LDFLAGS = $(APPLET_LINKER_FLAGS)
-all: all-recursive
+wobblyzini_iconsdir = $(applet_datadir)/icons
+dist_wobblyzini_icons_DATA = \
+	icons/wobblyzini.png	\
+	$(NULL)
+
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.c-applet $(top_srcdir)/Makefile.desktop-files $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/Makefile.c-applet $(top_srcdir)/Makefile.common $(top_srcdir)/Makefile.desktop-files $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -486,6 +490,23 @@ uninstall-desktopDATA:
 	  echo " rm -f '$(DESTDIR)$(desktopdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(desktopdir)/$$f"; \
 	done
+install-dist_wobblyzini_iconsDATA: $(dist_wobblyzini_icons_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(wobblyzini_iconsdir)" || $(MKDIR_P) "$(DESTDIR)$(wobblyzini_iconsdir)"
+	@list='$(dist_wobblyzini_icons_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_wobblyzini_iconsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(wobblyzini_iconsdir)/$$f'"; \
+	  $(dist_wobblyzini_iconsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(wobblyzini_iconsdir)/$$f"; \
+	done
+
+uninstall-dist_wobblyzini_iconsDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_wobblyzini_icons_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(wobblyzini_iconsdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(wobblyzini_iconsdir)/$$f"; \
+	done
 install-iconDATA: $(icon_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(icondir)" || $(MKDIR_P) "$(DESTDIR)$(icondir)"
@@ -504,76 +525,6 @@ uninstall-iconDATA:
 	  rm -f "$(DESTDIR)$(icondir)/$$f"; \
 	done
 
-# This directory's subdirectories are mostly independent; you can cd
-# into them and run `make' without going through this Makefile.
-# To change the values of `make' variables: instead of editing Makefiles,
-# (1) if the variable is set in `config.status', edit `config.status'
-#     (which will cause the Makefiles to be regenerated when you run `make');
-# (2) otherwise, pass the desired values on the `make' command line.
-$(RECURSIVE_TARGETS):
-	@failcom='exit 1'; \
-	for f in x $$MAKEFLAGS; do \
-	  case $$f in \
-	    *=* | --[!k]*);; \
-	    *k*) failcom='fail=yes';; \
-	  esac; \
-	done; \
-	dot_seen=no; \
-	target=`echo $@ | sed s/-recursive//`; \
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  echo "Making $$target in $$subdir"; \
-	  if test "$$subdir" = "."; then \
-	    dot_seen=yes; \
-	    local_target="$$target-am"; \
-	  else \
-	    local_target="$$target"; \
-	  fi; \
-	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
-	  || eval $$failcom; \
-	done; \
-	if test "$$dot_seen" = "no"; then \
-	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
-	fi; test -z "$$fail"
-
-$(RECURSIVE_CLEAN_TARGETS):
-	@failcom='exit 1'; \
-	for f in x $$MAKEFLAGS; do \
-	  case $$f in \
-	    *=* | --[!k]*);; \
-	    *k*) failcom='fail=yes';; \
-	  esac; \
-	done; \
-	dot_seen=no; \
-	case "$@" in \
-	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
-	  *) list='$(SUBDIRS)' ;; \
-	esac; \
-	rev=''; for subdir in $$list; do \
-	  if test "$$subdir" = "."; then :; else \
-	    rev="$$subdir $$rev"; \
-	  fi; \
-	done; \
-	rev="$$rev ."; \
-	target=`echo $@ | sed s/-recursive//`; \
-	for subdir in $$rev; do \
-	  echo "Making $$target in $$subdir"; \
-	  if test "$$subdir" = "."; then \
-	    local_target="$$target-am"; \
-	  else \
-	    local_target="$$target"; \
-	  fi; \
-	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
-	  || eval $$failcom; \
-	done && test -z "$$fail"
-tags-recursive:
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
-	done
-ctags-recursive:
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) ctags); \
-	done
-
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
@@ -584,23 +535,10 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	mkid -fID $$unique
 tags: TAGS
 
-TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
-	  include_option=--etags-include; \
-	  empty_fix=.; \
-	else \
-	  include_option=--include; \
-	  empty_fix=; \
-	fi; \
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  if test "$$subdir" = .; then :; else \
-	    test ! -f $$subdir/TAGS || \
-	      tags="$$tags $$include_option=$$here/$$subdir/TAGS"; \
-	  fi; \
-	done; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
@@ -613,7 +551,7 @@ TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	    $$tags $$unique; \
 	fi
 ctags: CTAGS
-CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
@@ -660,40 +598,22 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
-	list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
-	  if test "$$subdir" = .; then :; else \
-	    test -d "$(distdir)/$$subdir" \
-	    || $(MKDIR_P) "$(distdir)/$$subdir" \
-	    || exit 1; \
-	    distdir=`$(am__cd) $(distdir) && pwd`; \
-	    top_distdir=`$(am__cd) $(top_distdir) && pwd`; \
-	    (cd $$subdir && \
-	      $(MAKE) $(AM_MAKEFLAGS) \
-	        top_distdir="$$top_distdir" \
-	        distdir="$$distdir/$$subdir" \
-		am__remove_distdir=: \
-		am__skip_length_check=: \
-	        distdir) \
-	      || exit 1; \
-	  fi; \
-	done
 check-am: all-am
-check: check-recursive
+check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA)
-installdirs: installdirs-recursive
-installdirs-am:
-	for dir in "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(icondir)"; do \
+installdirs:
+	for dir in "$(DESTDIR)$(appletdir)" "$(DESTDIR)$(desktopdir)" "$(DESTDIR)$(wobblyzini_iconsdir)" "$(DESTDIR)$(icondir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-recursive
-install-exec: install-exec-recursive
-install-data: install-data-recursive
-uninstall: uninstall-recursive
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-recursive
+installcheck: installcheck-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
@@ -710,86 +630,86 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-recursive
+clean: clean-am
 
 clean-am: clean-appletLTLIBRARIES clean-generic clean-libtool \
 	mostlyclean-am
 
-distclean: distclean-recursive
+distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
 
-dvi: dvi-recursive
+dvi: dvi-am
 
 dvi-am:
 
-html: html-recursive
+html: html-am
 
-info: info-recursive
+info: info-am
 
 info-am:
 
 install-data-am: install-appletLTLIBRARIES install-desktopDATA \
-	install-iconDATA
+	install-dist_wobblyzini_iconsDATA install-iconDATA
 
-install-dvi: install-dvi-recursive
+install-dvi: install-dvi-am
 
 install-exec-am:
 
-install-html: install-html-recursive
+install-html: install-html-am
 
-install-info: install-info-recursive
+install-info: install-info-am
 
 install-man:
 
-install-pdf: install-pdf-recursive
+install-pdf: install-pdf-am
 
-install-ps: install-ps-recursive
+install-ps: install-ps-am
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-recursive
+maintainer-clean: maintainer-clean-am
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
-mostlyclean: mostlyclean-recursive
+mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool
 
-pdf: pdf-recursive
+pdf: pdf-am
 
 pdf-am:
 
-ps: ps-recursive
+ps: ps-am
 
 ps-am:
 
 uninstall-am: uninstall-appletLTLIBRARIES uninstall-desktopDATA \
+	uninstall-dist_wobblyzini_iconsDATA uninstall-iconDATA
+
+.MAKE: install-am install-strip
+
+.PHONY: CTAGS GTAGS all all-am check check-am clean \
+	clean-appletLTLIBRARIES clean-generic clean-libtool ctags \
+	distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am \
+	install-appletLTLIBRARIES install-data install-data-am \
+	install-desktopDATA install-dist_wobblyzini_iconsDATA \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-iconDATA install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-appletLTLIBRARIES \
+	uninstall-desktopDATA uninstall-dist_wobblyzini_iconsDATA \
 	uninstall-iconDATA
-
-.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) install-am \
-	install-strip
-
-.PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
-	all all-am check check-am clean clean-appletLTLIBRARIES \
-	clean-generic clean-libtool ctags ctags-recursive distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-appletLTLIBRARIES install-data \
-	install-data-am install-desktopDATA install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-iconDATA install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-appletLTLIBRARIES \
-	uninstall-desktopDATA uninstall-iconDATA
 
 @INTLTOOL_DESKTOP_RULE@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

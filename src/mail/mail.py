@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#
 # Copyright (C) 2008  Pavel Panchekha <pavpanchekha@gmail.com>
 # 
 # This program is free software: you can redistribute it and/or modify
@@ -24,7 +26,7 @@ import subprocess
 import pygtk
 pygtk.require("2.0")
 import gtk
-from awn.extras import AWNLib
+from awn.extras import awnlib
 
 APP = "awn-mail-applet"
 DIR=os.path.dirname(__file__) + '/locale'
@@ -46,8 +48,6 @@ def strMessages(num):
 class MailApplet:
     def __init__(self, applet):
         self.awn = applet
-        
-        self.awn.keyring.require()
         
         default_values = {
             "backend": "GMail",
@@ -91,7 +91,7 @@ class MailApplet:
         # is no login information. We'd delete the key, but that's not
         # always supported.
 
-        key = self.awn.keyring.fromToken(token)
+        key = self.awn.keyring.from_token(token)
 
         self.submitPWD(key)
 
@@ -132,7 +132,7 @@ class MailApplet:
             self.__setIcon("error")
 
             if self.showerror:
-                self.awn.errors.general(err, lambda: ())
+                self.awn.errors.general(err)
             return
 
         diffSubjects = [i for i in self.mail.subjects if i not in oldSubjects]
@@ -147,6 +147,9 @@ class MailApplet:
         
         if self.hide and len(self.mail.subjects) == 0:
             self.awn.icon.hide()
+
+        elif self.hide:
+            self.awn.show()
 
         self.awn.dialog.hide()
         self.drawMainDlog()
@@ -295,7 +298,7 @@ class MailApplet:
         prefs_vbox.add(vbox)
         vbox.set_border_width(5)
         
-        vbox_mail = AWNLib.create_frame(vbox, "Mail")
+        vbox_mail = awnlib.create_frame(vbox, "Mail")
         
         hbox_backend = gtk.HBox(spacing=13)
         vbox_mail.add(hbox_backend)
@@ -319,7 +322,7 @@ class MailApplet:
         email.connect("changed", self.changed_client_cb)
         hbox_client.add(email)
         
-        vbox_display = AWNLib.create_frame(vbox, "Display")
+        vbox_display = awnlib.create_frame(vbox, "Display")
         
         hbox_theme = gtk.HBox(spacing=13)
         vbox_display.add(hbox_theme)
@@ -804,10 +807,10 @@ class Backends:
                     "folder": folder}, "network")
 
 if __name__ == "__main__":
-    applet = AWNLib.initiate({
+    awnlib.init_start(MailApplet, {
         "name": _("Mail Applet"),
         "short": "mail",
-	    "version": "0.2.8",
+	    "version": "0.3.2",
         "description": _("An applet to check one's email"),
         "logo": os.path.join(os.path.dirname(__file__), "Themes/Tango/read.svg"),
         "author": "Pavel Panchekha",
@@ -815,5 +818,3 @@ if __name__ == "__main__":
         "email": "pavpanchekha@gmail.com",
         "type": ["Network", "Email"]},
         ["settings-per-instance", "detach"])
-    applet = MailApplet(applet)
-    AWNLib.start(applet.awn)

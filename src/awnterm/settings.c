@@ -54,10 +54,21 @@ GtkWidget* create_popup_menu (AwnTerm *applet)
 
 void init_settings (AwnTerm *applet)
 {
-	applet->config = awn_config_client_new_for_applet ("awn-terminal", NULL);
+	gfloat opacity = 1.0;
+	applet->config = awn_config_client_new_for_applet ("awnterm", NULL);
 	
-	awn_config_client_notify_add (applet->config, AWN_CONFIG_CLIENT_DEFAULT_GROUP, OPACITY, (AwnConfigClientNotifyFunc)load_opacity, applet);
-	set_opacity (applet, awn_config_client_get_float (applet->config, AWN_CONFIG_CLIENT_DEFAULT_GROUP, OPACITY, NULL));
+	awn_config_client_notify_add (applet->config, 
+		AWN_CONFIG_CLIENT_DEFAULT_GROUP,
+		OPACITY,
+		(AwnConfigClientNotifyFunc)load_opacity,
+		applet);
+	if (awn_config_client_entry_exists (applet->config,
+			AWN_CONFIG_CLIENT_DEFAULT_GROUP, OPACITY))
+		opacity = awn_config_client_get_float (applet->config,
+				AWN_CONFIG_CLIENT_DEFAULT_GROUP,
+				OPACITY,
+				NULL);
+	set_opacity (applet, opacity);
 	
 	awn_config_client_notify_add (applet->config, AWN_CONFIG_CLIENT_DEFAULT_GROUP, BG_IMG, (AwnConfigClientNotifyFunc)load_bg_img, applet);
 	set_bg_img (applet, awn_config_client_get_string (applet->config, AWN_CONFIG_CLIENT_DEFAULT_GROUP, BG_IMG, NULL));
@@ -83,7 +94,14 @@ void save_opacity (GtkWidget *scale, AwnConfigClient *config)
 
 static void set_bg_img (AwnTerm *applet, gchar *path)
 {
-	vte_terminal_set_background_image_file (VTE_TERMINAL (applet->terminal), path);
+	GtkWidget *terminal;
+	int i;
+	
+	for(i = 0; i <= applet->number_of_tabs; i++)
+	{
+		terminal = gtk_notebook_get_nth_page(GTK_NOTEBOOK(applet->notebook), i);
+		vte_terminal_set_background_image_file (VTE_TERMINAL (terminal), path);
+	}
 }
 
 void load_bg_img (AwnConfigClientNotifyEntry *entry, AwnTerm *applet)
