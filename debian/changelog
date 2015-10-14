@@ -5,8 +5,19 @@ awn-extras (0.4.1~bzr1542-0~github1) UNRELEASED; urgency=medium
   * Orphan the package.
   * Rename source package to 'awn-extras'.
   * Bump the debhelper version and compatibility level to 9.
+  * Bump Standards-Version to 3.9.6.
   * debian/control:
-    - Update the build dependencies.
+    - Remove deprecated DM-Upload-Allowed field.
+    - Update the build dependencies/depends/recommends.
+    - Drop obsolete Breaks/Conflicts/Replaces.
+    - Replace hal with upower. Upower is used by default now.
+    - Recommend fortune-mod instead of the virtual package.
+    - Remove python-gweather since it's no longer in the archive and cairo-clock
+      does not use it if it's not found.
+    - Drop gnome-applets instead of recommending it. Cpufreq works without it
+      and avoids pulling all of the gnome dependencies.
+    - Recommend python-gnomekeyring for the mail applet.
+    - Recommend python-vobject for the calendar applet.
   * debian/patches:
     - Drop patches applied upstream.
     - Add patches to fix several issues.
@@ -16,7 +27,12 @@ awn-extras (0.4.1~bzr1542-0~github1) UNRELEASED; urgency=medium
     - Add a get-orig-source target.
     - Use dh $@ --foo as required since compat 8.
     - Add dh-autoreconf support.
+    - Use the FLAGS from dpkg-buildflags.
+    - Allow parallel builds.
   * Remove the main-menu applet since libgnome-menu-dev was removed.
+  * Remove bandwidth-monitor since python-gtop was removed from the archive.
+  * Add the common-folder applet to awn-applets-python-core.
+  * Update the package according to the latest Python policy.
 
  -- Miguel A. Colón Vélez <debian.micove@gmail.com>  Mon, 12 Oct 2015 22:59:51 -0400
 
