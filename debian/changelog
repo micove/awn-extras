@@ -1,10 +1,22 @@
-awn-extras (0.4.1~bzr1542-0.1) UNRELEASED; urgency=medium
+awn-extras (0.4.1~bzr1542-0~github1) UNRELEASED; urgency=medium
 
   * QA upload.
   * New upstream snapshot.
+  * Orphan the package.
   * Rename source package to 'awn-extras'.
+  * Bump the debhelper version and compatibility level to 9.
+  * debian/control:
+    - Update the build dependencies.
+  * debian/patches:
+    - Drop patches applied upstream.
+    - Add patches to fix several issues.
+      > Fix a FTBFS when using a recent valac.
+      > Fix cairo menu.
   * debian/rules:
     - Add a get-orig-source target.
+    - Use dh $@ --foo as required since compat 8.
+    - Add dh-autoreconf support.
+  * Remove the main-menu applet since libgnome-menu-dev was removed.
 
  -- Miguel A. Colón Vélez <debian.micove@gmail.com>  Mon, 12 Oct 2015 22:59:51 -0400
 
