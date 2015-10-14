@@ -1,0 +1,45 @@
+From d48114fe2fa2a6e52c67a077d4e3dfc395217d0e Mon Sep 17 00:00:00 2001
+From: Povilas Kanapickas <tir5c3@yahoo.co.uk>
+Date: Tue, 5 Nov 2013 05:49:21 +0200
+Subject: [PATCH] notification-area: Rename EGG_TYPE_TRAY_CHILD to
+ EGG_TYPE_TRAY_CHILD
+
+Valac expects the macro to be in the *_TYPE_CHILD format and breaks
+compilation if this rule is not obeyed.
+---
+ applets/maintained/notification-area/egg-tray-child.c |  2 +-
+ applets/maintained/notification-area/egg-tray-child.h | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+--- a/applets/maintained/notification-area/egg-tray-child.c
++++ b/applets/maintained/notification-area/egg-tray-child.c
+@@ -313,7 +313,7 @@
+       new_colormap = TRUE;
+     }
+ 
+-  child = g_object_new (EGG_TYPE_TRAY_CHILD, NULL);
++  child = g_object_new (EGG_TRAY_TYPE_CHILD, NULL);
+   child->icon_window = icon_window;
+ 
+   gtk_widget_set_colormap (GTK_WIDGET (child), colormap);
+--- a/applets/maintained/notification-area/egg-tray-child.h
++++ b/applets/maintained/notification-area/egg-tray-child.h
+@@ -27,12 +27,12 @@
+ 
+ G_BEGIN_DECLS
+ 
+-#define EGG_TYPE_TRAY_CHILD			(egg_tray_child_get_type ())
+-#define EGG_TRAY_CHILD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), EGG_TYPE_TRAY_CHILD, EggTrayChild))
+-#define EGG_TRAY_CHILD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), EGG_TYPE_TRAY_CHILD, EggTrayChildClass))
+-#define EGG_IS_TRAY_CHILD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), EGG_TYPE_TRAY_CHILD))
+-#define EGG_IS_TRAY_CHILD_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE ((klass), EGG_TYPE_TRAY_CHILD))
+-#define EGG_TRAY_CHILD_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS ((obj), EGG_TYPE_TRAY_CHILD, EggTrayChildClass))
++#define EGG_TRAY_TYPE_CHILD			(egg_tray_child_get_type ())
++#define EGG_TRAY_CHILD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), EGG_TRAY_TYPE_CHILD, EggTrayChild))
++#define EGG_TRAY_CHILD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), EGG_TRAY_TYPE_CHILD, EggTrayChildClass))
++#define EGG_IS_TRAY_CHILD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), EGG_TRAY_TYPE_CHILD))
++#define EGG_IS_TRAY_CHILD_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE ((klass), EGG_TRAY_TYPE_CHILD))
++#define EGG_TRAY_CHILD_GET_CLASS(obj)		(G_TYPE_INSTANCE_GET_CLASS ((obj), EGG_TRAY_TYPE_CHILD, EggTrayChildClass))
+ 
+ typedef struct _EggTrayChild	    EggTrayChild;
+ typedef struct _EggTrayChildClass  EggTrayChildClass;

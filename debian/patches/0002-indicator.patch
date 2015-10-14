@@ -1,0 +1,27 @@
+From deb49d20373338803fdf5d39608d01ab37658230 Mon Sep 17 00:00:00 2001
+From: Povilas Kanapickas <tir5c3@yahoo.co.uk>
+Date: Tue, 5 Nov 2013 05:49:10 +0200
+Subject: [PATCH] Fix indicator API detection
+
+This commit applies a patch of awn-extras 0.4.1~bzr1507-0ubuntu7
+---
+ configure.ac | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -97,9 +97,11 @@
+ 
+ if test "$with_indicator" != "no"; then
+ # indicator-applet
+-PKG_CHECK_MODULES(INDICATOR, [indicator >= 0.3])
+-INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator`
+-INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator`
++INDICATOR_REQUIRED_VERSION=0.3.0
++INDICATOR_PKG_NAME=indicator-0.4
++PKG_CHECK_MODULES(INDICATOR, [$INDICATOR_PKG_NAME >= $INDICATOR_REQUIRED_VERSION])
++INDICATORDIR=`$PKG_CONFIG --variable=indicatordir $INDICATOR_PKG_NAME`
++INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir $INDICATOR_PKG_NAME`
+ AC_SUBST(INDICATORDIR)
+ AC_SUBST(INDICATORICONSDIR)
+ fi

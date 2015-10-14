@@ -1,0 +1,84 @@
+From c0cf10370cadcdea3959e83e98f7d20306fda7f1 Mon Sep 17 00:00:00 2001
+From: Povilas Kanapickas <tir5c3@yahoo.co.uk>
+Date: Tue, 5 Nov 2013 05:49:24 +0200
+Subject: [PATCH] Fix several ambiguities in vala files
+
+---
+ applets/maintained/awnterm/awn-terminal.vala |  6 +++---
+ applets/maintained/garbage/applet.vala       | 14 +++++++-------
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+--- a/applets/maintained/awnterm/awn-terminal.vala
++++ b/applets/maintained/awnterm/awn-terminal.vala
+@@ -33,7 +33,7 @@
+ public class AwnTerminalApplet : AppletSimple, TerminalDBus
+ {
+   private Client config;
+-  private Menu menu;
++  private Gtk.Menu menu;
+   private Awn.Dialog dialog;
+   private Gtk.Notebook notebook;
+   private Gtk.FileChooserButton chooser;
+@@ -382,7 +382,7 @@
+       ImageMenuItem prefs_item;
+       Widget about_item;
+ 
+-      this.menu = this.create_default_menu () as Menu;
++      this.menu = this.create_default_menu () as Gtk.Menu;
+       
+       prefs_item = new ImageMenuItem.from_stock (STOCK_PREFERENCES, null);
+       prefs_item.activate.connect (this.on_prefs_activate);
+@@ -393,7 +393,7 @@
+                                        "<michal.mhr@gmail.com>",
+                                        AppletLicense.GPLV2, Build.VERSION);
+       about_item.show ();
+-      this.menu.append (about_item as MenuItem);
++      this.menu.append (about_item as Gtk.MenuItem);
+     }
+     this.menu.set_screen (null);
+     this.get_icon ().popup_gtk_menu (this.menu, evt.button, evt.time);
+--- a/applets/maintained/garbage/applet.vala
++++ b/applets/maintained/garbage/applet.vala
+@@ -34,8 +34,8 @@
+ {
+   public VFS.Trash trash;
+   private Client config;
+-  private Menu menu;
+-  private MenuItem empty_menu_item;
++  private Gtk.Menu menu;
++  private Gtk.MenuItem empty_menu_item;
+   private GarbagePrefs? prefs;
+   private OverlayText? text_overlay;
+   private OverlayThrobber? throbber_overlay;
+@@ -203,16 +203,16 @@
+   private void
+   on_context_menu_popup (EventButton evt)
+   {
+-    weak Menu ctx_menu;
++    weak Gtk.Menu ctx_menu;
+     if (this.menu == null)
+     {
+       ImageMenuItem prefs_item;
+       Widget about_item;
+       SeparatorMenuItem sep_item;
+ 
+-      this.menu = this.create_default_menu () as Menu;
++      this.menu = this.create_default_menu () as Gtk.Menu;
+       this.empty_menu_item =
+-        new MenuItem.with_mnemonic (Gettext._ ("_Empty Trash"));
++        new Gtk.MenuItem.with_mnemonic (Gettext._ ("_Empty Trash"));
+       this.empty_menu_item.activate.connect (this.on_menu_empty_activate);
+       this.empty_menu_item.set_sensitive (this.trash.file_count > 0);
+       this.empty_menu_item.show ();
+@@ -231,9 +231,9 @@
+                                            AppletLicense.GPLV2, Build.VERSION,
+                                            Gettext._ ("A lightweight, cross-desktop trash applet"),
+                                            null, null, "user-trash", null, authors, null, null);
+-      this.menu.append (about_item as MenuItem);
++      this.menu.append (about_item as Gtk.MenuItem);
+     }
+-    ctx_menu = (Menu)this.menu;
++    ctx_menu = (Gtk.Menu)this.menu;
+     ctx_menu.set_screen (null);
+     this.get_icon ().popup_gtk_menu (ctx_menu, evt.button, evt.time);
+   }
