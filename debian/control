@@ -42,11 +42,6 @@ Suggests:
  gconf-editor,
 # notification-area
  python-gconf
-Provides:
- notification-daemon
-Breaks:
- avant-windows-navigator (<< 0.4.0-1),
- awn-applets-python-core (<< 0.4.0-1)
 Description: Collection of applets for Awn, written in C or Vala
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like
@@ -75,8 +70,6 @@ Depends:
  ${shlibs:Depends}
 Recommends:
  awn-settings
-Breaks:
- awn-applets-python-extras (<< 0.4.0-1)
 Description: Collection of extras applets for Awn, written in C or Vala
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like
@@ -182,8 +175,6 @@ Suggests:
 # YAMA
  alacarte,
  tomboy
-Breaks:
- awn-applets-python-core (<< 0.3~bzr912)
 Description: Collection of extras applets for Awn, written in Python
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like
@@ -204,12 +195,6 @@ Depends:
  ${misc:Depends},
  ${python:Depends},
  ${shlibs:Depends}
-Provides:
- ${python:Provides}
-Conflicts:
- python-awnlib
-Replaces:
- python-awnlib
 Description: Python bindings for avant-window-navigator's applets
  This package provides Python bindings to create and use Python applets with
  functions of libawn-extras. It also includes AWNLib, a collection of
