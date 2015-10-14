@@ -77,7 +77,6 @@ Description: Collection of extras applets for Awn, written in C or Vala
  .
  This package contains extras applets written in C:
   * digitalClock: A digital clock and calendar applet.
-  * main-menu: Display a list of all the applications on your computer.
   * places: Displays shortcuts in buttons.
   * sysmon: Display CPU activity and system stats on click.
   * webapplet: Displays a web page.
