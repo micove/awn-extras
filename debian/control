@@ -23,8 +23,8 @@ Build-Depends:
  python-gtk2-dev,
  valac
 Standards-Version: 3.9.6
+X-Python-Version: >= 2.6
 Homepage: https://launchpad.net/awn-extras
-X-Python-Version: >= 2.5
 
 Package: awn-applets-c-core
 Architecture: any
@@ -90,8 +90,7 @@ Depends:
  python-awn,
  python-awn-extras,
  ${misc:Depends},
- ${python:Depends},
- ${shlibs:Depends}
+ ${python:Depends}
 Recommends:
  awn-settings,
 # animal-farm
@@ -159,8 +158,7 @@ Depends:
  python-awn,
  python-awn-extras,
  ${misc:Depends},
- ${python:Depends},
- ${shlibs:Depends}
+ ${python:Depends}
 Recommends:
  awn-settings,
 # calendar
@@ -193,8 +191,7 @@ Section: python
 Architecture: any
 Depends:
  ${misc:Depends},
- ${python:Depends},
- ${shlibs:Depends}
+ ${python:Depends}
 Description: Python bindings for avant-window-navigator's applets
  This package provides Python bindings to create and use Python applets with
  functions of libawn-extras. It also includes AWNLib, a collection of
@@ -206,8 +203,7 @@ Priority: extra
 Architecture: any
 Depends:
  awn-applets-c-extras (= ${binary:Version}),
- ${misc:Depends},
- ${shlibs:Depends}
+ ${misc:Depends}
 Description: Collection of applets for avant-window-navigator - debug symbols
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like
@@ -218,8 +214,7 @@ Description: Collection of applets for avant-window-navigator - debug symbols
 Package: awn-applets-common
 Architecture: any
 Depends:
- ${misc:Depends},
- ${shlibs:Depends}
+ ${misc:Depends}
 Description: Collection of applets for avant-window-navigator - common files
  Awn-extras-applets is a collection of applets for avant-window-navigator. It
  provides some extensions to the bar and some new features (like
