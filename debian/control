@@ -1,7 +1,7 @@
 Source: awn-extras
 Section: gnome
 Priority: optional
-Maintainer: Julien Lavergne <julien.lavergne@gmail.com>
+Maintainer: Debian QA Group <packages@qa.debian.org>
 Build-Depends:
  debhelper (>= 9~),
  dh-autoreconf,
