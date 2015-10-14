@@ -124,7 +124,6 @@ Description: Collection of applets for Awn, written in Python
  .
  This package provides the core Python applets:
   * animal-farm : Various animals tell your fortune.
-  * bandwidth-monitor: Displays information from network.
   * battery-applet: This applet displays your computers current power status.
   * cairo-clock: Displays an analog clock.
   * comics: View your favourite comics on your desktop.

@@ -29,13 +29,16 @@ override_dh_install:
 	find $(CURDIR)/debian/tmp/usr/share/ -name LGPL -delete
 	find $(CURDIR)/debian/tmp/usr/share/ -name CHANGELOG -delete
 	#Disable applets
-	set -e; for applet in dropper mimenu vala-test python-test wobblyzini; do \
+	set -e; for applet in bandwidth-monitor dropper mimenu vala-test python-test wobblyzini; do \
+		$(RM) $(CURDIR)/debian/tmp/etc/gconf/schemas/awn-applet-$${applet}.schemas \
 		$(RM) $(CURDIR)/debian/tmp/usr/lib/awn/applets/$${applet}/*.so \
 		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/*.py; \
 		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/icons/*.svg; \
 		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/icons/*.png; \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/images/*.png; \
 		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/*.ui; \
 		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}.desktop; \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/schemas/awn-applet-$${applet}.schema-ini; \
 	done
 	#Make script executable
 	chmod +x $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/comics/comics.sh
