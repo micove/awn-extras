@@ -3,8 +3,10 @@ Section: gnome
 Priority: optional
 Maintainer: Julien Lavergne <julien.lavergne@gmail.com>
 Build-Depends: debhelper (>= 7.0.50~),
+               dh-autoreconf,
+               dh-python,
                intltool, 
-               libgnome-menu-dev, 
+               libgnome-menu-3-dev,
                libgconf2-dev,
                librsvg2-dev, 
                libgtop2-dev, 
@@ -16,7 +18,7 @@ Build-Depends: debhelper (>= 7.0.50~),
                python (>= 2.6.6-3~),
                python-gtk2-dev,
                python-cairo-dev,
-               valac (>= 0.7.7),
+               valac,
                libwebkitgtk-dev,
                libdesktop-agnostic-bin
 Standards-Version: 3.9.3
