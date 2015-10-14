@@ -108,8 +108,6 @@ Recommends:
  fortune,
 # cpufreq
  gnome-applets,
-# battery
- hal,
 # feeds
  python (>= 2.6) | python-simplejson,
 # cairo-clock
@@ -129,7 +127,9 @@ Recommends:
 # hardware-sensors, cairo-clock, comics
  python-rsvg | python-gnome2-desktop,
 # Dialect
- python-xklavier
+ python-xklavier,
+# battery
+ upower
 Suggests:
  awn-applets-python-extras
 Description: Collection of applets for Awn, written in Python
