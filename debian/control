@@ -143,6 +143,7 @@ Description: Collection of applets for Awn, written in Python
   * battery-applet: This applet displays your computers current power status.
   * cairo-clock: Displays an analog clock.
   * comics: View your favourite comics on your desktop.
+  * common-folder: Launcher for common folders and bookmarks.
   * cpufreq: Monitors and controls the CPU frequency.
   * dialect: Manages keyboard layouts.
   * feeds: A Python feed launcher.
