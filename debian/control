@@ -105,9 +105,7 @@ Depends:
 Recommends:
  awn-settings (>= 0.3~bzr489),
 # animal-farm
- fortune,
-# cpufreq
- gnome-applets,
+ fortune-mod,
 # feeds
  python (>= 2.6) | python-simplejson,
 # cairo-clock
@@ -116,10 +114,10 @@ Recommends:
  python-feedparser,
 # Stack
  python-gnomedesktop | python-gnome2-desktop,
+# mail
+ python-gnomekeyring,
 # volume-control
  python-gst0.10,
-# cairo-clock
- python-gweather,
 # comics, battery
  python-notify,
 # thinkhdaps
@@ -181,6 +179,8 @@ Recommends:
  python-gdata,
 # YAMA
  python-gmenu,
+# calendar
+ python-vobject,
 # slickswitcher
  python-wnck | python-gnome2-desktop
 Suggests:
