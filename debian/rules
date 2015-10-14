@@ -1,8 +1,10 @@
 #!/usr/bin/make -f
 
-#DH_VERBOSE=1
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
 
 configure_flags += \
+		--disable-static \
 		--disable-pymod-checks \
 		--with-webkit
 
@@ -14,23 +16,22 @@ override_dh_auto_configure:
 
 override_dh_install:
 	#Remove CHANGELOG,LGPL, AUTHORS, README, COPYING, .la, .a, pyo and pyc files.
-	find $(CURDIR)/debian/tmp/usr/lib/ -name *.a |xargs rm
-	find $(CURDIR)/debian/tmp/usr/lib -name *.la |xargs rm
-	find $(CURDIR)/debian/tmp/usr/lib -name *.pyc |xargs rm
-	find $(CURDIR)/debian/tmp/usr/lib -name *.pyo |xargs rm
-	find $(CURDIR)/debian/tmp/usr -name COPYING |xargs rm
-	find $(CURDIR)/debian/tmp/usr -name README |xargs rm
-	find $(CURDIR)/debian/tmp/usr -name AUTHORS |xargs rm
-	find $(CURDIR)/debian/tmp/usr -name LGPL |xargs rm
-	find $(CURDIR)/debian/tmp/usr -name CHANGELOG |xargs rm
+	find $(CURDIR)/debian/tmp/usr/lib -name *.la -delete
+	find $(CURDIR)/debian/tmp/usr/lib -name *.pyc -delete
+	find $(CURDIR)/debian/tmp/usr/lib -name *.pyo -delete
+	find $(CURDIR)/debian/tmp/usr/share/ -name COPYING -delete
+	find $(CURDIR)/debian/tmp/usr/share/ -name README -delete
+	find $(CURDIR)/debian/tmp/usr/share/ -name AUTHORS -delete
+	find $(CURDIR)/debian/tmp/usr/share/ -name LGPL -delete
+	find $(CURDIR)/debian/tmp/usr/share/ -name CHANGELOG -delete
 	#Disable applets
 	set -e; for applet in dropper mimenu vala-test python-test wobblyzini; do \
-		rm -f $(CURDIR)/debian/tmp/usr/lib/awn/applets/$${applet}/*.so \
-		rm -f $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/*.py; \
-		rm -f $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/icons/*.svg; \
-		rm -f $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/icons/*.png; \
-		rm -f $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/*.ui; \
-		rm -f $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}.desktop; \
+		$(RM) $(CURDIR)/debian/tmp/usr/lib/awn/applets/$${applet}/*.so \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/*.py; \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/icons/*.svg; \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/icons/*.png; \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}/*.ui; \
+		$(RM) $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/$${applet}.desktop; \
 	done
 	#Make script executable
 	chmod +x $(CURDIR)/debian/tmp/usr/share/avant-window-navigator/applets/comics/comics.sh
@@ -39,7 +40,7 @@ override_dh_install:
 
 override_dh_auto_test:
 	#Pass, tests don't pass for now.
-	
+
 override_dh_makeshlibs:
 	dh_makeshlibs -pawn-applets-c-core -a -n --exclude=*
 	dh_makeshlibs -pawn-applets-c-extras -a -n --exclude=*
