@@ -25,7 +25,6 @@ Build-Depends:
 Standards-Version: 3.9.6
 Homepage: https://launchpad.net/awn-extras
 X-Python-Version: >= 2.5
-DM-Upload-Allowed: yes
 
 Package: awn-applets-c-core
 Architecture: any
