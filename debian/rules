@@ -6,12 +6,11 @@ configure_flags += \
 		--disable-pymod-checks \
 		--with-webkit
 
-
-%:
-	dh $@ --with python2
+override_dh_autoreconf:
+	dh_autoreconf '(intltoolize -f -c && autoreconf -vfi)'
 
 override_dh_auto_configure:
-	dh_auto_configure -- 	$(configure_flags)
+	dh_auto_configure -- $(configure_flags)
 
 override_dh_install:
 	#Remove CHANGELOG,LGPL, AUTHORS, README, COPYING, .la, .a, pyo and pyc files.
@@ -47,6 +46,9 @@ override_dh_makeshlibs:
 
 override_dh_strip:
 	dh_strip --dbg-package=awn-applets-c-dbg
+
+%:
+	dh $@ --with autoreconf,python2
 
 get-orig-source:
 	sh debian/get-bzr-source.sh
