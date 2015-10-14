@@ -7,12 +7,12 @@ Build-Depends:
  dh-autoreconf,
  dh-python,
  intltool,
- libawn-dev (>= 0.4.1~bzr830),
+ libawn-dev,
  libdesktop-agnostic-bin,
  libgconf2-dev,
  libgnome-menu-3-dev,
  libgtop2-dev,
- libnotify-dev (>= 0.7),
+ libnotify-dev,
  librsvg2-dev,
  libsexy-dev,
  libvte-dev,
@@ -94,17 +94,15 @@ Depends:
  avant-window-navigator,
  awn-applets-common,
  python,
- python-awn (>= 0.3.2.1),
- python-awn-extras (>= 0.4.0),
+ python-awn,
+ python-awn-extras,
  ${misc:Depends},
  ${python:Depends},
  ${shlibs:Depends}
 Recommends:
- awn-settings (>= 0.3~bzr489),
+ awn-settings,
 # animal-farm
  fortune-mod,
-# feeds
- python (>= 2.6) | python-simplejson,
 # cairo-clock
  python-dateutil,
 # comics, feeds
@@ -165,13 +163,13 @@ Depends:
  avant-window-navigator,
  awn-applets-common,
  python,
- python-awn (>= 0.3.2.1),
- python-awn-extras (>= 0.4.0),
+ python-awn,
+ python-awn-extras,
  ${misc:Depends},
  ${python:Depends},
  ${shlibs:Depends}
 Recommends:
- awn-settings (>= 0.3~bzr489),
+ awn-settings,
 # calendar
  python-gdata,
 # YAMA
