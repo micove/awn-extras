@@ -22,10 +22,8 @@ Build-Depends:
  python-cairo-dev,
  python-gtk2-dev,
  valac
-Standards-Version: 3.9.3
+Standards-Version: 3.9.6
 Homepage: https://launchpad.net/awn-extras
-Vcs-Git: git://github.com/gilir/awn-extras-debian.git
-Vcs-Browser: http://github.com/gilir/awn-extras-debian/tree
 X-Python-Version: >= 2.5
 DM-Upload-Allowed: yes
 
